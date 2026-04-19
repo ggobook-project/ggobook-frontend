@@ -223,7 +223,7 @@ export default function ContentRegisterPage() {
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              laceholder="작품 줄거리를 입력해주세요"
+              placeholder="작품 줄거리를 입력해주세요"
               rows={4}
               style={{
                 width: "100%",
@@ -267,10 +267,11 @@ export default function ContentRegisterPage() {
               <input
                 type="file"
                 onChange={(e) => setFile(e.target.files[0])}
-                tyle={{ fontSize: 13, color: c.textMuted }}
-              >
+                style={{ fontSize: 13, color: c.textMuted }}
+              />
+              <span style={{ fontSize: 13, color: c.textMuted, marginLeft: 8 }}>
                 + 이미지 업로드
-              </input>
+              </span>
             </div>
           </div>
 
