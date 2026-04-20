@@ -11,6 +11,7 @@ export default function ContentRegisterPage() {
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState(null);
+  const [videoUrl, setVideoUrl] = useState("");
 
   const genres = ["로맨스", "판타지", "무협", "현대", "스릴러", "BL", "액션"];
 
@@ -21,11 +22,12 @@ export default function ContentRegisterPage() {
     }
 
     const userContent = {
-      title: title,
-      type: type,
-      genre: genre,
-      summary: summary,
-      description: description,
+      title,
+      type,
+      genre,
+      summary,
+      description,
+      videoUrl,
     };
 
     const formData = new FormData();
@@ -33,7 +35,6 @@ export default function ContentRegisterPage() {
       "content",
       new Blob([JSON.stringify(userContent)], { type: "application/json" }),
     );
-
     formData.append("file", file);
 
     try {
@@ -66,19 +67,8 @@ export default function ContentRegisterPage() {
           padding: "32px 40px 24px",
         }}
       >
-        <div
-          style={{
-            fontSize: 24,
-            fontWeight: 700,
-            color: c.text,
-            marginBottom: 4,
-          }}
-        >
-          작품 등록
-        </div>
-        <div style={{ fontSize: 14, color: c.textSub }}>
-          새 작품을 등록하세요
-        </div>
+        <div style={{ fontSize: 24, fontWeight: 700, color: c.text, marginBottom: 4 }}>작품 등록</div>
+        <div style={{ fontSize: 14, color: c.textSub }}>새 작품을 등록하세요</div>
       </div>
 
       <div style={{ maxWidth: 700, margin: "0 auto", padding: "24px 40px" }}>
@@ -90,183 +80,101 @@ export default function ContentRegisterPage() {
             padding: 32,
           }}
         >
+          {/* 작품 유형 */}
           <div style={{ marginBottom: 20 }}>
-            <div
-              style={{
-                fontSize: 13,
-                color: c.textSub,
-                marginBottom: 8,
-                fontWeight: 500,
-              }}
-            >
-              작품 유형
-            </div>
+            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>작품 유형</div>
             <div style={{ display: "flex", gap: 10 }}>
               {["웹툰", "웹소설"].map((t) => (
                 <button
                   key={t}
                   onClick={() => setType(t)}
                   style={{
-                    flex: 1,
-                    padding: 12,
-                    borderRadius: theme.radius.md,
-                    fontSize: 14,
-                    cursor: "pointer",
+                    flex: 1, padding: 12, borderRadius: theme.radius.md,
+                    fontSize: 14, cursor: "pointer",
                     background: type === t ? c.primary : c.bgSurface,
                     color: type === t ? "#fff" : c.textSub,
                     border: `1px solid ${type === t ? c.primary : c.border}`,
                     fontWeight: type === t ? 500 : 400,
                   }}
-                >
-                  {t}
-                </button>
+                >{t}</button>
               ))}
             </div>
           </div>
 
+          {/* 작품명 */}
           <div style={{ marginBottom: 20 }}>
-            <div
-              style={{
-                fontSize: 13,
-                color: c.textSub,
-                marginBottom: 8,
-                fontWeight: 500,
-              }}
-            >
-              작품명
-            </div>
+            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>작품명</div>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="작품명 입력"
               style={{
-                width: "100%",
-                background: c.bgSurface,
-                border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md,
-                padding: "11px 14px",
-                color: c.text,
-                fontSize: 13,
-                outline: "none",
-                boxSizing: "border-box",
+                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
+                borderRadius: theme.radius.md, padding: "11px 14px",
+                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box",
               }}
             />
           </div>
 
+          {/* 장르 */}
           <div style={{ marginBottom: 20 }}>
-            <div
-              style={{
-                fontSize: 13,
-                color: c.textSub,
-                marginBottom: 8,
-                fontWeight: 500,
-              }}
-            >
-              장르
-            </div>
+            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>장르</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {genres.map((g) => (
                 <button
                   key={g}
                   onClick={() => setGenre(g)}
                   style={{
-                    padding: "6px 14px",
-                    borderRadius: theme.radius.full,
-                    fontSize: 12,
-                    cursor: "pointer",
+                    padding: "6px 14px", borderRadius: theme.radius.full,
+                    fontSize: 12, cursor: "pointer",
                     background: genre === g ? c.primary : c.bgSurface,
                     color: genre === g ? "#fff" : c.textSub,
                     border: `1px solid ${genre === g ? c.primary : c.border}`,
                   }}
-                >
-                  {g}
-                </button>
+                >{g}</button>
               ))}
             </div>
           </div>
 
+          {/* 한줄 요약 */}
           <div style={{ marginBottom: 20 }}>
-            <div
-              style={{
-                fontSize: 13,
-                color: c.textSub,
-                marginBottom: 8,
-                fontWeight: 500,
-              }}
-            >
-              한줄 요약
-            </div>
+            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>한줄 요약</div>
             <input
               value={summary}
               onChange={(e) => setSummary(e.target.value)}
               placeholder="작품을 한 줄로 소개해주세요"
               style={{
-                width: "100%",
-                background: c.bgSurface,
-                border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md,
-                padding: "11px 14px",
-                color: c.text,
-                fontSize: 13,
-                outline: "none",
-                boxSizing: "border-box",
+                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
+                borderRadius: theme.radius.md, padding: "11px 14px",
+                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box",
               }}
             />
           </div>
 
+          {/* 줄거리 */}
           <div style={{ marginBottom: 20 }}>
-            <div
-              style={{
-                fontSize: 13,
-                color: c.textSub,
-                marginBottom: 8,
-                fontWeight: 500,
-              }}
-            >
-              줄거리
-            </div>
+            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>줄거리</div>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="작품 줄거리를 입력해주세요"
               rows={4}
               style={{
-                width: "100%",
-                background: c.bgSurface,
-                border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md,
-                padding: "11px 14px",
-                color: c.text,
-                fontSize: 13,
-                outline: "none",
-                boxSizing: "border-box",
-                resize: "vertical",
+                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
+                borderRadius: theme.radius.md, padding: "11px 14px",
+                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical",
               }}
             />
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          {/* 대표 이미지 */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>대표 이미지</div>
             <div
               style={{
-                fontSize: 13,
-                color: c.textSub,
-                marginBottom: 8,
-                fontWeight: 500,
-              }}
-            >
-              대표 이미지
-            </div>
-            <div
-              style={{
-                width: "100%",
-                height: 120,
-                background: c.bgSurface,
-                border: `2px dashed ${c.border}`,
-                borderRadius: theme.radius.md,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
+                width: "100%", height: 120, background: c.bgSurface,
+                border: `2px dashed ${c.border}`, borderRadius: theme.radius.md,
+                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
               }}
             >
               <input
@@ -274,45 +182,75 @@ export default function ContentRegisterPage() {
                 onChange={(e) => setFile(e.target.files[0])}
                 style={{ fontSize: 13, color: c.textMuted }}
               />
-              <span style={{ fontSize: 13, color: c.textMuted, marginLeft: 8 }}>
-                + 이미지 업로드
-              </span>
+              <span style={{ fontSize: 13, color: c.textMuted, marginLeft: 8 }}>+ 이미지 업로드</span>
             </div>
+            {file && (
+              <div style={{ fontSize: 12, color: c.primary, marginTop: 6 }}>
+                ✓ {file.name}
+              </div>
+            )}
           </div>
 
+          {/* 홍보 영상 URL */}
+          <div style={{ marginBottom: 28 }}>
+            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>
+              홍보 영상 URL <span style={{ fontSize: 11, color: c.textMuted, fontWeight: 400 }}>(선택)</span>
+            </div>
+            <input
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              placeholder="https://media.giphy.com/... 또는 영상 URL 입력"
+              style={{
+                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
+                borderRadius: theme.radius.md, padding: "11px 14px",
+                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box",
+              }}
+            />
+            {/* 미리보기 */}
+            {videoUrl && (
+              <div style={{ marginTop: 12, borderRadius: theme.radius.md, overflow: "hidden", border: `1px solid ${c.border}` }}>
+                {videoUrl.includes("giphy.com") ? (
+                  <img
+                    src={videoUrl}
+                    alt="홍보 영상 미리보기"
+                    style={{ width: "100%", maxHeight: 200, objectFit: "cover", display: "block" }}
+                  />
+                ) : (
+                  <video
+                    src={videoUrl}
+                    autoPlay
+                    loop
+                    muted
+                    style={{ width: "100%", maxHeight: 200, objectFit: "cover", display: "block" }}
+                  />
+                )}
+                <div style={{ fontSize: 11, color: c.textMuted, padding: "6px 10px", background: c.bgSurface }}>
+                  미리보기
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 버튼 */}
           <div style={{ display: "flex", gap: 10 }}>
             <button
               onClick={() => navigate("/author/contents")}
               style={{
-                flex: 1,
-                padding: 12,
-                background: c.bgWhite,
-                border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md,
-                color: c.textSub,
-                fontSize: 14,
-                cursor: "pointer",
+                flex: 1, padding: 12, background: c.bgWhite,
+                border: `1px solid ${c.border}`, borderRadius: theme.radius.md,
+                color: c.textSub, fontSize: 14, cursor: "pointer",
               }}
-            >
-              취소
-            </button>
+            >취소</button>
             <button
               onClick={handleContentRegister}
               style={{
-                flex: 2,
-                padding: 12,
-                background: c.primary,
-                border: "none",
-                borderRadius: theme.radius.md,
-                color: "#fff",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
+                flex: 2, padding: 12, background: c.primary,
+                border: "none", borderRadius: theme.radius.md,
+                color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
               }}
-            >
-              등록하기
-            </button>
+            >등록하기</button>
           </div>
+
         </div>
       </div>
     </div>
