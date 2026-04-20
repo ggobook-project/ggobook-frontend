@@ -70,6 +70,7 @@ export default function NovelPage() {
   const observerRef = useRef(null);
   const popularSwiperRef = useRef(null);
   const newSwiperRef = useRef(null);
+  const [query, setQuery] = useState("");
 
   // 히어로 자동 슬라이드
   useEffect(() => {

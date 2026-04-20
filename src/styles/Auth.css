@@ -1,0 +1,60 @@
+/* 메인 제출 버튼 (가입하기, 로그인) */
+.auth-btn-submit {
+  width: 100%;
+  padding: 12px;
+  background: #2196F3; /* primary */
+  border: none;
+  border-radius: 10px; /* md */
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 14px;
+  transition: background 0.2s, transform 0.1s;
+}
+.auth-btn-submit:hover { background: #1565C0; /* primaryDark */ }
+.auth-btn-submit:active { transform: scale(0.98); }
+
+/* 링크 텍스트 */
+.auth-link-text {
+  font-size: 13px;
+  color: #90A4C8; /* textMuted */
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.auth-link-text:hover { color: #2196F3; /* primary */ }
+
+/* 중복확인 등 작은 버튼 (기본) */
+.auth-btn-small {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, color 0.2s;
+  background: #E8F4FD; /* bgSurface */
+  border: 1px solid #BBDEFB; /* border */
+  color: #4A6FA5; /* textSub */
+}
+.auth-btn-small:not(:disabled):hover { background: #dbeafe; }
+
+/* 작은 버튼 (활성화/확인됨 상태) */
+.auth-btn-small.active {
+  background: #2196F3;
+  border-color: #2196F3;
+  color: #fff;
+}
+.auth-btn-small.active:hover { background: #2196F3; /* 활성 상태에선 호버 효과 고정 */ }
+
+/* 소셜 버튼 뼈대 및 브랜드 컬러 */
+.social-btn-base {
+  width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-kakao { background-color: #FEE500; }
+.btn-kakao:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(254, 229, 0, 0.5); }
+.btn-naver { background-color: #03C75A; }
+.btn-naver:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(3, 199, 90, 0.5); }
+.btn-google { background-color: #ffffff; border: 1px solid #e0e0e0; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1); }
+.btn-google:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
