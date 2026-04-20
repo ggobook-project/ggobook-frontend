@@ -1,5 +1,5 @@
-import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useEffect, useState } from "react"
 import theme from "../styles/theme"
 const { colors: c } = theme
 
@@ -13,10 +13,38 @@ export default function ContentDetailPage() {
   const [tab, setTab] = useState("회차목록")
   const [liked, setLiked] = useState(false)
   const [comment, setComment] = useState("")
+  const { contentId } = useParams();
+  const [content, setContent] = useState({});
+  
   const comments = [
     { user: "독자1", text: "정말 재밌어요! 다음화가 기대됩니다", date: "04.13" },
     { user: "독자2", text: "빨리 다음화 올려주세요", date: "04.12" },
   ]
+
+  const loadContentDetail = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+
+      const response = await fetch("http://localhost:8080/api/contents/" + contentId, {
+        method: "GET",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        alert("백엔드 통신 실패(작품 상세)");
+        return;
+      }const data = await response.json();
+      setContent(data);
+    } catch (error) {
+      console.error("Error fetching content detail:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadContentDetail();
+  }, [contentId]);
 
   return (
     <div style={{ background: c.bg, minHeight: "calc(100vh - 60px)" }}>

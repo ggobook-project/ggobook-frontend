@@ -37,8 +37,13 @@ export default function ContentRegisterPage() {
     formData.append("file", file);
 
     try {
+      const token = localStorage.getItem('accessToken');
+
       const response = await fetch("http://localhost:8080/api/contents/", {
         method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
 
