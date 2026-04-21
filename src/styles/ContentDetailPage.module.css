@@ -1,0 +1,300 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.loading {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loadingText {
+  color: var(--textSub);
+  font-size: 14px;
+}
+
+.inner {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+.heroBanner {
+  height: 200px;
+  background: linear-gradient(135deg, var(--primaryLight) 0%, var(--primarySoft) 100%);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  padding: 24px;
+  gap: 16px;
+}
+
+.thumbnail {
+  width: 80px;
+  height: 104px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+  background: var(--bgWhite);
+}
+
+.thumbnailImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.contentMeta {
+  font-size: 11px;
+  color: var(--textSub);
+  margin-bottom: 6px;
+}
+
+.contentTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.contentStats {
+  font-size: 13px;
+  color: var(--textSub);
+}
+
+.actionSection {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(187, 222, 251, 0.6);
+}
+
+.actionBtns {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--textSub);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.actionBtn:hover {
+  border-color: #2196F3;
+}
+
+.actionBtnLiked {
+  background: var(--bgSurface);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.firstEpBtn {
+  flex: 2;
+  padding: 10px;
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.firstEpBtn:hover {
+  background: var(--primaryDark);
+}
+
+.firstEpBtn:disabled {
+  background: var(--border);
+  cursor: default;
+}
+
+.summary {
+  font-size: 13px;
+  color: var(--textSub);
+  line-height: 1.8;
+  background: var(--bgSurface);
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.tabGroup {
+  display: flex;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(187, 222, 251, 0.6);
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 14px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--textSub);
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 400;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tabBtnActive {
+  border-bottom: 2px solid var(--primary);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.episodeRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(187, 222, 251, 0.3);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.episodeRow:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.epNum {
+  font-size: 12px;
+  color: var(--textMuted);
+  margin-bottom: 3px;
+}
+
+.epTitle {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.epRight {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.badgeFree {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--bgSurface);
+  color: var(--free);
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.badgePaid {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--bgSurface);
+  border: 1px solid var(--border);
+  color: var(--textSub);
+  border-radius: 6px;
+}
+
+.epDate {
+  font-size: 12px;
+  color: var(--textMuted);
+}
+
+.emptyMsg {
+  padding: 32px;
+  text-align: center;
+  color: var(--textMuted);
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.commentSection {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  padding: 20px 24px;
+}
+
+.commentInput {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.input {
+  flex: 1;
+  background: var(--bgSurface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+}
+
+.submitBtn {
+  padding: 10px 20px;
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.submitBtn:hover {
+  background: var(--primaryDark);
+}
+
+.commentItem {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--bgSurface);
+}
+
+.commentHeader {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.commentAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--bgSurface);
+  border: 1px solid var(--border);
+}
+
+.commentUser {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.commentDate {
+  font-size: 12px;
+  color: var(--textMuted);
+}
+
+.commentText {
+  font-size: 14px;
+  color: var(--text);
+  padding-left: 42px;
+}

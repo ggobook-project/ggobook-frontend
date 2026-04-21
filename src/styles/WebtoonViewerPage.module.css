@@ -1,0 +1,108 @@
+.pageWrapper {
+  background: #F0F8FF;
+  min-height: 100vh;
+}
+
+.topBar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #FFFFFF;
+  border-bottom: 1px solid #BBDEFB;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 24px;
+  height: 52px;
+}
+
+.topBtn {
+  background: none;
+  border: none;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.topTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0D1B2A;
+}
+
+.topPage {
+  font-size: 13px;
+  color: #90A4C8;
+}
+
+.content {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.panel {
+  width: 100%;
+  border-bottom: 1px solid #BBDEFB;
+}
+
+.panelEven {
+  background: #E8F4FD;
+}
+
+.panelOdd {
+  background: #FFFFFF;
+}
+
+.bottomBar {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 24px;
+  border-top: 1px solid #BBDEFB;
+  background: #FFFFFF;
+}
+
+.prevBtn {
+  background: #FFFFFF;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 9px 20px;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.prevBtn:hover {
+  background: #E8F4FD;
+}
+
+.listBtn {
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 9px 20px;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.listBtn:hover {
+  background: #BBDEFB;
+}
+
+.nextBtn {
+  background: #2196F3;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 20px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.nextBtn:hover {
+  background: #1565C0;
+}

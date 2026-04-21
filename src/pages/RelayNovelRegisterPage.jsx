@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
-import theme from "../styles/theme"
-const { colors: c } = theme
+import styles from "../styles/RelayNovelRegisterPage.module.css"
 
 export default function RelayNovelRegisterPage() {
   const navigate = useNavigate()
@@ -10,33 +9,27 @@ export default function RelayNovelRegisterPage() {
   const adminTopics = ["사랑에 빠진 두 사람", "마법사의 비밀", "미래 도시의 탐정"]
 
   return (
-    <div style={{ background: c.bg, minHeight: "calc(100vh - 60px)" }}>
-      <div style={{ background: `linear-gradient(135deg, ${c.primarySoft} 0%, ${c.bgWhite} 100%)`, padding: "32px 40px 24px" }}>
-        <div style={{ fontSize: 24, fontWeight: 700, color: c.text, marginBottom: 4 }}>릴레이 소설 등록</div>
-        <div style={{ fontSize: 14, color: c.textSub }}>새로운 릴레이 소설을 시작하세요</div>
+    <div className={styles.pageWrapper}>
+      <div className={styles.header}>
+        <div className={styles.headerTitle}>릴레이 소설 등록</div>
+        <div className={styles.headerSubtitle}>새로운 릴레이 소설을 시작하세요</div>
       </div>
 
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "24px 40px" }}>
-        <div style={{ background: c.bgWhite, borderRadius: theme.radius.lg, border: `1px solid ${c.border}`, padding: 32 }}>
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div style={{ fontSize: 13, color: c.textSub, fontWeight: 500 }}>관리자 주제 사용</div>
-              <button onClick={() => setUseAdminTopic(!useAdminTopic)} style={{
-                padding: "4px 12px", borderRadius: theme.radius.full, fontSize: 12, cursor: "pointer",
-                background: useAdminTopic ? c.primary : c.bgSurface,
-                color: useAdminTopic ? "#fff" : c.textSub,
-                border: `1px solid ${useAdminTopic ? c.primary : c.border}`
-              }}>{useAdminTopic ? "ON" : "OFF"}</button>
+      <div className={styles.content}>
+        <div className={styles.formCard}>
+          <div className={styles.formGroup}>
+            <div className={styles.topicToggleRow}>
+              <div className={styles.label}>관리자 주제 사용</div>
+              <button onClick={() => setUseAdminTopic(!useAdminTopic)} className={`${styles.toggleBtn} ${useAdminTopic ? styles.toggleBtnActive : ""}`}>
+                {useAdminTopic ? "ON" : "OFF"}
+              </button>
             </div>
             {useAdminTopic && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <div className={styles.topicList}>
                 {adminTopics.map(topic => (
-                  <div key={topic} onClick={() => setSelectedTopic(topic)} style={{
-                    padding: "12px 14px", borderRadius: theme.radius.md, cursor: "pointer",
-                    background: selectedTopic === topic ? "#E3F2FD" : c.bgSurface,
-                    border: `1px solid ${selectedTopic === topic ? c.primary : c.border}`,
-                    fontSize: 13, color: selectedTopic === topic ? c.primary : c.text
-                  }}>{topic}</div>
+                  <div key={topic} onClick={() => setSelectedTopic(topic)} className={`${styles.topicItem} ${selectedTopic === topic ? styles.topicItemActive : ""}`}>
+                    {topic}
+                  </div>
                 ))}
               </div>
             )}
@@ -44,22 +37,20 @@ export default function RelayNovelRegisterPage() {
 
           {!useAdminTopic && (
             <>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>제목</div>
-                <input placeholder="릴레이 소설 제목 입력"
-                  style={{ width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`, borderRadius: theme.radius.md, padding: "11px 14px", color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box" }} />
+              <div className={styles.formGroup}>
+                <div className={styles.label}>제목</div>
+                <input placeholder="릴레이 소설 제목 입력" className={styles.input} />
               </div>
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>시작 내용</div>
-                <textarea placeholder="이야기의 시작을 써주세요..." rows={5}
-                  style={{ width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`, borderRadius: theme.radius.md, padding: "11px 14px", color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical" }} />
+              <div className={styles.formGroup}>
+                <div className={styles.label}>시작 내용</div>
+                <textarea placeholder="이야기의 시작을 써주세요..." rows={5} className={styles.textarea} />
               </div>
             </>
           )}
 
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => navigate("/relay")} style={{ flex: 1, padding: 12, background: c.bgWhite, border: `1px solid ${c.border}`, borderRadius: theme.radius.md, color: c.textSub, fontSize: 14, cursor: "pointer" }}>취소</button>
-            <button style={{ flex: 2, padding: 12, background: c.primary, border: "none", borderRadius: theme.radius.md, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>등록하기</button>
+          <div className={styles.btnGroup}>
+            <button className={styles.cancelBtn} onClick={() => navigate("/relay")}>취소</button>
+            <button className={styles.submitBtn}>등록하기</button>
           </div>
         </div>
       </div>

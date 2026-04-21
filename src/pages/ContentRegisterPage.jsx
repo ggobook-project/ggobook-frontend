@@ -1,258 +1,108 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-import theme from "../styles/theme";
-const { colors: c } = theme;
+import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import styles from "../styles/ContentRegisterPage.module.css"
 
 export default function ContentRegisterPage() {
-  const navigate = useNavigate();
-  const [type, setType] = useState("웹툰");
-  const [title, setTitle] = useState("");
-  const [genre, setGenre] = useState("");
-  const [summary, setSummary] = useState("");
-  const [description, setDescription] = useState("");
-  const [file, setFile] = useState(null);
-  const [videoUrl, setVideoUrl] = useState("");
+  const navigate = useNavigate()
+  const [type, setType] = useState("웹툰")
+  const [title, setTitle] = useState("")
+  const [genre, setGenre] = useState("")
+  const [summary, setSummary] = useState("")
+  const [description, setDescription] = useState("")
+  const [file, setFile] = useState(null)
+  const [videoUrl, setVideoUrl] = useState("")
 
-  const genres = ["로맨스", "판타지", "무협", "현대", "스릴러", "BL", "액션"];
+  const genres = ["로맨스", "판타지", "무협", "현대", "스릴러", "BL", "액션"]
 
   const handleContentRegister = async () => {
     if (!title || !genre || !file) {
-      alert("작품명, 장르, 대표 이미지는 필수입니다.");
-      return;
+      alert("작품명, 장르, 대표 이미지는 필수입니다.")
+      return
     }
-
-    const userContent = {
-      title,
-      type,
-      genre,
-      summary,
-      description,
-      videoUrl,
-    };
-
-    const formData = new FormData();
-    formData.append(
-      "content",
-      new Blob([JSON.stringify(userContent)], { type: "application/json" }),
-    );
-    formData.append("file", file);
-
+    const userContent = { title, type, genre, summary, description, videoUrl }
+    const formData = new FormData()
+    formData.append("content", new Blob([JSON.stringify(userContent)], { type: "application/json" }))
+    formData.append("file", file)
     try {
-      const token = localStorage.getItem('accessToken');
-
+      const token = localStorage.getItem('accessToken')
       const response = await fetch("http://localhost:8080/api/contents/", {
-        method: "POST",
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert("작품 등록 성공");
-        navigate("/author/contents");
-      } else {
-        alert("백엔드 통신 실패");
-      }
-    } catch (error) {
-      alert("에러 발생 : ", error);
-    }
-  };
+        method: "POST", headers: { 'Authorization': `Bearer ${token}` }, body: formData
+      })
+      if (response.ok) { alert("작품 등록 성공"); navigate("/author/contents") }
+      else alert("백엔드 통신 실패")
+    } catch (error) { alert("에러 발생 : ", error) }
+  }
 
   return (
-    <div style={{ background: c.bg, minHeight: "calc(100vh - 60px)" }}>
-      <div
-        style={{
-          background: `linear-gradient(135deg, ${c.primarySoft} 0%, ${c.bgWhite} 100%)`,
-          padding: "32px 40px 24px",
-        }}
-      >
-        <div style={{ fontSize: 24, fontWeight: 700, color: c.text, marginBottom: 4 }}>작품 등록</div>
-        <div style={{ fontSize: 14, color: c.textSub }}>새 작품을 등록하세요</div>
+    <div className={styles.pageWrapper}>
+      <div className={styles.header}>
+        <div className={styles.headerTitle}>작품 등록</div>
+        <div className={styles.headerSubtitle}>새 작품을 등록하세요</div>
       </div>
 
-      <div style={{ maxWidth: 700, margin: "0 auto", padding: "24px 40px" }}>
-        <div
-          style={{
-            background: c.bgWhite,
-            borderRadius: theme.radius.lg,
-            border: `1px solid ${c.border}`,
-            padding: 32,
-          }}
-        >
-          {/* 작품 유형 */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>작품 유형</div>
-            <div style={{ display: "flex", gap: 10 }}>
-              {["웹툰", "웹소설"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setType(t)}
-                  style={{
-                    flex: 1, padding: 12, borderRadius: theme.radius.md,
-                    fontSize: 14, cursor: "pointer",
-                    background: type === t ? c.primary : c.bgSurface,
-                    color: type === t ? "#fff" : c.textSub,
-                    border: `1px solid ${type === t ? c.primary : c.border}`,
-                    fontWeight: type === t ? 500 : 400,
-                  }}
-                >{t}</button>
+      <div className={styles.content}>
+        <div className={styles.formCard}>
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>작품 유형</div>
+            <div className={styles.typeGroup}>
+              {["웹툰", "웹소설"].map(t => (
+                <button key={t} onClick={() => setType(t)} className={`${styles.typeBtn} ${type === t ? styles.typeBtnActive : ""}`}>{t}</button>
               ))}
             </div>
           </div>
 
-          {/* 작품명 */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>작품명</div>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="작품명 입력"
-              style={{
-                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md, padding: "11px 14px",
-                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box",
-              }}
-            />
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>작품명</div>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="작품명 입력" className={styles.input} />
           </div>
 
-          {/* 장르 */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>장르</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {genres.map((g) => (
-                <button
-                  key={g}
-                  onClick={() => setGenre(g)}
-                  style={{
-                    padding: "6px 14px", borderRadius: theme.radius.full,
-                    fontSize: 12, cursor: "pointer",
-                    background: genre === g ? c.primary : c.bgSurface,
-                    color: genre === g ? "#fff" : c.textSub,
-                    border: `1px solid ${genre === g ? c.primary : c.border}`,
-                  }}
-                >{g}</button>
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>장르</div>
+            <div className={styles.genreGroup}>
+              {genres.map(g => (
+                <button key={g} onClick={() => setGenre(g)} className={`${styles.genreBtn} ${genre === g ? styles.genreBtnActive : ""}`}>{g}</button>
               ))}
             </div>
           </div>
 
-          {/* 한줄 요약 */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>한줄 요약</div>
-            <input
-              value={summary}
-              onChange={(e) => setSummary(e.target.value)}
-              placeholder="작품을 한 줄로 소개해주세요"
-              style={{
-                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md, padding: "11px 14px",
-                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box",
-              }}
-            />
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>한줄 요약</div>
+            <input value={summary} onChange={e => setSummary(e.target.value)} placeholder="작품을 한 줄로 소개해주세요" className={styles.input} />
           </div>
 
-          {/* 줄거리 */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>줄거리</div>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="작품 줄거리를 입력해주세요"
-              rows={4}
-              style={{
-                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md, padding: "11px 14px",
-                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box", resize: "vertical",
-              }}
-            />
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>줄거리</div>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="작품 줄거리를 입력해주세요" rows={4} className={styles.textarea} />
           </div>
 
-          {/* 대표 이미지 */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>대표 이미지</div>
-            <div
-              style={{
-                width: "100%", height: 120, background: c.bgSurface,
-                border: `2px dashed ${c.border}`, borderRadius: theme.radius.md,
-                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-              }}
-            >
-              <input
-                type="file"
-                onChange={(e) => setFile(e.target.files[0])}
-                style={{ fontSize: 13, color: c.textMuted }}
-              />
-              <span style={{ fontSize: 13, color: c.textMuted, marginLeft: 8 }}>+ 이미지 업로드</span>
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>대표 이미지</div>
+            <div className={styles.fileUpload}>
+              <input type="file" onChange={e => setFile(e.target.files[0])} className={styles.fileInput} />
+              <span className={styles.fileLabel}>+ 이미지 업로드</span>
             </div>
-            {file && (
-              <div style={{ fontSize: 12, color: c.primary, marginTop: 6 }}>
-                ✓ {file.name}
-              </div>
-            )}
+            {file && <div className={styles.fileName}>✓ {file.name}</div>}
           </div>
 
-          {/* 홍보 영상 URL */}
-          <div style={{ marginBottom: 28 }}>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 8, fontWeight: 500 }}>
-              홍보 영상 URL <span style={{ fontSize: 11, color: c.textMuted, fontWeight: 400 }}>(선택)</span>
-            </div>
-            <input
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              placeholder="https://media.giphy.com/... 또는 영상 URL 입력"
-              style={{
-                width: "100%", background: c.bgSurface, border: `1px solid ${c.border}`,
-                borderRadius: theme.radius.md, padding: "11px 14px",
-                color: c.text, fontSize: 13, outline: "none", boxSizing: "border-box",
-              }}
-            />
-            {/* 미리보기 */}
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>홍보 영상 URL <span className={styles.optional}>(선택)</span></div>
+            <input value={videoUrl} onChange={e => setVideoUrl(e.target.value)} placeholder="https://media.giphy.com/... 또는 영상 URL 입력" className={styles.input} />
             {videoUrl && (
-              <div style={{ marginTop: 12, borderRadius: theme.radius.md, overflow: "hidden", border: `1px solid ${c.border}` }}>
-                {videoUrl.includes("giphy.com") ? (
-                  <img
-                    src={videoUrl}
-                    alt="홍보 영상 미리보기"
-                    style={{ width: "100%", maxHeight: 200, objectFit: "cover", display: "block" }}
-                  />
-                ) : (
-                  <video
-                    src={videoUrl}
-                    autoPlay
-                    loop
-                    muted
-                    style={{ width: "100%", maxHeight: 200, objectFit: "cover", display: "block" }}
-                  />
-                )}
-                <div style={{ fontSize: 11, color: c.textMuted, padding: "6px 10px", background: c.bgSurface }}>
-                  미리보기
-                </div>
+              <div className={styles.preview}>
+                {videoUrl.includes("giphy.com")
+                  ? <img src={videoUrl} alt="미리보기" className={styles.previewMedia} />
+                  : <video src={videoUrl} autoPlay loop muted className={styles.previewMedia} />}
+                <div className={styles.previewLabel}>미리보기</div>
               </div>
             )}
           </div>
 
-          {/* 버튼 */}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              onClick={() => navigate("/author/contents")}
-              style={{
-                flex: 1, padding: 12, background: c.bgWhite,
-                border: `1px solid ${c.border}`, borderRadius: theme.radius.md,
-                color: c.textSub, fontSize: 14, cursor: "pointer",
-              }}
-            >취소</button>
-            <button
-              onClick={handleContentRegister}
-              style={{
-                flex: 2, padding: 12, background: c.primary,
-                border: "none", borderRadius: theme.radius.md,
-                color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
-              }}
-            >등록하기</button>
+          <div className={styles.btnGroup}>
+            <button className={styles.cancelBtn} onClick={() => navigate("/author/contents")}>취소</button>
+            <button className={styles.submitBtn} onClick={handleContentRegister}>등록하기</button>
           </div>
-
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,0 +1,159 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
+  padding: 32px 40px 24px;
+}
+
+.headerTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0D1B2A;
+  margin-bottom: 4px;
+}
+
+.pointDisplay {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.pointValue {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2196F3;
+}
+
+.pointLabel {
+  font-size: 16px;
+  color: #4A6FA5;
+}
+
+.content {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+
+.tabGroup {
+  display: flex;
+  border-bottom: 1px solid #BBDEFB;
+  margin-bottom: 24px;
+}
+
+.tabBtn {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #4A6FA5;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 400;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tabBtnActive {
+  border-bottom: 2px solid #2196F3;
+  color: #2196F3;
+  font-weight: 600;
+}
+
+.packageGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.packageCard {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.packageCard:hover {
+  border-color: #2196F3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+}
+
+.packagePoint {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2196F3;
+  margin-bottom: 4px;
+}
+
+.packagePrice {
+  font-size: 14px;
+  color: #4A6FA5;
+  margin-bottom: 14px;
+}
+
+.chargeBtn {
+  width: 100%;
+  padding: 8px;
+  background: #2196F3;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.chargeBtn:hover {
+  background: #1565C0;
+}
+
+.historyItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.historyItem:hover {
+  border-color: #2196F3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+}
+
+.historyDesc {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0D1B2A;
+  margin-bottom: 3px;
+}
+
+.historyDate {
+  font-size: 12px;
+  color: #90A4C8;
+}
+
+.historyAmount {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.amountPlus {
+  color: #2196F3;
+}
+
+.amountMinus {
+  color: #E53935;
+}

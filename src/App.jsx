@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
+import wave from "./assets/wave.png"
 import MainPage from "./pages/MainPage"
 import WebtoonPage from "./pages/WebtoonPage"
 import NovelPage from "./pages/NovelPage"
@@ -54,10 +55,29 @@ function Layout() {
   const showFooter = !hideFooter.includes(location.pathname)
 
   return (
-    <div style={{ fontFamily: "'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div style={{ fontFamily: "'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif", minHeight: "100vh", display: "flex", flexDirection: "column", background: "transparent" }}>
       <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet" />
+
+      {/* wave.png 배경 */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: `url(${wave})`,
+        backgroundSize: "cover", backgroundPosition: "center",
+        opacity: 0.10, zIndex: 0, pointerEvents: "none",
+      }} />
+
+      {/* SVG 파도 배경 */}
+      <div style={{
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 560'%3E%3Cpath fill='%2390CAF9' fill-opacity='0.12' d='M0,280L60,261.3C120,243,240,205,360,197.3C480,189,600,211,720,229.3C840,248,960,261,1080,250.7C1200,240,1320,205,1380,187.3L1440,170L1440,560L1380,560C1320,560,1200,560,1080,560C960,560,840,560,720,560C600,560,480,560,360,560C240,560,120,560,60,560L0,560Z'%3E%3C/path%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 560'%3E%3Cpath fill='%232196F3' fill-opacity='0.07' d='M0,350L60,336C120,322,240,294,360,282.7C480,272,600,277,720,298.7C840,320,960,357,1080,357.3C1200,357,1320,320,1380,301.3L1440,283L1440,560L1380,560C1320,560,1200,560,1080,560C960,560,840,560,720,560C600,560,480,560,360,560C240,560,120,560,60,560L0,560Z'%3E%3C/path%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 560'%3E%3Cpath fill='%23BBDEFB' fill-opacity='0.15' d='M0,420L60,405.3C120,391,240,362,360,346.7C480,331,600,330,720,346.7C840,363,960,397,1080,400C1200,403,1320,374,1380,359.3L1440,344L1440,560L1380,560C1320,560,1200,560,1080,560C960,560,840,560,720,560C600,560,480,560,360,560C240,560,120,560,60,560L0,560Z'%3E%3C/path%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "center 40%, center 60%, center 80%",
+        backgroundSize: "200% auto, 200% auto, 200% auto",
+        zIndex: 0, pointerEvents: "none",
+      }} />
+
       {showHeader && <Header />}
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, background: "transparent" }}>
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/webtoon" element={<WebtoonPage />} />
@@ -102,7 +122,11 @@ function Layout() {
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         </Routes>
       </div>
-      {showFooter && <Footer />}
+      {showFooter &&(
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <Footer />
+        </div>
+      )}
     </div>
   )
 }

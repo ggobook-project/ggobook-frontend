@@ -1,0 +1,167 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.header {
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1565C0;
+  margin-bottom: 4px;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: #4A6FA5;
+  margin-bottom: 20px;
+}
+
+.searchWrap {
+  display: flex;
+  justify-content: center;
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 40px;  /* content랑 동일 */
+}
+
+.searchBox {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 10px 16px;
+  width: 100%;  /* searchWrap 꽉 채우기 */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.searchBox:focus-within {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.12);
+}
+
+.searchIcon {
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #0D1B2A;
+  font-size: 13px;
+}
+
+.searchInput::placeholder {
+  color: #90A4C8;
+}
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+
+.memberCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
+}
+
+.memberCard:hover {
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.memberLeft {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #E3F2FD;
+  border: 1px solid #BBDEFB;
+  flex-shrink: 0;
+}
+
+.memberName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0D1B2A;
+  margin-bottom: 3px;
+}
+
+.memberMeta {
+  font-size: 12px;
+  color: #90A4C8;
+}
+
+.memberRight {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.roleBadge {
+  font-size: 11px;
+  padding: 3px 9px;
+  background: #E3F2FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 6px;
+  color: #4A6FA5;
+}
+
+.statusBadge {
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.statusActive {
+  background: #E3F2FD;
+  color: #2196F3;
+}
+
+.statusBanned {
+  background: #FFEBEE;
+  color: #E53935;
+}
+
+.actionBtn {
+  padding: 6px 13px;
+  background: none;
+  border: 1px solid #BBDEFB;
+  border-radius: 8px;
+  color: #4A6FA5;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.actionBtn:hover {
+  background: #E3F2FD;
+  color: #1565C0;
+  border-color: #90CAF9;
+  transform: translateY(-1px);
+}

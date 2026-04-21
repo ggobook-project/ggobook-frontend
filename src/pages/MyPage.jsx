@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom"
-import theme from "../styles/theme"
-const { colors: c } = theme
+import styles from "../styles/MyPage.module.css"
 
 export default function MyPage() {
   const navigate = useNavigate()
+
   const menus = [
     { label: "내 정보 수정", sub: "프로필 및 비밀번호 변경" },
     { label: "찜한 작품", sub: "저장한 작품 목록" },
@@ -15,44 +15,34 @@ export default function MyPage() {
   ]
 
   return (
-    <div style={{ background: c.bg, minHeight: "calc(100vh - 60px)" }}>
-      <div style={{ maxWidth: 600, margin: "0 auto", paddingBottom: 40 }}>
-        <div style={{
-          background: `linear-gradient(135deg, ${c.primarySoft} 0%, ${c.bgWhite} 100%)`,
-          padding: "28px 24px", borderBottom: `1px solid ${c.border}`,
-          display: "flex", gap: 18, alignItems: "center"
-        }}>
-          <div style={{ width: 64, height: 64, borderRadius: "50%", background: c.bgWhite, border: `2px solid ${c.primary}`, flexShrink: 0 }}></div>
+    <div className={styles.pageWrapper}>
+      <div className={styles.inner}>
+        <div className={styles.profile}>
+          <div className={styles.avatar} />
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: c.text, marginBottom: 4 }}>홍길동</div>
-            <div style={{ fontSize: 13, color: c.textSub, marginBottom: 10 }}>example@email.com</div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <span style={{ fontSize: 12, padding: "4px 12px", background: c.bgSurface, color: c.primary, borderRadius: theme.radius.full, fontWeight: 500, border: `1px solid ${c.border}` }}>1,200 P</span>
-              <span style={{ fontSize: 12, padding: "4px 12px", background: c.bgSurface, border: `1px solid ${c.border}`, color: c.textSub, borderRadius: theme.radius.full }}>일반 회원</span>
+            <div className={styles.name}>홍길동</div>
+            <div className={styles.email}>example@email.com</div>
+            <div className={styles.badges}>
+              <span className={styles.pointBadge}>1,200 P</span>
+              <span className={styles.roleBadge}>일반 회원</span>
             </div>
           </div>
         </div>
 
-        <div style={{ background: c.bgWhite }}>
+        <div className={styles.menuList}>
           {menus.map((m, i) => (
-            <div key={i} style={{
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-              padding: "16px 24px", borderBottom: `1px solid ${c.bgSurface}`, cursor: "pointer"
-            }}
-              onMouseEnter={e => e.currentTarget.style.background = c.bgSurface}
-              onMouseLeave={e => e.currentTarget.style.background = c.bgWhite}
-            >
+            <div key={i} className={styles.menuItem}>
               <div>
-                <div style={{ fontSize: 14, color: c.text, marginBottom: 2 }}>{m.label}</div>
-                <div style={{ fontSize: 12, color: c.textMuted }}>{m.sub}</div>
+                <div className={styles.menuLabel}>{m.label}</div>
+                <div className={styles.menuSub}>{m.sub}</div>
               </div>
-              <span style={{ color: c.textMuted, fontSize: 18 }}>›</span>
+              <span className={styles.menuArrow}>›</span>
             </div>
           ))}
         </div>
 
-        <div style={{ padding: "16px 24px" }}>
-          <button onClick={() => navigate("/login")} style={{ width: "100%", padding: 12, background: c.bgWhite, border: `1px solid ${c.border}`, borderRadius: theme.radius.md, color: c.textSub, fontSize: 13, cursor: "pointer" }}>로그아웃</button>
+        <div className={styles.logoutWrap}>
+          <button className={styles.logoutBtn} onClick={() => navigate("/login")}>로그아웃</button>
         </div>
       </div>
     </div>

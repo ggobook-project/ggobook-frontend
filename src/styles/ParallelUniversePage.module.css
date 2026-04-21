@@ -1,0 +1,137 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
+  padding: 32px 40px 24px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.headerTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0D1B2A;
+  margin-bottom: 4px;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: #4A6FA5;
+}
+
+.content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 14px;
+  padding: 28px;
+  margin-bottom: 20px;
+}
+
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0D1B2A;
+  margin-bottom: 6px;
+}
+
+.currentEp {
+  font-size: 13px;
+  color: #4A6FA5;
+  padding: 12px 14px;
+  background: var(--bgSurface);
+  border-radius: 10px;
+}
+
+.scenarioList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.scenarioItem {
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  background: var(--bgSurface);
+  color: #0D1B2A;
+  border: 1px solid #BBDEFB;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.scenarioItemActive {
+  background: #E3F2FD;
+  color: #2196F3;
+  border-color: #2196F3;
+}
+
+.textarea {
+  width: 100%;
+  background: var(--bgSurface);
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #0D1B2A;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  resize: none;
+}
+
+.generateBtn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: #2196F3;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.generateBtn:hover {
+  background: #1565C0;
+}
+
+.resultCard {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid #2196F3;
+  border-radius: 14px;
+  padding: 28px;
+}
+
+.resultTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2196F3;
+  margin-bottom: 14px;
+}
+
+.resultText {
+  font-size: 14px;
+  color: #0D1B2A;
+  line-height: 1.9;
+}
