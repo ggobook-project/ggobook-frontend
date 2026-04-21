@@ -1,0 +1,119 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.inner {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+
+.profile {
+  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
+  padding: 28px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+.avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--bgWhite);
+  border: 2px solid var(--primary);
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.email {
+  font-size: 13px;
+  color: var(--textSub);
+  margin-bottom: 10px;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+}
+
+.pointBadge {
+  font-size: 12px;
+  padding: 4px 12px;
+  background: var(--bgSurface);
+  color: var(--primary);
+  border-radius: 999px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+}
+
+.roleBadge {
+  font-size: 12px;
+  padding: 4px 12px;
+  background: var(--bgSurface);
+  border: 1px solid var(--border);
+  color: var(--textSub);
+  border-radius: 999px;
+}
+
+.menuList {
+  background: #FFFFFF;
+}
+
+.menuItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #E8F4FD;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menuItem:hover {
+  background: #E8F4FD;
+}
+
+.menuLabel {
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.menuSub {
+  font-size: 12px;
+  color: var(--textMuted);
+}
+
+.menuArrow {
+  color: var(--textMuted);
+  font-size: 18px;
+}
+
+.logoutWrap {
+  padding: 16px 24px;
+}
+
+.logoutBtn {
+  width: 100%;
+  padding: 12px;
+  background: #FFFFFF;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  color: var(--textSub);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logoutBtn:hover {
+  background: var(--bgSurface);
+}

@@ -1,0 +1,80 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
+  padding: 32px 40px 24px;
+}
+
+.headerTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0D1B2A;
+  margin-bottom: 4px;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: #4A6FA5;
+}
+
+.content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+
+.noticeItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.noticeItem:hover {
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+}
+
+.noticePinned {
+  background: #E3F2FD;
+  border-color: #2196F3;
+}
+
+.noticeLeft {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.pinnedBadge {
+  font-size: 11px;
+  padding: 2px 7px;
+  background: #2196F3;
+  color: #fff;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.noticeTitle {
+  font-size: 14px;
+  color: #0D1B2A;
+  font-weight: 400;
+}
+
+.noticeTitlePinned {
+  font-weight: 600;
+}
+
+.noticeDate {
+  font-size: 12px;
+  color: #90A4C8;
+}

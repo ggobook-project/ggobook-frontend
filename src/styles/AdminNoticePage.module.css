@@ -1,0 +1,221 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.header {
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1565C0;
+  margin-bottom: 4px;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: #4A6FA5;
+}
+
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+
+.contentHeader {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.registerBtn {
+  padding: 9px 20px;
+  background: #2196F3;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.registerBtn:hover {
+  background: #1565C0;
+  transform: translateY(-1px);
+}
+
+.form {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid #BBDEFB;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.formGroup {
+  margin-bottom: 14px;
+}
+
+.formLabel {
+  font-size: 12px;
+  color: #4A6FA5;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.formInput {
+  width: 100%;
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #0D1B2A;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.formInput:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.formTextarea {
+  width: 100%;
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #0D1B2A;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.formTextarea:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.formActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cancelBtn {
+  flex: 1;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.cancelBtn:hover {
+  background: #E3F2FD;
+  border-color: #90CAF9;
+}
+
+.submitBtn {
+  flex: 2;
+  padding: 10px;
+  background: #2196F3;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.submitBtn:hover {
+  background: #1565C0;
+  transform: translateY(-1px);
+}
+
+.noticeCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
+}
+
+.noticeCard:hover {
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.noticeTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0D1B2A;
+  margin-bottom: 3px;
+}
+
+.noticeDate {
+  font-size: 12px;
+  color: #90A4C8;
+}
+
+.noticeActions {
+  display: flex;
+  gap: 8px;
+}
+
+.editBtn {
+  padding: 6px 13px;
+  background: none;
+  border: 1px solid #BBDEFB;
+  border-radius: 8px;
+  color: #4A6FA5;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.editBtn:hover {
+  background: #E3F2FD;
+  color: #1565C0;
+  border-color: #90CAF9;
+  transform: translateY(-1px);
+}
+
+.deleteBtn {
+  padding: 6px 13px;
+  background: none;
+  border: 1px solid #E53935;
+  border-radius: 8px;
+  color: #E53935;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.deleteBtn:hover {
+  background: #E53935;
+  color: #fff;
+  transform: translateY(-1px);
+}

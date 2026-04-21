@@ -1,0 +1,133 @@
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
+}
+
+.header {
+  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
+  padding: 32px 40px 24px;
+}
+
+.headerTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: var(--textSub);
+}
+
+.content {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.filterBtn {
+  padding: 7px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--textSub);
+  border: 1px solid var(--border);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.filterBtn:hover {
+  background: var(--primarySoft);
+}
+
+.filterBtnActive {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.categoryBtn {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--textSub);
+  border: 1px solid var(--border);
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.categoryBtnActive {
+  background: var(--bgSurface);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.rankCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.rankCard:hover {
+  border-color: #2196F3;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+}
+
+.rank {
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--textMuted);
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.rankTop {
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.thumbnail {
+  width: 48px;
+  height: 62px;
+  background: var(--bgSurface);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.info {
+  flex: 1;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0D1B2A;
+  margin-bottom: 4px;
+}
+
+.meta {
+  font-size: 12px;
+  color: #4A6FA5;
+}
+.likes {
+  font-size: 13px;
+  color: #4A6FA5;
+}
