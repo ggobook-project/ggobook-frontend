@@ -43,6 +43,8 @@ import AdminTTSPage from "./pages/AdminTTSPage"
 import NotFoundPage from "./pages/NotFoundPage"
 import { useLocation } from "react-router-dom"
 
+import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler";
+
 const hideHeader = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password"]
 const hideFooter = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password", "/ai/chatbot"]
 
@@ -97,6 +99,7 @@ function Layout() {
           <Route path="/admin/relays" element={<AdminRelayPage />} />
           <Route path="/admin/tts" element={<AdminTTSPage />} />
           <Route path="*" element={<NotFoundPage />} />
+          <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         </Routes>
       </div>
       {showFooter && <Footer />}
