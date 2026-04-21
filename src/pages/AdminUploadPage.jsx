@@ -4,11 +4,21 @@ import axios from "axios"
 import theme from "../styles/theme"
 const { colors: c } = theme
 
+import styles from "../styles/AdminUploadPage.module.css"
+
 export default function AdminUploadPage() {
   const [items, setItems] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState(null)
+  // const [selectedItem, setSelectedItem] = useState(null)
   const [selectedDate, setSelectedDate] = useState("")
+
+    const navigate = useNavigate()
+
+  // const items = Array.from({ length: 5 }, (_, i) => ({
+  //   id: i + 1, contentTitle: `작품 제목 ${i + 1}`, episodeNum: `${i + 1}화`,
+  //   type: i % 2 === 0 ? "웹툰" : "웹소설",
+  //   status: i % 3 === 0 ? "비공개" : "공개", date: "2026.04.13"
+  // }))
 
   // 명세서 반영: loadUploadList()
   const loadUploadList = async () => {
@@ -39,22 +49,27 @@ export default function AdminUploadPage() {
   }
 
   return (
-    <div style={{ background: c.bg, minHeight: "calc(100vh - 60px)" }}>
-      <div style={{ background: `linear-gradient(135deg, ${c.primarySoft} 0%, ${c.bgWhite} 100%)`, padding: "28px 40px 22px" }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: c.text }}>업로드 관리</div>
+    <div className={styles.pageWrapper}>
+      <div className={styles.header}>
+        <div className={styles.headerTitle}>업로드 관리</div>
+        <div className={styles.headerSubtitle}>회차 공개/비공개를 관리하세요</div>
       </div>
-      <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 40px" }}>
+      <div className={styles.content}>
         {items.map(item => (
-          <div key={item.episodeId} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 16, background: c.bgWhite, borderRadius: theme.radius.md, border: `1px solid ${c.border}`, marginBottom: 10 }}>
+          <div
+            key={item.id}
+            className={styles.itemCard}
+            onClick={() => navigate(`/admin/uploads/${item.id}`)}
+          >
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600 }}>{item.contentTitle} · {item.episodeNum}화</div>
-              <div style={{ fontSize: 12, color: c.textMuted }}>예약일: {item.scheduledAt || "미정"}</div>
+              <div className={styles.itemTitle}>{item.contentTitle} · {item.episodeNum}</div>
+              <div className={styles.itemMeta}>{item.type} · {item.date}</div>
             </div>
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => handleToggleVisibility(item.episodeId, item.status)}>{item.status}</button>
-              <button disabled={!!item.scheduledAt} onClick={() => { setSelectedItem(item); setIsModalOpen(true); }}>
-                {item.scheduledAt ? "예약 완료" : "예약"}
-              </button>
+            <div className={styles.itemRight} onClick={e => e.stopPropagation()}>
+              <span className={`${styles.statusBadge} ${item.status === "공개" ? styles.statusPublic : styles.statusPrivate}`}>
+                {item.status}
+              </span>
+              <button className={styles.changeBtn}>변경</button>
             </div>
           </div>
         ))}

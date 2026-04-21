@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState } from "react" //
 import { useNavigate, useLocation } from "react-router-dom"
 import theme from "../styles/theme"
 const { colors: c } = theme
@@ -9,6 +9,24 @@ export default function Header() {
   const currentPath = location.pathname
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState("")
+
+  // =========================================================================
+  // 🌟 [가장 완벽한 백엔드 연동] 상태(State) 없이 바로 로컬스토리지 확인!
+  // =========================================================================
+  // 페이지가 바뀔 때마다 무조건 여기를 다시 읽기 때문에 에러가 날 수가 없습니다.
+  const isLoggedIn = !!localStorage.getItem("accessToken");
+
+  // 로그아웃 처리 함수
+  const handleLogout = () => {
+    if (window.confirm("로그아웃 하시겠습니까?")) {
+      localStorage.removeItem("accessToken"); // 토큰 파기
+      alert("성공적으로 로그아웃 되었습니다.");
+      
+      // 🌟 핵심: 로그아웃 후 브라우저를 깔끔하게 한 번 새로고침해서 잔존 메모리까지 날려줍니다.
+      window.location.reload(); 
+    }
+  }
+  // =========================================================================
 
   const menus = [
     { path: "/webtoon", label: "웹툰" },
@@ -42,7 +60,6 @@ export default function Header() {
 
       {/* 가운데 메뉴 or 검색창 */}
       <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
-        {/* 검색창 - searchOpen일 때만 표시 */}
         {searchOpen ? (
           <div style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -51,9 +68,9 @@ export default function Header() {
             width: 280, transition: "all 0.3s"
           }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: c.textMuted, flexShrink: 0 }}>
-  <circle cx="11" cy="11" r="8" />
-  <line x1="21" y1="21" x2="16.65" y2="16.65" />
-</svg>
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             <input
               autoFocus
               value={query}
@@ -100,37 +117,61 @@ export default function Header() {
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         {/* 돋보기 아이콘 */}
         <span onClick={() => setSearchOpen(!searchOpen)} style={{
-  cursor: "pointer", padding: "6px 8px", display: "flex", alignItems: "center",
-  color: searchOpen ? c.primary : c.textSub, transition: "color 0.2s"
-}}
-  onMouseEnter={e => e.currentTarget.style.color = c.primary}
-  onMouseLeave={e => e.currentTarget.style.color = searchOpen ? c.primary : c.textSub}
->
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="11" cy="11" r="8" />
-    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-  </svg>
-</span>
+          cursor: "pointer", padding: "6px 8px", display: "flex", alignItems: "center",
+          color: searchOpen ? c.primary : c.textSub, transition: "color 0.2s"
+        }}
+          onMouseEnter={e => e.currentTarget.style.color = c.primary}
+          onMouseLeave={e => e.currentTarget.style.color = searchOpen ? c.primary : c.textSub}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+        </span>
 
         <span style={{ fontSize: 13, color: c.textMuted }}>|</span>
 
-        <span onClick={() => navigate("/login")} style={{
-          fontSize: 13, color: c.textSub, cursor: "pointer",
-          padding: "6px 12px", transition: "color 0.2s"
-        }}
-          onMouseEnter={e => e.currentTarget.style.color = c.primary}
-          onMouseLeave={e => e.currentTarget.style.color = c.textSub}
-        >로그인</span>
+        {isLoggedIn ? (
+          <>
+            <span onClick={handleLogout} style={{
+              fontSize: 13, color: c.textSub, cursor: "pointer",
+              padding: "6px 12px", transition: "color 0.2s"
+            }}
+              onMouseEnter={e => e.currentTarget.style.color = c.primary}
+              onMouseLeave={e => e.currentTarget.style.color = c.textSub}
+            >로그아웃</span>
 
-        <span style={{ fontSize: 13, color: c.textMuted }}>|</span>
+            <span style={{ fontSize: 13, color: c.textMuted }}>|</span>
 
-        <span onClick={() => navigate("/mypage")} style={{
-          fontSize: 13, color: c.textSub, cursor: "pointer",
-          padding: "6px 12px", transition: "color 0.2s"
-        }}
-          onMouseEnter={e => e.currentTarget.style.color = c.primary}
-          onMouseLeave={e => e.currentTarget.style.color = c.textSub}
-        >마이페이지</span>
+            <span onClick={() => navigate("/mypage")} style={{
+              fontSize: 13, color: c.textSub, cursor: "pointer",
+              padding: "6px 12px", transition: "color 0.2s"
+            }}
+              onMouseEnter={e => e.currentTarget.style.color = c.primary}
+              onMouseLeave={e => e.currentTarget.style.color = c.textSub}
+            >마이페이지</span>
+          </>
+        ) : (
+          <>
+            <span onClick={() => navigate("/login")} style={{
+              fontSize: 13, color: c.textSub, cursor: "pointer",
+              padding: "6px 12px", transition: "color 0.2s"
+            }}
+              onMouseEnter={e => e.currentTarget.style.color = c.primary}
+              onMouseLeave={e => e.currentTarget.style.color = c.textSub}
+            >로그인</span>
+
+            <span style={{ fontSize: 13, color: c.textMuted }}>|</span>
+
+            <span onClick={() => navigate("/signup")} style={{
+              fontSize: 13, color: c.textSub, cursor: "pointer",
+              padding: "6px 12px", transition: "color 0.2s"
+            }}
+              onMouseEnter={e => e.currentTarget.style.color = c.primary}
+              onMouseLeave={e => e.currentTarget.style.color = c.textSub}
+            >회원가입</span>
+          </>
+        )}
       </div>
     </nav>
   )
