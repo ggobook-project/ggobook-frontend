@@ -4,20 +4,20 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .headerTitle {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--text);
+  color: #1565C0;
   margin-bottom: 4px;
 }
 
 .headerSubtitle {
   font-size: 14px;
-  color: var(--textSub);
+  color: #4A6FA5;
 }
 
 .content {
@@ -26,48 +26,41 @@
   padding: 24px 40px;
 }
 
-.filterGroup {
+.tabGroup {
   display: flex;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 0;
+  margin-bottom: 4px;
+  border-bottom: 1.5px solid #BBDEFB;
 }
 
-.filterBtn {
-  padding: 7px 18px;
-  border-radius: 999px;
+.tabBtn {
+  padding: 8px 20px;
+  border-radius: 0;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--textSub);
-  border: 1px solid var(--border);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  background: transparent;
+  color: #90A4C8;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1.5px;
+  transition: color 0.2s, border-color 0.2s;
 }
 
-.filterBtn:hover {
-  background: var(--primarySoft);
+.tabBtn:hover {
+  color: #2196F3;
+  border-bottom-color: #90CAF9;
 }
 
-.filterBtnActive {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+.tabBtnActive {
+  color: #1565C0;
+  border-bottom-color: #2196F3;
+  font-weight: 600;
 }
 
-.categoryBtn {
-  padding: 6px 16px;
-  border-radius: 999px;
-  font-size: 13px;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--textSub);
-  border: 1px solid var(--border);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.categoryBtnActive {
-  background: var(--bgSurface);
-  color: var(--primary);
-  border-color: var(--primary);
+.tabBtnActive:hover {
+  color: #1565C0;
+  border-bottom-color: #2196F3;
 }
 
 .rankCard {
@@ -81,18 +74,20 @@
   border-radius: 10px;
   margin-bottom: 8px;
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
 }
 
 .rankCard:hover {
-  border-color: #2196F3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .rank {
   font-size: 18px;
   font-weight: 400;
-  color: var(--textMuted);
+  color: #90A4C8;
   width: 28px;
   text-align: center;
   flex-shrink: 0;
@@ -100,15 +95,15 @@
 
 .rankTop {
   font-weight: 700;
-  color: var(--primary);
+  color: #2196F3;
 }
 
 .thumbnail {
   width: 48px;
   height: 62px;
-  background: var(--bgSurface);
+  background: #E8F4FD;
   border-radius: 6px;
-  border: 1px solid var(--border);
+  border: 1px solid #BBDEFB;
   flex-shrink: 0;
 }
 
@@ -125,8 +120,9 @@
 
 .meta {
   font-size: 12px;
-  color: #4A6FA5;
+  color: #90A4C8;
 }
+
 .likes {
   font-size: 13px;
   color: #4A6FA5;

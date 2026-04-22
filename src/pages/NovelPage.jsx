@@ -6,7 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import styles from "../styles/NovelPage.module.css";
 
-const genres = ["전체", "로맨스", "판타지", "무협", "현대", "스릴러", "BL"];
+const days = ["전체", "월", "화", "수", "목", "금", "토", "일", "완결"];
 
 const HERO_ITEMS = [
   { gif: "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExbGxwbnlmcWF4NGcwMnJ0NHlpaDdvZXQ2cWJhNHNhN21zdTdqOHBhcCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/e90FexJLguhdDMugYq/giphy.gif", label: "이번 주 추천 소설" },
@@ -35,11 +35,11 @@ function NavBtn({ direction, swiperRef }) {
 
 export default function NovelPage() {
   const navigate = useNavigate();
-  const [activeGenre, setActiveGenre] = useState("전체");
+  const [activeDay, setActiveDay] = useState("전체");
   const [heroIndex, setHeroIndex] = useState(0);
   const [popularContents, setPopularContents] = useState([]);
   const [newContents, setNewContents] = useState([]);
-  const [genreContents, setGenreContents] = useState([]);
+  const [dayContents, setDayContents] = useState([]);
   const [page, setPage] = useState(0);
   const [hasNext, setHasNext] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,52 +66,52 @@ export default function NovelPage() {
     } catch (error) { console.error("메인 데이터 로딩 실패:", error); }
   };
 
-  const fetchGenreData = async (pageNum, genre) => {
+  const fetchDayData = async (pageNum, day) => {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const genreParam = genre === "전체" ? "" : `&genre=${genre}`;
-      const response = await fetch(`http://localhost:8080/api/contents/?type=웹소설&page=${pageNum}&size=10${genreParam}`);
+      const dayParam = day === "전체" ? "" : `&serialDay=${day}`;
+      const response = await fetch(`http://localhost:8080/api/contents/?type=웹소설&page=${pageNum}&size=10${dayParam}`);
       if (response.ok) {
         const data = await response.json();
-        setGenreContents((prev) => pageNum === 0 ? data.content : [...prev, ...data.content]);
+        setDayContents((prev) => pageNum === 0 ? data.content : [...prev, ...data.content]);
         setHasNext(!data.last);
       }
-    } catch (error) { console.error("장르별 소설 불러오기 실패:", error); }
+    } catch (error) { console.error("요일별 소설 불러오기 실패:", error); }
     finally { setIsLoading(false); }
   };
 
   useEffect(() => {
-    if (activeGenre === "전체") {
-      setGenreContents([]); setPage(0); setHasNext(true);
+    if (activeDay === "전체") {
+      setDayContents([]); setPage(0); setHasNext(true);
       fetchMainData();
     } else {
-      setGenreContents([]); setPage(0); setHasNext(true);
-      fetchGenreData(0, activeGenre);
+      setDayContents([]); setPage(0); setHasNext(true);
+      fetchDayData(0, activeDay);
     }
-  }, [activeGenre]);
+  }, [activeDay]);
 
   useEffect(() => {
-    if (activeGenre === "전체") {
+    if (activeDay === "전체") {
       setTimeout(() => {
         popularSwiperRef.current?.update();
         newSwiperRef.current?.update();
       }, 50);
     }
-  }, [activeGenre]);
+  }, [activeDay]);
 
   const handleObserver = useCallback((entries) => {
     const target = entries[0];
-    if (target.isIntersecting && hasNext && !isLoading && activeGenre !== "전체") {
-      setPage((prev) => { const next = prev + 1; fetchGenreData(next, activeGenre); return next; });
+    if (target.isIntersecting && hasNext && !isLoading && activeDay !== "전체") {
+      setPage((prev) => { const next = prev + 1; fetchDayData(next, activeDay); return next; });
     }
-  }, [hasNext, isLoading, activeGenre]);
+  }, [hasNext, isLoading, activeDay]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(handleObserver, { threshold: 0.5 });
     if (observerRef.current) observer.observe(observerRef.current);
     return () => observer.disconnect();
-  }, [handleObserver, activeGenre]);
+  }, [handleObserver, activeDay]);
 
   const heroItem = popularContents[heroIndex] || null;
   const currentHero = HERO_ITEMS[heroIndex];
@@ -152,13 +152,38 @@ export default function NovelPage() {
       </div>
 
       <div className={styles.content}>
+
+        {/* 검색창 */}
+        <div className={styles.searchBox}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#90A4C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === "Enter" && query.trim()) {
+                navigate(`/search?q=${encodeURIComponent(query)}`)
+              }
+            }}
+            placeholder="작품명, 작가명, 태그 검색"
+            className={styles.searchInput}
+          />
+        </div>
+
+        {/* 요일 탭 */}
         <div className={styles.tabGroup}>
-          {genres.map((g) => (
-            <button key={g} onClick={() => setActiveGenre(g)} className={`${styles.tabBtn} ${activeGenre === g ? styles.tabBtnActive : ""}`}>{g}</button>
+          {days.map((d) => (
+            <button
+              key={d}
+              onClick={() => setActiveDay(d)}
+              className={`${styles.tabBtn} ${activeDay === d ? styles.tabBtnActive : ""}`}
+            >{d}</button>
           ))}
         </div>
 
-        {activeGenre === "전체" ? (
+        {activeDay === "전체" ? (
           <div>
             <div className={styles.sectionTitle}>인기 웹소설</div>
             <div className={styles.swiperWrap}>
@@ -196,8 +221,8 @@ export default function NovelPage() {
           </div>
         ) : (
           <div>
-            <div className={styles.sectionTitle}>{activeGenre} 웹소설</div>
-            {genreContents.map((n) => (
+            <div className={styles.sectionTitle}>{activeDay}요일 웹소설</div>
+            {dayContents.map((n) => (
               <div key={n.contentId} className={styles.genreCard} onClick={() => navigate(`/contents/${n.contentId}`)}>
                 <img src={n.thumbnailUrl} alt={n.title} className={styles.genreCardImg} />
                 <div>
@@ -211,7 +236,7 @@ export default function NovelPage() {
             ))}
             <div ref={observerRef} className={styles.observer}>
               {isLoading && <span className={styles.observerText}>데이터를 불러오는 중입니다...</span>}
-              {!hasNext && !isLoading && genreContents.length > 0 && <span className={styles.observerText}>모든 작품을 다 보셨습니다.</span>}
+              {!hasNext && !isLoading && dayContents.length > 0 && <span className={styles.observerText}>모든 작품을 다 보셨습니다.</span>}
             </div>
           </div>
         )}

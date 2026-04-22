@@ -1,43 +1,23 @@
 .pageWrapper {
   background: transparent;
   min-height: calc(100vh - 60px);
-  position: relative;
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .headerTitle {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--text);
+  color: #1565C0;
   margin-bottom: 4px;
 }
 
 .headerSubtitle {
   font-size: 14px;
-  color: var(--textSub);
-}
-
-.newBtn {
-  padding: 10px 20px;
-  background: var(--primary);
-  border: none;
-  border-radius: 10px;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.newBtn:hover {
-  background: var(--primaryDark);
+  color: #4A6FA5;
 }
 
 .content {
@@ -46,53 +26,83 @@
   padding: 24px 40px;
 }
 
+.contentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
 .sortGroup {
   display: flex;
-  gap: 8px;
-  margin-bottom: 24px;
+  gap: 0;
+  border-bottom: 1.5px solid #BBDEFB;
 }
 
 .sortBtn {
-  padding: 7px 18px;
-  border-radius: 999px;
+  padding: 8px 20px;
+  border-radius: 0;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  background: var(--bgWhite);
-  color: var(--textSub);
-  border: 1px solid var(--border);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  background: transparent;
+  color: #90A4C8;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1.5px;
+  transition: color 0.2s, border-color 0.2s;
 }
 
 .sortBtn:hover {
-  background: var(--primarySoft);
+  color: #2196F3;
+  border-bottom-color: #90CAF9;
 }
 
 .sortBtnActive {
-  background: var(--primary);
+  color: #1565C0;
+  border-bottom-color: #2196F3;
+  font-weight: 600;
+}
+
+.newBtn {
+  padding: 10px 16px;
+  background: #2196F3;
+  border: none;
+  border-radius: 8px;
   color: #fff;
-  border-color: var(--primary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.newBtn:hover {
+  background: #1565C0;
+  transform: translateY(-1px);
 }
 
 .relayCard {
   padding: 20px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 10px;
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
 }
 
 .relayCard:hover {
-  border-color: #2196F3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .relayTitle {
   font-size: 15px;
   font-weight: 600;
-  color: var(--text);
+  color: #0D1B2A;
   margin-bottom: 8px;
 }
 
@@ -100,15 +110,16 @@
   display: flex;
   gap: 16px;
   font-size: 12px;
-  color: var(--textMuted);
+  color: #90A4C8;
   margin-bottom: 10px;
 }
 
 .relayPreview {
   font-size: 13px;
-  color: var(--textSub);
+  color: #4A6FA5;
   line-height: 1.6;
   padding: 10px 14px;
-  background: var(--bgSurface);
+  background: #E8F4FD;
   border-radius: 6px;
+  border: 1px solid #BBDEFB;
 }

@@ -4,29 +4,45 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .headerTitle {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: #0D1B2A;
-  margin-bottom: 16px;
+  color: #1565C0;
+  margin-bottom: 4px;
+}
+
+.headerSubtitle {
+  font-size: 14px;
+  color: #4A6FA5;
+  margin-bottom: 20px;
+}
+
+.searchWrap {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 40px;
 }
 
 .searchBox {
   display: flex;
   gap: 10px;
   align-items: center;
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.85);
   border: 1px solid #BBDEFB;
   border-radius: 10px;
   padding: 10px 16px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.searchIcon {
-  color: #90A4C8;
+.searchBox:focus-within {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.12);
 }
 
 .searchInput {
@@ -35,7 +51,11 @@
   border: none;
   outline: none;
   color: #0D1B2A;
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.searchInput::placeholder {
+  color: #90A4C8;
 }
 
 .content {
@@ -46,29 +66,39 @@
 
 .filterGroup {
   display: flex;
-  gap: 8px;
+  gap: 0;
   margin-bottom: 24px;
+  border-bottom: 1.5px solid #BBDEFB;
 }
 
 .filterBtn {
-  padding: 6px 16px;
-  border-radius: 999px;
+  padding: 8px 20px;
+  border-radius: 0;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  background: #FFFFFF;
-  color: #4A6FA5;
-  border: 1px solid #BBDEFB;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  background: transparent;
+  color: #90A4C8;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1.5px;
+  transition: color 0.2s, border-color 0.2s;
 }
 
 .filterBtn:hover {
-  background: var(--primarySoft);
+  color: #2196F3;
+  border-bottom-color: #90CAF9;
 }
 
 .filterBtnActive {
-  background: #2196F3;
-  color: #fff;
-  border-color: #2196F3;
+  color: #1565C0;
+  border-bottom-color: #2196F3;
+  font-weight: 600;
+}
+
+.filterBtnActive:hover {
+  color: #1565C0;
+  border-bottom-color: #2196F3;
 }
 
 .resultCount {
@@ -80,25 +110,27 @@
 .card {
   display: flex;
   gap: 16px;
-  padding: 16px;
+  padding: 16px 20px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 10px;
   margin-bottom: 10px;
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
 }
 
 .card:hover {
-  border-color: #2196F3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .thumbnail {
   width: 60px;
   height: 78px;
-  background: var(--bgSurface);
+  background: #E8F4FD;
   border-radius: 6px;
   border: 1px solid #BBDEFB;
   flex-shrink: 0;
@@ -125,7 +157,7 @@
 .badge {
   font-size: 11px;
   padding: 2px 8px;
-  background: var(--bgSurface);
+  background: #E3F2FD;
   border: 1px solid #BBDEFB;
   border-radius: 6px;
   color: #4A6FA5;

@@ -1,4 +1,4 @@
-import { useState } from "react" //
+import { useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import theme from "../styles/theme"
 const { colors: c } = theme
@@ -10,43 +10,42 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState("")
 
-  // =========================================================================
-  // 🌟 [가장 완벽한 백엔드 연동] 상태(State) 없이 바로 로컬스토리지 확인!
-  // =========================================================================
-  // 페이지가 바뀔 때마다 무조건 여기를 다시 읽기 때문에 에러가 날 수가 없습니다.
-  const isLoggedIn = !!localStorage.getItem("accessToken");
+  const isLoggedIn = !!localStorage.getItem("accessToken")
 
-  // 로그아웃 처리 함수
   const handleLogout = () => {
     if (window.confirm("로그아웃 하시겠습니까?")) {
-      localStorage.removeItem("accessToken"); // 토큰 파기
-      alert("성공적으로 로그아웃 되었습니다.");
-      
-      // 🌟 핵심: 로그아웃 후 브라우저를 깔끔하게 한 번 새로고침해서 잔존 메모리까지 날려줍니다.
-      window.location.reload(); 
+      localStorage.removeItem("accessToken")
+      alert("성공적으로 로그아웃 되었습니다.")
+      window.location.reload()
     }
   }
-  // =========================================================================
 
   const menus = [
     { path: "/webtoon", label: "웹툰" },
     { path: "/novel", label: "웹소설" },
     { path: "/relay", label: "릴레이" },
     { path: "/ranking", label: "랭킹" },
+    { path: "/notices", label: "공지" },
   ]
 
   const handleSearch = (e) => {
     if (e.key === "Enter" && query.trim()) {
-      navigate(`/search?q=${query}`)
+      navigate(`/search?q=${encodeURIComponent(query)}`)
       setSearchOpen(false)
       setQuery("")
     }
   }
 
+  const btnStyle = {
+    fontSize: 13, color: c.textSub, cursor: "pointer",
+    padding: "6px 12px", transition: "color 0.2s", background: "none", border: "none"
+  }
+
   return (
     <nav style={{
       position: "sticky", top: 0, zIndex: 100,
-      background: c.bgWhite,
+      background: "rgba(255, 255, 255, 0.92)",
+      backdropFilter: "blur(8px)",
       borderBottom: `1px solid ${c.border}`,
       padding: "0 40px",
       display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -63,11 +62,13 @@ export default function Header() {
         {searchOpen ? (
           <div style={{
             display: "flex", alignItems: "center", gap: 8,
-            background: c.bgSurface, border: `1px solid ${c.primary}`,
-            borderRadius: theme.radius.full, padding: "6px 16px",
-            width: 280, transition: "all 0.3s"
+            background: "rgba(255, 255, 255, 0.85)",
+            border: "1px solid #BBDEFB",
+            borderRadius: 10, padding: "7px 16px",
+            width: 400,
+            transition: "all 0.2s",
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: c.textMuted, flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#90A4C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -79,24 +80,27 @@ export default function Header() {
               placeholder="작품명, 작가명 검색"
               style={{
                 flex: 1, background: "none", border: "none",
-                outline: "none", color: c.text, fontSize: 13
+                outline: "none", color: "#0D1B2A", fontSize: 13
               }}
             />
-            {/* X 버튼 */}
-            <span onClick={() => { setSearchOpen(false); setQuery("") }} style={{
-              color: c.textMuted, cursor: "pointer", fontSize: 16, lineHeight: 1
-            }}>×</span>
+            <span
+              onClick={() => { setSearchOpen(false); setQuery("") }}
+              style={{ color: "#90A4C8", cursor: "pointer", fontSize: 15, lineHeight: 1, flexShrink: 0 }}
+            >✕</span>
           </div>
         ) : (
           <>
             {menus.map(m => (
-              <span key={m.path} onClick={() => navigate(m.path)} style={{
-                fontSize: 14, cursor: "pointer",
-                fontWeight: currentPath === m.path ? 600 : 400,
-                color: currentPath === m.path ? c.primary : c.textSub,
-                borderBottom: currentPath === m.path ? `2px solid ${c.primary}` : "2px solid transparent",
-                paddingBottom: 4, transition: "color 0.2s, border-bottom 0.2s"
-              }}
+              <span
+                key={m.path}
+                onClick={() => navigate(m.path)}
+                style={{
+                  fontSize: 14, cursor: "pointer",
+                  fontWeight: currentPath === m.path ? 600 : 400,
+                  color: currentPath === m.path ? c.primary : c.textSub,
+                  borderBottom: currentPath === m.path ? `2px solid ${c.primary}` : "2px solid transparent",
+                  paddingBottom: 4, transition: "color 0.2s, border-bottom 0.2s"
+                }}
                 onMouseEnter={e => {
                   e.currentTarget.style.color = c.primary
                   e.currentTarget.style.borderBottom = `2px solid ${c.primary}`
@@ -114,12 +118,14 @@ export default function Header() {
       </div>
 
       {/* 오른쪽 버튼들 */}
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        {/* 돋보기 아이콘 */}
-        <span onClick={() => setSearchOpen(!searchOpen)} style={{
-          cursor: "pointer", padding: "6px 8px", display: "flex", alignItems: "center",
-          color: searchOpen ? c.primary : c.textSub, transition: "color 0.2s"
-        }}
+      <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+        <span
+          onClick={() => setSearchOpen(!searchOpen)}
+          style={{
+            cursor: "pointer", padding: "6px 8px", display: "flex", alignItems: "center",
+            color: searchOpen ? c.primary : c.textSub, transition: "color 0.2s",
+            borderRadius: 8,
+          }}
           onMouseEnter={e => e.currentTarget.style.color = c.primary}
           onMouseLeave={e => e.currentTarget.style.color = searchOpen ? c.primary : c.textSub}
         >
@@ -129,44 +135,40 @@ export default function Header() {
           </svg>
         </span>
 
-        <span style={{ fontSize: 13, color: c.textMuted }}>|</span>
+        <span style={{ fontSize: 13, color: c.border }}>|</span>
 
         {isLoggedIn ? (
           <>
-            <span onClick={handleLogout} style={{
-              fontSize: 13, color: c.textSub, cursor: "pointer",
-              padding: "6px 12px", transition: "color 0.2s"
-            }}
+            <span
+              onClick={handleLogout}
+              style={btnStyle}
               onMouseEnter={e => e.currentTarget.style.color = c.primary}
               onMouseLeave={e => e.currentTarget.style.color = c.textSub}
             >로그아웃</span>
 
-            <span style={{ fontSize: 13, color: c.textMuted }}>|</span>
+            <span style={{ fontSize: 13, color: c.border }}>|</span>
 
-            <span onClick={() => navigate("/mypage")} style={{
-              fontSize: 13, color: c.textSub, cursor: "pointer",
-              padding: "6px 12px", transition: "color 0.2s"
-            }}
+            <span
+              onClick={() => navigate("/mypage")}
+              style={btnStyle}
               onMouseEnter={e => e.currentTarget.style.color = c.primary}
               onMouseLeave={e => e.currentTarget.style.color = c.textSub}
             >마이페이지</span>
           </>
         ) : (
           <>
-            <span onClick={() => navigate("/login")} style={{
-              fontSize: 13, color: c.textSub, cursor: "pointer",
-              padding: "6px 12px", transition: "color 0.2s"
-            }}
+            <span
+              onClick={() => navigate("/login")}
+              style={btnStyle}
               onMouseEnter={e => e.currentTarget.style.color = c.primary}
               onMouseLeave={e => e.currentTarget.style.color = c.textSub}
             >로그인</span>
 
-            <span style={{ fontSize: 13, color: c.textMuted }}>|</span>
+            <span style={{ fontSize: 13, color: c.border }}>|</span>
 
-            <span onClick={() => navigate("/signup")} style={{
-              fontSize: 13, color: c.textSub, cursor: "pointer",
-              padding: "6px 12px", transition: "color 0.2s"
-            }}
+            <span
+              onClick={() => navigate("/signup")}
+              style={btnStyle}
               onMouseEnter={e => e.currentTarget.style.color = c.primary}
               onMouseLeave={e => e.currentTarget.style.color = c.textSub}
             >회원가입</span>

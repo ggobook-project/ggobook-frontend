@@ -4,19 +4,14 @@ import styles from "../styles/ContentDetailPage.module.css"
 
 export default function ContentDetailPage() {
   const navigate = useNavigate()
-  const [tab, setTab] = useState("회차목록")
   const [liked, setLiked] = useState(false)
-  const [comment, setComment] = useState("")
+  const [copied, setCopied] = useState(false)
   const { contentId } = useParams()
   const [content, setContent] = useState(null)
   const [episodes, setEpisodes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [episodesLoading, setEpisodesLoading] = useState(true)
-
-  const comments = [
-    { user: "독자1", text: "정말 재밌어요! 다음화가 기대됩니다", date: "04.13" },
-    { user: "독자2", text: "빨리 다음화 올려주세요", date: "04.12" },
-  ]
+  const [showFullSummary, setShowFullSummary] = useState(false)
 
   const loadContentDetail = async () => {
     try {
@@ -76,6 +71,16 @@ export default function ContentDetailPage() {
     else if (content.type === "NOVEL") navigate(`/novel/viewer/${episodeId}`)
   }
 
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      alert("URL 복사에 실패했습니다.")
+    }
+  }
+
   if (isLoading) {
     return (
       <div className={styles.loading}>
@@ -84,86 +89,119 @@ export default function ContentDetailPage() {
     )
   }
 
+  const summary = content.summary || content.description || "작품 소개가 없습니다."
+
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.inner}>
-        <div className={styles.heroBanner}>
+        <div className={styles.infoSection}>
           <div className={styles.thumbnail}>
-            {content.thumbnailUrl && <img src={content.thumbnailUrl} alt="thumbnail" className={styles.thumbnailImg} />}
+            {content.thumbnailUrl
+              ? <img src={content.thumbnailUrl} alt="thumbnail" className={styles.thumbnailImg} />
+              : <div className={styles.thumbnailPlaceholder} />}
           </div>
-          <div>
+
+          <div className={styles.infoRight}>
             <div className={styles.contentMeta}>
               {typeLabel(content.type)}
               {content.genre ? ` · ${content.genre}` : ""}
               {content.serialDay ? ` · ${content.serialDay} 연재` : ""}
             </div>
             <div className={styles.contentTitle}>{content.title}</div>
+            {content.author && <div className={styles.contentAuthor}>{content.author}</div>}
             <div className={styles.contentStats}>
-              {content.rating != null ? `★ ${content.rating.toFixed(1)}` : ""}
-              {content.viewCount != null ? ` · 조회수 ${content.viewCount >= 10000 ? `${(content.viewCount / 10000).toFixed(1)}만` : content.viewCount.toLocaleString()}` : ""}
+              {content.rating != null && <span className={styles.rating}>★ {content.rating.toFixed(1)}</span>}
+              {content.viewCount != null && (
+                <span className={styles.views}>
+                  조회 {content.viewCount >= 10000
+                    ? `${(content.viewCount / 10000).toFixed(1)}만`
+                    : content.viewCount.toLocaleString()}
+                </span>
+              )}
+              <span className={styles.epCount}>총 {episodes.length}화</span>
+            </div>
+
+            <div className={styles.summaryBox}>
+              <p className={`${styles.summaryText} ${showFullSummary ? styles.summaryExpanded : ""}`}>
+                {summary}
+              </p>
+              {summary.length > 80 && (
+                <button className={styles.summaryToggle} onClick={() => setShowFullSummary(!showFullSummary)}>
+                  {showFullSummary ? "접기 ▲" : "더보기 ▼"}
+                </button>
+              )}
+            </div>
+
+            <div className={styles.actionRow}>
+              {/* 찜 버튼 */}
+              <button
+                onClick={() => setLiked(!liked)}
+                className={`${styles.iconBtn} ${liked ? styles.iconBtnLiked : ""}`}
+                title="찜하기"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24"
+                  fill={liked ? "#E53935" : "none"}
+                  stroke={liked ? "#E53935" : "#90A4C8"}
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+              </button>
+
+              {/* 공유 버튼 */}
+              <button
+                onClick={handleShare}
+                className={`${styles.iconBtn} ${copied ? styles.iconBtnCopied : ""}`}
+                title={copied ? "복사됨!" : "공유"}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={copied ? "#2196F3" : "#90A4C8"}
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="18" cy="5" r="3" />
+                  <circle cx="6" cy="12" r="3" />
+                  <circle cx="18" cy="19" r="3" />
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                </svg>
+              </button>
+
+              {/* 첫화 보기 */}
+              <button
+                onClick={() => episodes.length > 0 && handleEpisodeClick(episodes[0].episodeId)}
+                disabled={episodes.length === 0}
+                className={styles.firstEpBtn}
+              >
+                첫화 보기 · 1화
+              </button>
             </div>
           </div>
         </div>
 
-        <div className={styles.actionSection}>
-          <div className={styles.actionBtns}>
-            <button onClick={() => setLiked(!liked)} className={`${styles.actionBtn} ${liked ? styles.actionBtnLiked : ""}`}>{liked ? "♥ 찜됨" : "♡ 찜하기"}</button>
-            <button className={styles.actionBtn}>★ 별점</button>
-            <button className={styles.actionBtn}>공유</button>
-            <button
-              onClick={() => episodes.length > 0 && navigate(`/webtoon/viewer/${episodes[0].episodeId}`)}
-              disabled={episodes.length === 0}
-              className={styles.firstEpBtn}
-            >첫화 보기</button>
+        <div className={styles.episodeSection}>
+          <div className={styles.episodeHeader}>
+            <span className={styles.episodeCount}>총 {episodes.length}화</span>
           </div>
-          <div className={styles.summary}>{content.summary || content.description || "작품 소개가 없습니다."}</div>
-        </div>
-
-        <div className={styles.tabGroup}>
-          {["회차목록", "댓글"].map(t => (
-            <button key={t} onClick={() => setTab(t)} className={`${styles.tabBtn} ${tab === t ? styles.tabBtnActive : ""}`}>{t}</button>
-          ))}
-        </div>
-
-        {tab === "회차목록" && (
-          episodesLoading
+          {episodesLoading
             ? <div className={styles.emptyMsg}>회차 불러오는 중...</div>
             : episodes.length === 0
               ? <div className={styles.emptyMsg}>등록된 회차가 없습니다.</div>
               : episodes.map(ep => (
                 <div key={ep.episodeId} className={styles.episodeRow} onClick={() => handleEpisodeClick(ep.episodeId)}>
-                  <div>
-                    <div className={styles.epNum}>{ep.episodeNumber}화</div>
+                  <div className={styles.epThumb} />
+                  <div className={styles.epInfo}>
                     <div className={styles.epTitle}>{ep.episodeTitle}</div>
+                    <div className={styles.epMeta}>
+                      {ep.isFree
+                        ? <span className={styles.badgeFree}>무료</span>
+                        : <span className={styles.badgePaid}>유료</span>}
+                      <span className={styles.epDate}>{formatDate(ep.createdAt)}</span>
+                    </div>
                   </div>
-                  <div className={styles.epRight}>
-                    {ep.isFree
-                      ? <span className={styles.badgeFree}>무료</span>
-                      : <span className={styles.badgePaid}>유료</span>}
-                    <span className={styles.epDate}>{formatDate(ep.createdAt)}</span>
-                  </div>
+                  <div className={styles.epNum}>{ep.episodeNumber}화</div>
                 </div>
               ))
-        )}
-
-        {tab === "댓글" && (
-          <div className={styles.commentSection}>
-            <div className={styles.commentInput}>
-              <input value={comment} onChange={e => setComment(e.target.value)} placeholder="댓글을 입력하세요" className={styles.input} />
-              <button className={styles.submitBtn}>등록</button>
-            </div>
-            {comments.map((cm, i) => (
-              <div key={i} className={styles.commentItem}>
-                <div className={styles.commentHeader}>
-                  <div className={styles.commentAvatar} />
-                  <span className={styles.commentUser}>{cm.user}</span>
-                  <span className={styles.commentDate}>{cm.date}</span>
-                </div>
-                <div className={styles.commentText}>{cm.text}</div>
-              </div>
-            ))}
-          </div>
-        )}
+          }
+        </div>
       </div>
     </div>
   )

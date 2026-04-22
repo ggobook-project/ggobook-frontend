@@ -7,7 +7,8 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid #BBDEFB;
   display: flex;
   justify-content: space-between;
@@ -17,11 +18,22 @@
 }
 
 .topBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background: none;
   border: none;
   color: #4A6FA5;
   font-size: 13px;
   cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.topBtn:hover {
+  background: #E3F2FD;
+  color: #1565C0;
 }
 
 .topTitle {
@@ -38,6 +50,7 @@
 .content {
   max-width: 700px;
   margin: 0 auto;
+  padding-bottom: 40px;
 }
 
 .panel {
@@ -45,64 +58,408 @@
   border-bottom: 1px solid #BBDEFB;
 }
 
-.panelEven {
-  background: #E8F4FD;
-}
+.panelEven { background: rgba(232, 244, 253, 0.85); }
+.panelOdd { background: rgba(255, 255, 255, 0.85); }
 
-.panelOdd {
-  background: #FFFFFF;
-}
-
-.bottomBar {
+/* 에피소드 네비게이터 */
+.episodeNav {
   display: flex;
-  justify-content: space-between;
-  padding: 16px 24px;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
   border-top: 1px solid #BBDEFB;
-  background: #FFFFFF;
+  border-bottom: 1px solid #BBDEFB;
 }
 
-.prevBtn {
-  background: #FFFFFF;
+.epNavArrow {
+  background: none;
+  border: none;
+  color: #90A4C8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.2s, background 0.2s;
+}
+
+.epNavArrow:hover:not(:disabled) {
+  color: #1565C0;
+  background: #E3F2FD;
+}
+
+.epNavArrow:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.epNavList {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  justify-content: center;
+}
+
+.epNavItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.epNavItem:hover:not(.epNavItemCurrent) { transform: translateY(-2px); }
+.epNavItemCurrent { cursor: default; }
+
+.epNavItemCurrent .epNavThumb {
+  border: 2px solid #2196F3;
+}
+
+.epNavItemCurrent .epNavNum {
+  color: #2196F3;
+  font-weight: 600;
+}
+
+.epNavThumb {
+  width: 90px;
+  height: 64px;
+  border-radius: 8px;
+  overflow: hidden;
   border: 1px solid #BBDEFB;
-  border-radius: 10px;
-  padding: 9px 20px;
+  background: #E8F4FD;
+}
+
+.epNavThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.epNavThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+}
+
+.epNavNum {
+  font-size: 11px;
   color: #4A6FA5;
-  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* 액션 바 */
+.actionBar {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #BBDEFB;
+  padding: 0;
+}
+
+.actionItem {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 14px 8px;
+  background: none;
+  border: none;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.prevBtn:hover {
-  background: #E8F4FD;
-}
+.actionItem:hover { background: #E3F2FD; }
 
-.listBtn {
-  background: #E8F4FD;
-  border: 1px solid #BBDEFB;
-  border-radius: 10px;
-  padding: 9px 20px;
+.actionLabel {
+  font-size: 12px;
   color: #4A6FA5;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
+  font-weight: 500;
 }
 
-.listBtn:hover {
+.actionSub {
+  font-size: 11px;
+  color: #90A4C8;
+}
+
+.actionDivider {
+  width: 1px;
+  height: 40px;
   background: #BBDEFB;
+  flex-shrink: 0;
 }
 
-.nextBtn {
+/* 별점 모달 오버레이 */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ratingModal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 32px;
+  min-width: 280px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 8px 32px rgba(33, 150, 243, 0.15);
+}
+
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #90A4C8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modalClose:hover { color: #4A6FA5; }
+
+.ratingModalScore {
+  font-size: 36px;
+  font-weight: 700;
+  color: #2196F3;
+  margin-bottom: 12px;
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.starBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  transition: transform 0.12s;
+}
+
+.starBtn:hover { transform: scale(1.15); }
+
+.ratingModalHint {
+  font-size: 13px;
+  color: #90A4C8;
+  margin-bottom: 18px;
+}
+
+.ratingConfirmBtn {
+  width: 100%;
+  padding: 12px;
   background: #2196F3;
   border: none;
   border-radius: 10px;
-  padding: 9px 20px;
   color: #fff;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  font-weight: 500;
+  margin-bottom: 10px;
   transition: background 0.2s;
 }
 
-.nextBtn:hover {
-  background: #1565C0;
+.ratingConfirmBtn:hover { background: #1565C0; }
+
+.ratingConfirmBtn:disabled {
+  background: #BBDEFB;
+  color: #90A4C8;
+  cursor: default;
 }
+
+.ratingCancelBtn {
+  width: 100%;
+  padding: 10px;
+  background: none;
+  border: none;
+  color: #90A4C8;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.ratingCancelBtn:hover { color: #4A6FA5; }
+
+/* 댓글 섹션 */
+.commentSection {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid #BBDEFB;
+  padding: 20px 24px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1565C0;
+  margin-bottom: 14px;
+}
+
+.commentInputRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.commentInput {
+  flex: 1;
+  background: rgba(232, 244, 253, 0.85);
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #0D1B2A;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.commentInput:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.commentInput::placeholder { color: #90A4C8; }
+
+.commentSubmit {
+  padding: 10px 18px;
+  background: #2196F3;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.commentSubmit:hover {
+  background: #1565C0;
+  transform: translateY(-1px);
+}
+
+.commentList { display: flex; flex-direction: column; }
+
+.commentItem {
+  padding: 12px 0;
+  border-bottom: 1px solid #E8F4FD;
+}
+
+.commentHeader {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.commentAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #E3F2FD;
+  border: 1px solid #BBDEFB;
+  flex-shrink: 0;
+}
+
+.commentUser {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1565C0;
+}
+
+.commentDate {
+  font-size: 12px;
+  color: #90A4C8;
+}
+
+.commentActions {
+  margin-left: auto;
+  display: flex;
+  gap: 4px;
+}
+
+.commentActionBtn {
+  background: none;
+  border: none;
+  padding: 2px 6px;
+  font-size: 11px;
+  color: #90A4C8;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.commentActionBtn:hover {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
+.commentDeleteBtn:hover {
+  background: #FFEBEE;
+  color: #E53935;
+}
+
+.commentText {
+  font-size: 14px;
+  color: #0D1B2A;
+  padding-left: 36px;
+  line-height: 1.6;
+}
+
+.editRow {
+  display: flex;
+  gap: 6px;
+  padding-left: 36px;
+  margin-top: 4px;
+}
+
+.editInput {
+  flex: 1;
+  background: #E8F4FD;
+  border: 1px solid #90CAF9;
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: #0D1B2A;
+  outline: none;
+}
+
+.editSubmit {
+  padding: 6px 12px;
+  background: #2196F3;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.editSubmit:hover { background: #1565C0; }
+
+.editCancel {
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid #BBDEFB;
+  border-radius: 8px;
+  color: #4A6FA5;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.editCancel:hover { background: #E3F2FD; }

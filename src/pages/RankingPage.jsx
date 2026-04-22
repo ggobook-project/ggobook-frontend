@@ -21,14 +21,17 @@ export default function RankingPage() {
       </div>
 
       <div className={styles.content}>
-        <div className={styles.filterGroup}>
-          {["인기", "신작", "트렌드"].map(t => (
-            <button key={t} onClick={() => setType(t)} className={`${styles.filterBtn} ${type === t ? styles.filterBtnActive : ""}`}>{t}</button>
-          ))}
-        </div>
-        <div className={styles.filterGroup} style={{ marginBottom: 24 }}>
+      
+        
+
+        {/* 전체/웹툰/웹소설 탭 */}
+        <div className={styles.tabGroup} style={{ marginBottom: 24 }}>
           {["전체", "웹툰", "웹소설"].map(cat => (
-            <button key={cat} onClick={() => setCategory(cat)} className={`${styles.categoryBtn} ${category === cat ? styles.categoryBtnActive : ""}`}>{cat}</button>
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`${styles.tabBtn} ${category === cat ? styles.tabBtnActive : ""}`}
+            >{cat}</button>
           ))}
         </div>
 

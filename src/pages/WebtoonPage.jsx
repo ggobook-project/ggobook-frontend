@@ -4,10 +4,9 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
-import wave from "../assets/wave.png";
 import styles from "../styles/WebtoonPage.module.css"
 
-const days = ["전체", "월", "화", "수", "목", "금", "토", "일"];
+const days = ["전체", "월", "화", "수", "목", "금", "토", "일", "완결"];
 
 const HERO_ITEMS = [
   { gif: "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExOTduaDd0ZHd6eTY1b3Q4eHdva3VydGh4cm9zcWpia2R2bGcybmJsaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/BTjTA688xvJn5oJRxf/giphy.gif", label: "이번 주 추천 작품" },
@@ -124,15 +123,7 @@ export default function WebtoonPage() {
     <div className={styles.pageWrapper}>
       <style>{swiperNavStyle}</style>
 
-      {/* 파도 배경 */}
-      <div style={{
-  position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
-  backgroundImage: `url(${wave})`,
-  backgroundSize: "cover",
-  backgroundPosition: "center",
-  opacity: 0.08, zIndex: 0, pointerEvents: "none",
-}} />
-
+  
       {/* 히어로 섹션 */}
       <div className={styles.heroSection}>
         {HERO_ITEMS.map((item, i) => (

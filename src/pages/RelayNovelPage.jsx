@@ -15,24 +15,24 @@ export default function RelayNovelPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <div>
-          <div className={styles.headerTitle}>릴레이 소설</div>
-          <div className={styles.headerSubtitle}>함께 써내려가는 이야기</div>
-        </div>
-        <button className={styles.newBtn} onClick={() => navigate("/relay/register")}>+ 새 릴레이</button>
+        <div className={styles.headerTitle}>릴레이 소설</div>
+        <div className={styles.headerSubtitle}>함께 써내려가는 이야기</div>
       </div>
 
       <div className={styles.content}>
-        <div className={styles.sortGroup}>
-          {["최신순", "인기순"].map(s => (
-            <button
-              key={s}
-              onClick={() => setSort(s)}
-              className={`${styles.sortBtn} ${sort === s ? styles.sortBtnActive : ""}`}
-            >
-              {s}
-            </button>
-          ))}
+        <div className={styles.contentHeader}>
+          <div className={styles.sortGroup}>
+            {["최신순", "인기순"].map(s => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                className={`${styles.sortBtn} ${sort === s ? styles.sortBtnActive : ""}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <button className={styles.newBtn} onClick={() => navigate("/relay/register")}>릴레이 추가</button>
         </div>
 
         {relays.map(r => (
