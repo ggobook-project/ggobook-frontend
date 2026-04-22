@@ -1,6 +1,7 @@
 .pageWrapper {
   background: transparent;
   min-height: calc(100vh - 60px);
+  position: relative;
 }
 
 .header {
@@ -21,81 +22,132 @@
 }
 
 .content {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 24px 40px;
+  padding: 24px 60px;
+  position: relative;
+  z-index: 1;
 }
 
-.itemCard {
+.tabGroup {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(187, 222, 251, 0.6);
-  border-radius: 10px;
-  margin-bottom: 10px;
-   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
+  gap: 4px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #BBDEFB;
 }
 
-.itemCard:hover {
-  border-color: #90CAF9;
-  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
-  transform: translateY(-2px);
-  background: rgba(255, 255, 255, 0.92);
+.tabBtn {
+  padding: 8px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #4A6FA5;
+  font-weight: 400;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
 }
 
-.itemTitle {
-  font-size: 14px;
+.tabBtn:hover {
+  color: #2196F3;
+  border-bottom-color: #90CAF9;
+}
+
+.tabBtnActive {
+  border-bottom: 2px solid #2196F3;
+  color: #1565C0;
+  font-weight: 600;
+}
+
+.sectionTitle {
+  font-size: 15px;
   font-weight: 600;
   color: #0D1B2A;
-  margin-bottom: 4px;
+  margin-bottom: 14px;
 }
 
-.itemMeta {
-  font-size: 12px;
-  color: #90A4C8;
+.swiperWrap {
+  position: relative;
+  margin-bottom: 36px;
 }
 
-.itemRight {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.statusBadge {
-  font-size: 12px;
-  padding: 3px 10px;
-  border-radius: 6px;
-}
-
-.statusPublic {
-  background: #E3F2FD;
-  color: #2196F3;
-  border: 1px solid #BBDEFB;
-}
-
-.statusPrivate {
-  background: #E8F4FD;
-  color: #90A4C8;
-  border: 1px solid #BBDEFB;
-}
-
-.changeBtn {
-  padding: 7px 14px;
-  background: #2196F3;
+.navBtn {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background: none;
   border: none;
-  border-radius: 8px;
-  color: #fff;
-  font-size: 12px;
   cursor: pointer;
-  font-weight: 500;
-  transition: background 0.2s, transform 0.15s;
+  padding: 4px;
+  opacity: 0.4;
+  transition: opacity 0.2s, transform 0.2s;
 }
 
-.changeBtn:hover {
-  background: #1565C0;
-  transform: translateY(-1px);
+.navBtn:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.2);
+}
+
+.navBtnPrev { left: -48px; }
+.navBtnNext { right: -48px; }
+
+.dailyGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.cardItem {
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+
+.cardItem:hover { transform: translateY(-4px); }
+
+.cardImg {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid #BBDEFB;
+  margin-bottom: 6px;
+  display: block;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.cardImgPlaceholder {
+  width: 100%;
+  aspect-ratio: 3/4;
+  border-radius: 10px;
+  border: 1px solid #BBDEFB;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.cardItem:hover .cardImg,
+.cardItem:hover .cardImgPlaceholder {
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.15);
+  border-color: #90CAF9;
+}
+
+.cardTitle {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0D1B2A;
+  margin-bottom: 2px;
+  transition: color 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardItem:hover .cardTitle { color: #1565C0; }
+
+.cardGenre {
+  font-size: 11px;
+  color: #90A4C8;
 }
