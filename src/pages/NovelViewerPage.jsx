@@ -1,30 +1,86 @@
-import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useEffect, useState } from "react"
 import styles from "../styles/NovelViewerPage.module.css"
 
 export default function NovelViewerPage() {
   const navigate = useNavigate()
+  const { episodeId } = useParams()
   const [playing, setPlaying] = useState(false)
 
-  const paragraphs = [
-    "그날의 하늘은 유독 맑았다. 바람 한 점 없이 고요한 오후, 주인공은 창문 너머로 먼 산을 바라보며 생각에 잠겼다.",
-    "오래된 편지 한 통이 그의 손 안에서 조용히 떨리고 있었다. 발신인 이름을 확인한 순간, 그의 심장은 잠시 멈추는 것 같았다.",
-    "십 년 전 이별 후 단 한 번도 연락이 없었던 그 사람. 지금 이 순간, 무슨 말을 전하려는 것일까.",
-  ]
+  const [episode, setEpisode] = useState(null)
+  const [novel, setNovel] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const loadEpisodeDetail = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem('accessToken')
+      const response = await fetch(`http://localhost:8080/api/episodes/${episodeId}`, {
+        method: "GET",
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      if (!response.ok) { alert("백엔드 통신 실패(회차 상세)"); return }
+      const data = await response.json()
+      setEpisode(data)
+      setNovel(data.novel || null)
+    } catch (error) {
+      console.error("회차 상세 불러오기 실패 : ", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadEpisodeDetail()
+  }, [episodeId])
+
+  const goContentDetail = () => {
+    if (episode?.content?.contentId) {
+      navigate(`/contents/${episode.content.contentId}`)
+    } else {
+      navigate(-1)
+    }
+  }
+
+  const paragraphs = novel?.contentText
+    ? novel.contentText.split("\n").filter(p => p.trim() !== "")
+    : []
+
+  if (loading) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.loading}>불러오는 중...</div>
+      </div>
+    )
+  }
+
+  if (!episode) return null
 
   return (
     <div className={styles.pageWrapper}>
+
       <div className={styles.topBar}>
-        <button className={styles.topBtn} onClick={() => navigate("/contents/1")}>← 목록</button>
-        <span className={styles.topTitle}>소설 제목 1화</span>
+        <button className={styles.topBtn} onClick={goContentDetail}>← 목록</button>
+        <span className={styles.topTitle}>
+          {episode.episodeTitle || `${episode.episodeNumber}화`}
+        </span>
         <button className={styles.topBtn}>설정</button>
       </div>
 
       <div className={styles.content}>
-        <div className={styles.chapterLabel}>— 1화 —</div>
-        {paragraphs.map((p, i) => (
-          <p key={i} className={styles.paragraph}>{p}</p>
-        ))}
+        <div className={styles.chapterLabel}>— {episode.episodeNumber}화 —</div>
+        {paragraphs.length > 0
+          ? paragraphs.map((p, i) => (
+              <p key={i} className={styles.paragraph}>{p}</p>
+            ))
+          : <div className={styles.emptyMsg}>본문이 없습니다.</div>
+        }
+        {episode.aiSummary && (
+          <div className={styles.aiSummary}>
+            <div className={styles.aiSummaryLabel}>AI 요약</div>
+            <div className={styles.aiSummaryText}>{episode.aiSummary}</div>
+          </div>
+        )}
       </div>
 
       <div className={styles.bottomBar}>
@@ -40,11 +96,18 @@ export default function NovelViewerPage() {
             <span className={styles.voiceBtn}>목소리</span>
           </div>
           <div className={styles.navRow}>
-            <button className={styles.prevBtn}>← 이전화</button>
-            <button className={styles.nextBtn}>다음화 →</button>
+            <button
+              className={styles.prevBtn}
+              onClick={() => navigate(`/novel/viewer/${parseInt(episodeId) - 1}`)}
+            >← 이전화</button>
+            <button
+              className={styles.nextBtn}
+              onClick={() => navigate(`/novel/viewer/${parseInt(episodeId) + 1}`)}
+            >다음화 →</button>
           </div>
         </div>
       </div>
+
     </div>
   )
 }
