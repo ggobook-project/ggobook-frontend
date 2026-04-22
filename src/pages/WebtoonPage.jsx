@@ -6,6 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import wave from "../assets/wave.png";
 import styles from "../styles/WebtoonPage.module.css"
+import AiChatbotWidget from "../components/AiChatbotWidget";
 
 const days = ["전체", "월", "화", "수", "목", "금", "토", "일"];
 
@@ -237,6 +238,7 @@ export default function WebtoonPage() {
           </div>
         )}
       </div>
+      <AiChatbotWidget />
     </div>
   );
 }

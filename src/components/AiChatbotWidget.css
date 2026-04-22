@@ -1,0 +1,42 @@
+/* 화면 우측 하단에 고정되는 둥근 프레임 */
+.chatbot-widget {
+  position: fixed;
+  bottom: 40px;
+  right: 40px;
+  width: 250px;  /* 원하는 크기로 조절하세요 */
+  height: 250px;
+  border-radius: 50%; /* 💡 핵심 1: 네모난 영상을 완벽한 동그라미로 잘라냅니다 */
+  overflow: hidden; /* 원형 밖으로 튀어나온 영상 잘라내기 */
+  z-index: 9999; /* 웹툰 내용보다 무조건 위에 뜨게 설정 */
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 공중에 뜬 듯한 그림자 효과 */
+  cursor: pointer;
+  background-color: #ffffff; /* 영상의 기본 배경색과 맞추면 더 자연스럽습니다 */
+  transition: transform 0.2s ease-in-out;
+}
+
+/* 마우스 올리면 살짝 커지는 효과 */
+.chatbot-widget:hover {
+  transform: scale(1.05);
+}
+
+/* 💡 핵심 2: 머리 위 글자를 가리기 위한 하얀색 덮개 (반창고 역할) */
+.text-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0%; /* 글자가 차지하는 영역만큼 퍼센트 조절 (테스트하며 맞춰보세요) */
+  background-color: #ffffff; /* 가려줄 색상 (영상 배경색과 동일하게) */
+  z-index: 10;
+}
+
+/* 비디오 설정 */
+.mascot-video {
+  position: absolute; /* 영역 안에 꽉 차게 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1; /* 빨간 덮개(10)보다 낮고 배경보단 높게 설정 */
+}

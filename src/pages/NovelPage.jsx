@@ -5,6 +5,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import styles from "../styles/NovelPage.module.css";
+import AiChatbotWidget from "../components/AiChatbotWidget";
 
 const genres = ["전체", "로맨스", "판타지", "무협", "현대", "스릴러", "BL"];
 
@@ -216,6 +217,7 @@ export default function NovelPage() {
           </div>
         )}
       </div>
+      <AiChatbotWidget />
     </div>
   );
 }
