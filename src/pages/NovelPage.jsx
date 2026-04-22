@@ -5,6 +5,7 @@ import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import styles from "../styles/NovelPage.module.css";
+import AiChatbotWidget from "../components/AiChatbotWidget";
 
 const days = ["전체", "월", "화", "수", "목", "금", "토", "일", "완결"];
 
@@ -241,6 +242,7 @@ export default function NovelPage() {
           </div>
         )}
       </div>
+      <AiChatbotWidget />
     </div>
   );
 }
