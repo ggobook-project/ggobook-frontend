@@ -67,8 +67,8 @@ export default function ContentDetailPage() {
   }
 
   const handleEpisodeClick = (episodeId) => {
-    if (content.type === "WEBTOON") navigate(`/webtoon/viewer/${episodeId}`)
-    else if (content.type === "NOVEL") navigate(`/novel/viewer/${episodeId}`)
+    if (content.type === "웹툰") navigate(`/webtoon/viewer/${episodeId}`)
+    else if (content.type === "웹소설") navigate(`/novel/viewer/${episodeId}`)
   }
 
   const handleShare = async () => {

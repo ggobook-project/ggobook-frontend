@@ -1,9 +1,17 @@
-import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+import { useEffect, useState } from "react"
 import styles from "../styles/WebtoonViewerPage.module.css"
 
 export default function WebtoonViewerPage() {
   const navigate = useNavigate()
+  const { episodeId } = useParams()
+
+  // ── 원격(API) 상태 ──
+  const [episode, setEpisode] = useState(null)
+  const [comicToons, setComicToons] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  // ── 기존 UI 상태 ──
   const [myRating, setMyRating] = useState(0)
   const [hoverStar, setHoverStar] = useState(0)
   const [showRatingModal, setShowRatingModal] = useState(false)
@@ -25,13 +33,47 @@ export default function WebtoonViewerPage() {
   const currentUser = "나"
 
   const allEpisodes = Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1, num: `${i + 1}화`, thumb: null, current: i + 1 === 3
+    id: i + 1, num: `${i + 1}화`, thumb: null,
+    current: i + 1 === parseInt(episodeId)
   }))
-
   const visibleCount = 5
   const maxOffset = Math.max(0, allEpisodes.length - visibleCount)
   const visibleEpisodes = allEpisodes.slice(epOffset, epOffset + visibleCount)
 
+  // ── API 호출 ──
+  const loadEpisodeDetail = async () => {
+    try {
+      setLoading(true)
+      const token = localStorage.getItem("accessToken")
+      const response = await fetch(`http://localhost:8080/api/episodes/${episodeId}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) { alert("백엔드 통신 실패(회차 상세)"); return }
+      const data = await response.json()
+      setEpisode(data)
+      const sorted = (data.comicToons || []).sort((a, b) => a.imageOrder - b.imageOrder)
+      setComicToons(sorted)
+    } catch (error) {
+      console.error("회차 상세 불러오기 실패 : ", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    loadEpisodeDetail()
+  }, [episodeId])
+
+  const goContentDetail = () => {
+    if (episode?.content?.contentId) {
+      navigate(`/contents/${episode.content.contentId}`)
+    } else {
+      navigate(-1)
+    }
+  }
+
+  // ── 핸들러 ──
   const handleLike = () => {
     if (!isLoggedIn) { navigate("/login"); return }
     setLiked(!liked)
@@ -45,14 +87,9 @@ export default function WebtoonViewerPage() {
     setComment("")
   }
 
-  const handleDelete = (id) => {
-    setComments(comments.filter(c => c.id !== id))
-  }
+  const handleDelete = (id) => setComments(comments.filter(c => c.id !== id))
 
-  const handleEditStart = (cm) => {
-    setEditingId(cm.id)
-    setEditText(cm.text)
-  }
+  const handleEditStart = (cm) => { setEditingId(cm.id); setEditText(cm.text) }
 
   const handleEditSubmit = (id) => {
     setComments(comments.map(c => c.id === id ? { ...c, text: editText } : c))
@@ -65,22 +102,48 @@ export default function WebtoonViewerPage() {
     setShowRatingModal(false)
   }
 
+  // ── 로딩 / 에러 ──
+  if (loading) {
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.loading}>불러오는 중...</div>
+      </div>
+    )
+  }
+
+  if (!episode) return null
+
   return (
     <div className={styles.pageWrapper}>
+
+      {/* 상단 바 */}
       <div className={styles.topBar}>
-  <button className={styles.topBtn} onClick={() => navigate("/contents/1")}>
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="15 18 9 12 15 6" />
-    </svg>
-    목록
-  </button>
-  <span className={styles.topTitle}>작품명 3화</span>
-  <span className={styles.topPage}>3 / 8</span>
-</div>
+        <button className={styles.topBtn} onClick={goContentDetail}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          목록
+        </button>
+        <span className={styles.topTitle}>
+          {episode.episodeTitle || `${episode.episodeNumber}화`}
+        </span>
+        <span className={styles.topPage}>{episode.episodeNumber}화</span>
+      </div>
+
+      {/* 컨텐츠 (실제 이미지) */}
       <div className={styles.content}>
-        {[180, 140, 200, 160, 180, 150].map((h, i) => (
-          <div key={i} className={`${styles.panel} ${i % 2 === 0 ? styles.panelEven : styles.panelOdd}`} style={{ height: h }} />
-        ))}
+        {comicToons.length > 0
+          ? comicToons.map((ct) => (
+              <img
+                key={ct.comicToonId}
+                src={ct.imageUrl}
+                alt={`${ct.imageOrder}컷`}
+                className={styles.panel}
+                style={{ width: "100%", display: "block" }}
+              />
+            ))
+          : <div className={styles.emptyMsg}>이미지가 없습니다.</div>
+        }
 
         {/* 에피소드 네비게이터 */}
         <div className={styles.episodeNav}>
@@ -129,7 +192,7 @@ export default function WebtoonViewerPage() {
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
-            <span className={styles.actionLabel}> {avgRating.toFixed(1)}</span>
+            <span className={styles.actionLabel}>{avgRating.toFixed(1)}</span>
             <span className={styles.actionSub}>{totalRating}명 참여</span>
           </button>
 
@@ -239,6 +302,7 @@ export default function WebtoonViewerPage() {
             ))}
           </div>
         </div>
+
       </div>
     </div>
   )
