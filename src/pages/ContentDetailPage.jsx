@@ -47,10 +47,55 @@ export default function ContentDetailPage() {
     }
   }
 
+  const getUserId = () => {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return null
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.userId || payload.id || payload.sub
+    } catch { return null }
+  }
+
+  const checkLiked = async (userId) => {
+    if (!userId) return
+    try {
+      const token = localStorage.getItem('accessToken')
+      const response = await fetch(
+        `http://localhost:8080/api/likes/?userId=${userId}&page=0&size=100`,
+        { method: "GET", headers: { 'Authorization': `Bearer ${token}` } }
+      )
+      if (!response.ok) return
+      const data = await response.json()
+      const list = Array.isArray(data) ? data : (data.content ?? [])
+      const isLiked = list.some(l => l.content?.contentId === parseInt(contentId))
+      setLiked(isLiked)
+    } catch (error) {
+      console.error("찜 상태 확인 실패 : ", error)
+    }
+  }
+
   useEffect(() => {
     loadContentDetail()
     loadEpisodeList()
+    const userId = getUserId()
+    if (userId) checkLiked(userId)
   }, [contentId])
+
+  const handleLike = async () => {
+    const userId = getUserId()
+    if (!userId) { alert("로그인이 필요합니다."); return }
+    try {
+      const token = localStorage.getItem('accessToken')
+      const response = await fetch(
+        `http://localhost:8080/api/likes/${contentId}?userId=${userId}`,
+        { method: "POST", headers: { 'Authorization': `Bearer ${token}` } }
+      )
+      if (response.ok) setLiked(!liked)
+      else alert("찜 처리에 실패했습니다.")
+    } catch (error) {
+      console.error("찜 실패 : ", error)
+    }
+  }
 
   const formatDate = (dateStr) => {
     if (!dateStr) return ""
@@ -67,8 +112,8 @@ export default function ContentDetailPage() {
   }
 
   const handleEpisodeClick = (episodeId) => {
-    if (content.type === "웹툰") navigate(`/webtoon/viewer/${episodeId}`)
-    else if (content.type === "웹소설") navigate(`/novel/viewer/${episodeId}`)
+    if (content.type === "웹툰") navigate(`/webtoon/viewer/${episodeId}?contentId=${contentId}`)
+    else if (content.type === "웹소설") navigate(`/novel/viewer/${episodeId}?contentId=${contentId}`)
   }
 
   const handleShare = async () => {
@@ -135,7 +180,7 @@ export default function ContentDetailPage() {
             <div className={styles.actionRow}>
               {/* 찜 버튼 */}
               <button
-                onClick={() => setLiked(!liked)}
+                onClick={handleLike}
                 className={`${styles.iconBtn} ${liked ? styles.iconBtnLiked : ""}`}
                 title="찜하기"
               >

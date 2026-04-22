@@ -1,9 +1,11 @@
-import { useNavigate, useParams } from "react-router-dom"
+import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import styles from "../styles/WebtoonViewerPage.module.css"
 
 export default function WebtoonViewerPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const contentId = searchParams.get("contentId")
   const { episodeId } = useParams()
 
   // ── 원격(API) 상태 ──
@@ -27,10 +29,54 @@ export default function WebtoonViewerPage() {
   const [editText, setEditText] = useState("")
   const [epOffset, setEpOffset] = useState(0)
 
-  const avgRating = 4.2
-  const totalRating = 128
+  const [avgRating, setAvgRating] = useState(0)
+
   const isLoggedIn = !!localStorage.getItem("accessToken")
   const currentUser = "나"
+
+  const getUserId = () => {
+    const token = localStorage.getItem('accessToken')
+    if (!token) return null
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      return payload.userId || payload.id || payload.sub
+    } catch { return null }
+  }
+
+  const loadAverageRating = async () => {
+    try {
+      const token = localStorage.getItem('accessToken')
+      const response = await fetch(
+        `http://localhost:8080/api/ratings/${contentId}`,
+        { method: "GET", headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (!response.ok) return
+      const avg = await response.json()
+      setAvgRating(avg || 0)
+    } catch (error) {
+      console.error("평균 평점 로드 실패 : ", error)
+    }
+  }
+
+  const loadMyRating = async () => {
+    const userId = getUserId()
+    if (!userId) return
+    try {
+      const token = localStorage.getItem('accessToken')
+      const response = await fetch(
+        `http://localhost:8080/api/ratings/${contentId}/users/${userId}`,
+        { method: "GET", headers: { Authorization: `Bearer ${token}` } }
+      )
+      if (!response.ok) return
+      const data = await response.json()
+      if (data?.score) {
+        setMyRating(data.score)
+        setTempRating(data.score)
+      }
+    } catch (error) {
+      console.error("내 평점 로드 실패 : ", error)
+    }
+  }
 
   const allEpisodes = Array.from({ length: 10 }, (_, i) => ({
     id: i + 1, num: `${i + 1}화`, thumb: null,
@@ -65,9 +111,16 @@ export default function WebtoonViewerPage() {
     loadEpisodeDetail()
   }, [episodeId])
 
+  useEffect(() => {
+    if (contentId) {
+      loadAverageRating()
+      loadMyRating()
+    }
+  }, [episode])
+
   const goContentDetail = () => {
-    if (episode?.content?.contentId) {
-      navigate(`/contents/${episode.content.contentId}`)
+    if (contentId) {
+      navigate(`/contents/${contentId}`)
     } else {
       navigate(-1)
     }
@@ -97,9 +150,33 @@ export default function WebtoonViewerPage() {
     setEditText("")
   }
 
-  const handleRatingConfirm = () => {
-    setMyRating(tempRating)
-    setShowRatingModal(false)
+  const handleRatingConfirm = async () => {
+    const userId = getUserId()
+    if (!userId) { navigate("/login"); return }
+    try {
+      const token = localStorage.getItem('accessToken')
+      const rating = { score: tempRating }
+      const response = await fetch(
+        `http://localhost:8080/api/ratings/${contentId}?userId=${userId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(rating)
+        }
+      )
+      if (response.ok) {
+        setMyRating(tempRating)
+        setShowRatingModal(false)
+        loadAverageRating() // 평균 평점 갱신
+      } else {
+        alert("별점 저장에 실패했습니다.")
+      }
+    } catch (error) {
+      console.error("별점 저장 실패 : ", error)
+    }
   }
 
   // ── 로딩 / 에러 ──
@@ -159,7 +236,7 @@ export default function WebtoonViewerPage() {
           <div className={styles.epNavList}>
             {visibleEpisodes.map(ep => (
               <div
-                key={ep.id}
+                key={`${epOffset}-${ep.id}`}
                 className={`${styles.epNavItem} ${ep.current ? styles.epNavItemCurrent : ""}`}
                 onClick={() => !ep.current && navigate(`/webtoon/viewer/${ep.id}`)}
               >
@@ -193,7 +270,7 @@ export default function WebtoonViewerPage() {
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
             </svg>
             <span className={styles.actionLabel}>{avgRating.toFixed(1)}</span>
-            <span className={styles.actionSub}>{totalRating}명 참여</span>
+            <span className={styles.actionSub}>평균 별점</span>
           </button>
 
           <div className={styles.actionDivider} />
