@@ -1,132 +1,65 @@
-import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
-import axios from "axios" 
-import theme from "../styles/theme"
-const { colors: c } = theme
-import styles from "../styles/AdminInspectionPage.module.css"
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import styles from "../styles/AdminInspectionPage.module.css";
 
 export default function AdminInspectionPage() {
-  const navigate = useNavigate()
-  
-  const [filter, setFilter] = useState("전체")
-  const [items, setItems] = useState([]) 
-  
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [selectedItem, setSelectedItem] = useState(null)
-  const [rejectReason, setRejectReason] = useState("")
-
-  // const items = Array.from({ length: 6 }, (_, i) => ({
-  //   id: i + 1, title: `작품 제목 ${i + 1}`, author: "작가명",
-  //   type: i % 2 === 0 ? "웹툰" : "웹소설", date: "2026.04.13",
-  //   status: "대기"
-  // }))
+  const navigate = useNavigate();
+  const [filter, setFilter] = useState("전체");
+  const [items, setItems] = useState([]); // 🌟 실제 DB 데이터를 담을 공간
 
   // ==========================================
-  // [연동 1] 백엔드에서 검수 대기 목록 불러오기
+  // [연동 1] 백엔드에서 실제 검수 대기 목록 불러오기
   // ==========================================
   const loadInspectionList = async () => {
     try {
       const response = await axios.get("http://localhost:8080/api/admin/inspections");
-      setItems(response.data); 
+      
+      // 🌟 [추가] 백엔드가 정확히 어떤 모양으로 데이터를 주는지 콘솔에서 확인합니다.
+      console.log("=== 목록 응답 데이터 ===", response.data);
+
+      // 🌟 [강력한 방어 코드] 어떤 껍데기로 오든 배열(Array)만 정확히 찾아냅니다.
+      let dataList = [];
+      if (Array.isArray(response.data)) {
+        dataList = response.data; // 껍데기 없이 순수 리스트만 왔을 때
+      } else if (response.data && Array.isArray(response.data.content)) {
+        dataList = response.data.content; // Spring Boot의 Page<> 객체로 왔을 때
+      } else if (response.data && Array.isArray(response.data.data)) {
+        dataList = response.data.data; // 커스텀 API Response 객체로 왔을 때
+      }
+
+      setItems(dataList); // 안전하게 추출된 배열만 상태에 저장!
     } catch (error) {
       console.error("목록을 불러오는데 실패했습니다.", error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadInspectionList()
-  }, []) 
+    loadInspectionList();
+  }, []);
 
-  // ==========================================
-  // [탭 필터 변경]
-  // ==========================================
-  const handleTypeFilter = (selectedFilter) => {
-    setFilter(selectedFilter);
-  }
+  const filteredItems = items.filter(item => {
+    // 1. "전체" 탭이면 모두 통과
+    if (filter === "전체") return true;
 
-  // ==========================================
-  // [작품 상세 보기]
-  // ==========================================
-  const handleInspectionClick = (episodeId) => {
-    navigate(`/admin/inspection/detail/${episodeId}`);
-  }
+    // 🌟 2. DB에 한글("웹소설", "웹툰")로 저장되어 있으므로, 한글 글자 그대로 비교합니다!
+    const type = item.content?.type; 
 
-  // ==========================================
-  // [연동 2] 작품 승인 처리하기
-  // ==========================================
-  const handleApprove = async (episodeId) => {
-    if(window.confirm("이 작품을 승인하시겠습니까?")) {
-      try {
-        const now = new Date();
-        const formattedDate = now.getFullYear() + '-' + 
-                              String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-                              String(now.getDate()).padStart(2, '0') + ' ' + 
-                              String(now.getHours()).padStart(2, '0') + ':' + 
-                              String(now.getMinutes()).padStart(2, '0') + ':' + 
-                              String(now.getSeconds()).padStart(2, '0');
-        
-        const requestData = { scheduledAt: formattedDate };
+    if (filter === "웹소설" && type === "웹소설") return true;
+    if (filter === "웹툰" && type === "웹툰") return true; 
 
-        await axios.post(`http://localhost:8080/api/admin/inspections/episodes/${episodeId}/approve`, requestData);
-        
-        alert("승인 처리가 완료되었습니다.");
-        loadInspectionList(); 
-      } catch (error) {
-        console.error("승인 처리 실패", error);
-        alert("승인 처리 중 오류가 발생했습니다.");
-      }
-    }
-  }
+    return false;
+  });
 
-  // ==========================================
-  // [연동 3] 작품 반려 처리하기
-  // ==========================================
-  const handleReject = async () => {
-    if (!rejectReason) {
-      alert("반려 사유를 선택해주세요.");
-      return;
-    }
-    
-    try {
-      const requestData = { rejectReason: rejectReason };
-
-      await axios.post(`http://localhost:8080/api/admin/inspections/episodes/${selectedItem?.episodeId}/reject`, requestData);
-      
-      alert(`'${selectedItem?.title}' 작품이 반려되었습니다.\n사유: ${rejectReason}`);
-      
-      closeRejectModal();
-      loadInspectionList(); 
-
-    } catch (error) {
-      console.error("반려 처리 실패", error);
-      alert("반려 처리 중 오류가 발생했습니다.");
-    }
-  } 
-
-  // ==========================================
-  // [UI 제어] 모달창 열기/닫기
-  // ==========================================
-  const openRejectModal = (item) => {
-    setSelectedItem(item)
-    setIsModalOpen(true)
-  }
-
-  const closeRejectModal = () => {
-    setIsModalOpen(false)
-    setSelectedItem(null)
-    setRejectReason("") 
-  }
-
-  // ==========================================
-  // 화면 렌더링 (View)
-  // ==========================================
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>검수 관리</div>
         <div className={styles.headerSubtitle}>등록된 작품을 검토하고 승인/반려하세요</div>
       </div>
+      
       <div className={styles.content}>
+        {/* 필터 탭 (임시 UI - 실제 필터링 로직은 추후 추가 가능) */}
         <div className={styles.filterGroup}>
           {["전체", "웹툰", "웹소설"].map(f => (
             <button
@@ -139,51 +72,51 @@ export default function AdminInspectionPage() {
           ))}
         </div>
 
-        {items.map(item => (
-          <div key={item.id} className={styles.itemCard}
-           onClick={() => handleInspectionClick(item.episodeId)}>
-            <div className={styles.itemLeft}>
-              <div className={styles.thumbnail} />
-              <div>
-                <div className={styles.itemTitle}>{item.title}</div>
-                <div className={styles.itemMeta}>{item.author} · {item.type} · {item.date}</div>
+        {/* 🌟 실제 데이터 렌더링 영역 */}
+        {filteredItems.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>
+            현재 대기 중인 검수 요청이 없습니다.
+          </div>
+        ) : (
+          /* 🌟 기존에 items.map 을 filteredItems.map 으로 변경! */
+          filteredItems.map(item => {
+            const contentInfo = item.content || {};
+
+            return (
+              <div 
+                key={item.episodeId} 
+                className={styles.itemCard}
+                // 🌟 [핵심] 목적지를 App.js에 등록한 "detail/" 이 포함된 주소로 완벽히 수정!
+                onClick={() => navigate(`/admin/inspection/detail/${item.episodeId}`)}
+              >
+                <div className={styles.itemLeft}>
+                  {/* 썸네일 표시 */}
+                  {contentInfo.thumbnailUrl ? (
+                     <img src={contentInfo.thumbnailUrl} className={styles.thumbnail} alt="썸네일" style={{ objectFit: "cover" }}/>
+                  ) : (
+                     <div className={styles.thumbnail} style={{display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#999"}}>No IMG</div>
+                  )}
+                  
+                  <div>
+                    {/* 백엔드 DTO 규격에 맞춰 제목과 정보 출력 */}
+                    <div className={styles.itemTitle}>{contentInfo.title || item.episodeTitle || "제목 없음"}</div>
+                    <div className={styles.itemMeta}>
+                      작가ID: {contentInfo.authorId || "미상"} · {contentInfo.type === "NOVEL" ? "웹소설" : "웹툰"} · {item.episodeNumber}화
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 🌟 밖에서 대충 승인하지 못하게 버튼들을 지우고 화살표 아이콘이나 안내 문구로 대체 */}
+                <div className={styles.actionGroup}>
+                  <span style={{ fontSize: "13px", color: "#2196F3", fontWeight: "600" }}>
+                    상세 검토하기 ➔
+                  </span>
+                </div>
               </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-            <div className={styles.actionGroup}>
-              <button onClick={() => handleApprove(item.episodeId)} className={styles.btnApprove}>승인</button>
-              <button onClick={() => openRejectModal(item)} className={styles.btnReject}>반려</button>
-            </div>
-          </div>
-          </div>
-        ))}
+            );
+          })
+        )}
       </div>
-
-      {isModalOpen && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 1000 }}>
-          <div style={{ background: c.bgWhite, padding: 30, borderRadius: theme.radius.md, width: "100%", maxWidth: 400 }}>
-            <h3 style={{ marginTop: 0, marginBottom: 10, color: c.text }}>작품 반려</h3>
-            <p style={{ fontSize: 14, color: c.textSub, marginBottom: 20 }}>
-              <strong style={{color: c.primary}}>{selectedItem?.title}</strong> 작품을 반려하시겠습니까?
-            </p>
-            
-            <select value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} style={{ width: "100%", padding: 10, marginBottom: 20, borderRadius: theme.radius.sm, border: `1px solid ${c.border}` }}>
-              <option value="">반려 사유를 선택해주세요</option>
-              <option value="저작권 침해 및 표절 의심">저작권 침해 및 표절 의심</option>
-              <option value="운영정책 위반 (욕설, 선정성 등)">운영정책 위반 (욕설, 선정성 등)</option>
-              <option value="원고 파일 누락 및 규격 미달">원고 파일 누락 및 규격 미달</option>
-              <option value="광고 및 상업적 목적">광고 및 상업적 목적</option>
-              <option value="가독성 심각 (문맥 파괴 등)">가독성 심각 (문맥 파괴 등)</option>
-              <option value="기타 사유">기타 사유</option>
-            </select>
-
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-              <button onClick={closeRejectModal} style={{ padding: "8px 16px", background: c.bgSurface, border: "none", borderRadius: theme.radius.md, cursor: "pointer" }}>취소</button>
-              <button onClick={handleReject} style={{ padding: "8px 16px", background: c.danger, color: "#fff", border: "none", borderRadius: theme.radius.md, cursor: "pointer" }}>반려 전송</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-  )
+  );
 }
