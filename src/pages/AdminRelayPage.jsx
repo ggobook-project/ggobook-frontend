@@ -1,60 +1,103 @@
-import { useNavigate } from "react-router-dom"
-import { useState } from "react"
-import styles from "../styles/AdminRelayPage.module.css"
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import styles from "../styles/AdminRelayPage.module.css";
 
 const initialGuidelines = [
   { id: 1, title: "분량 가이드", content: "각 이어쓰기는 200자 이상 1000자 이내로 작성해주세요." },
   { id: 2, title: "내용 가이드", content: "이전 내용의 흐름을 자연스럽게 이어가야 합니다." },
   { id: 3, title: "금지 사항", content: "폭력적이거나 선정적인 내용은 작성할 수 없습니다." },
-]
+];
 
 export default function AdminRelayPage() {
-  const navigate = useNavigate()
-  const [tab, setTab] = useState("릴레이 목록")
+  const navigate = useNavigate();
+  const [tab, setTab] = useState("릴레이 목록");
 
-  const relays = Array.from({ length: 4 }, (_, i) => ({
-    id: i + 1, title: `릴레이 소설 ${i + 1}`, starter: "홍길동",
-    entries: i * 5 + 3, date: "2026.04.10"
-  }))
+  const [relays, setRelays] = useState([]);
+  const [topics, setTopics] = useState([]);
 
-  const topics = Array.from({ length: 3 }, (_, i) => ({
-    id: i + 1, title: `관리자 주제 ${i + 1}`, date: "2026.04.01"
-  }))
+  const [newTopicTitle, setNewTopicTitle] = useState("");
+  const [newTopicDesc, setNewTopicDesc] = useState("");
 
-  // 가이드라인 상태
-  const [guidelines, setGuidelines] = useState(initialGuidelines)
-  const [newTitle, setNewTitle] = useState("")
-  const [newContent, setNewContent] = useState("")
-  const [editingId, setEditingId] = useState(null)
-  const [editTitle, setEditTitle] = useState("")
-  const [editContent, setEditContent] = useState("")
+  const [guidelines, setGuidelines] = useState(initialGuidelines);
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+
+  const loadRelayNovels = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/admin/relay-novels");
+      const dataList = response.data.content ? response.data.content : response.data;
+      setRelays(dataList);
+    } catch (error) {
+      console.error("릴레이 소설 목록을 불러오지 못했습니다.", error);
+    }
+  };
+
+  const loadAdminTopics = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/admin/relay-topics");
+      const dataList = response.data.content ? response.data.content : response.data;
+      setTopics(dataList);
+    } catch (error) {
+      console.error("관리자 주제 목록을 불러오지 못했습니다.", error);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === "릴레이 목록") loadRelayNovels();
+    if (tab === "주제 관리") loadAdminTopics();
+  }, [tab]);
+
+  const handleAddTopic = async () => {
+    if (!newTopicTitle.trim()) { alert("주제 제목을 입력해주세요."); return; }
+    try {
+      await axios.post("http://localhost:8080/api/admin/relay-topics", {
+        title: newTopicTitle.trim(),
+        description: newTopicDesc.trim() || "관리자가 등록한 공식 주제입니다.",
+      });
+      alert("새 주제가 등록되었습니다.");
+      setNewTopicTitle("");
+      setNewTopicDesc("");
+      loadAdminTopics();
+    } catch (error) {
+      console.error("주제 등록 실패", error);
+      alert("주제 등록 중 오류가 발생했습니다.");
+    }
+  };
+
+  const handleDeleteTopic = async (topicId) => {
+    if (!window.confirm("정말 이 주제를 삭제하시겠습니까?")) return;
+    try {
+      await axios.delete(`http://localhost:8080/api/admin/relay-topics/${topicId}`);
+      alert("삭제되었습니다.");
+      loadAdminTopics();
+    } catch (error) {
+      console.error("주제 삭제 실패", error);
+      alert("삭제 중 오류가 발생했습니다.");
+    }
+  };
 
   const handleAdd = () => {
-    if (!newTitle.trim() || !newContent.trim()) return
-    setGuidelines(prev => [...prev, { id: Date.now(), title: newTitle.trim(), content: newContent.trim() }])
-    setNewTitle("")
-    setNewContent("")
-  }
+    if (!newTitle.trim() || !newContent.trim()) return;
+    setGuidelines(prev => [...prev, { id: Date.now(), title: newTitle.trim(), content: newContent.trim() }]);
+    setNewTitle("");
+    setNewContent("");
+  };
 
-  const handleEditStart = (g) => {
-    setEditingId(g.id)
-    setEditTitle(g.title)
-    setEditContent(g.content)
-  }
+  const handleEditStart = (g) => { setEditingId(g.id); setEditTitle(g.title); setEditContent(g.content); };
 
   const handleEditSave = (id) => {
-    if (!editTitle.trim() || !editContent.trim()) return
-    setGuidelines(prev => prev.map(g => g.id === id ? { ...g, title: editTitle.trim(), content: editContent.trim() } : g))
-    setEditingId(null)
-  }
+    if (!editTitle.trim() || !editContent.trim()) return;
+    setGuidelines(prev => prev.map(g => g.id === id ? { ...g, title: editTitle.trim(), content: editContent.trim() } : g));
+    setEditingId(null);
+  };
 
-  const handleEditCancel = () => {
-    setEditingId(null)
-  }
+  const handleEditCancel = () => setEditingId(null);
 
-  const handleDelete = (id) => {
-    setGuidelines(prev => prev.filter(g => g.id !== id))
-  }
+  const handleDelete = (id) => setGuidelines(prev => prev.filter(g => g.id !== id));
 
   return (
     <div className={styles.pageWrapper}>
@@ -70,48 +113,69 @@ export default function AdminRelayPage() {
               key={t}
               onClick={() => setTab(t)}
               className={`${styles.tabBtn} ${tab === t ? styles.tabBtnActive : ""}`}
-            >
-              {t}
-            </button>
+            >{t}</button>
           ))}
         </div>
 
         {/* 릴레이 목록 */}
-        {tab === "릴레이 목록" && relays.map(r => (
-          <div key={r.id} className={styles.card}>
-            <div>
-              <div className={styles.cardTitle}>{r.title}</div>
-              <div className={styles.cardMeta}>시작: {r.starter} · 이어쓰기 {r.entries}개 · {r.date}</div>
-            </div>
-            <button className={styles.deleteBtn}>삭제</button>
-          </div>
-        ))}
+        {tab === "릴레이 목록" && (
+          relays.length === 0
+            ? <div style={{ padding: "20px", textAlign: "center" }}>등록된 릴레이 소설이 없습니다.</div>
+            : relays.map(r => (
+              <div key={r.relayNovelId || r.id} className={styles.card}>
+                <div>
+                  <div className={styles.cardTitle}>{r.title}</div>
+                  <div className={styles.cardMeta}>
+                    작성자 ID: {r.userId} · 생성일: {new Date(r.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+                <button
+                  className={styles.detailBtn}
+                  onClick={() => navigate(`/admin/relay/detail/${r.relayNovelId || r.id}`)}
+                >상세 보기 ➔</button>
+              </div>
+            ))
+        )}
 
         {/* 주제 관리 */}
         {tab === "주제 관리" && (
           <>
             <div className={styles.topicForm}>
               <div className={styles.topicInputRow}>
-                <input placeholder="새 주제 입력" className={styles.topicInput} />
-                <button className={styles.registerBtn}>등록</button>
+                <input
+                  placeholder="새 주제 입력 (예: 좀비 아포칼립스)"
+                  className={styles.topicInput}
+                  value={newTopicTitle}
+                  onChange={e => setNewTopicTitle(e.target.value)}
+                />
+                <button className={styles.registerBtn} onClick={handleAddTopic}>등록</button>
               </div>
+              <input
+                placeholder="주제 설명 (선택사항)"
+                className={styles.topicInput}
+                style={{ marginTop: "10px", width: "100%" }}
+                value={newTopicDesc}
+                onChange={e => setNewTopicDesc(e.target.value)}
+              />
             </div>
-            {topics.map(t => (
-              <div key={t.id} className={styles.card}>
-                <div>
-                  <div className={styles.cardTitle}>{t.title}</div>
-                  <div className={styles.cardMeta}>{t.date}</div>
+            {topics.length === 0
+              ? <div style={{ padding: "20px", textAlign: "center" }}>등록된 관리자 주제가 없습니다.</div>
+              : topics.map(t => (
+                <div key={t.topicId || t.id} className={styles.card}>
+                  <div>
+                    <div className={styles.cardTitle}>{t.title}</div>
+                    <div className={styles.cardMeta}>{t.description} · {new Date(t.createdAt).toLocaleDateString()}</div>
+                  </div>
+                  <button className={styles.deleteBtn} onClick={() => handleDeleteTopic(t.topicId || t.id)}>삭제</button>
                 </div>
-                <button className={styles.deleteBtn}>삭제</button>
-              </div>
-            ))}
+              ))
+            }
           </>
         )}
 
         {/* 가이드라인 */}
         {tab === "가이드라인" && (
           <>
-            {/* 새 가이드라인 추가 폼 */}
             <div className={styles.topicForm}>
               <div className={styles.guideFormTitle}>새 가이드라인 추가</div>
               <div className={styles.topicInputRow}>
@@ -133,11 +197,9 @@ export default function AdminRelayPage() {
               </div>
             </div>
 
-            {/* 가이드라인 목록 */}
             {guidelines.map(g => (
               <div key={g.id} className={styles.guideCard}>
                 {editingId === g.id ? (
-                  /* 수정 모드 */
                   <>
                     <input
                       className={styles.topicInput}
@@ -155,7 +217,6 @@ export default function AdminRelayPage() {
                     </div>
                   </>
                 ) : (
-                  /* 보기 모드 */
                   <>
                     <div className={styles.guideCardHeader}>
                       <div className={styles.cardTitle}>{g.title}</div>
@@ -173,5 +234,5 @@ export default function AdminRelayPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

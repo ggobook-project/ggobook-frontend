@@ -35,12 +35,14 @@ import NoticePage from "./pages/NoticePage"
 import NoticeDetailPage from "./pages/NoticeDetailPage"
 import AdminMainPage from "./pages/AdminMainPage"
 import AdminInspectionPage from "./pages/AdminInspectionPage"
+import AdminInspectionDetailPage from "./pages/AdminInspectionDetailPage"
 import AdminUploadPage from "./pages/AdminUploadPage"
 import AdminUploadDetailPage from "./pages/AdminUploadDetailPage"
 import AdminMemberPage from "./pages/AdminMemberPage"
 import AdminReportPage from "./pages/AdminReportPage"
 import AdminNoticePage from "./pages/AdminNoticePage"
 import AdminRelayPage from "./pages/AdminRelayPage"
+import AdminRelayDetailPage from "./pages/AdminRelayDetailPage"
 import AdminTTSPage from "./pages/AdminTTSPage"
 import NotFoundPage from "./pages/NotFoundPage"
 import { useLocation } from "react-router-dom"
@@ -121,12 +123,14 @@ function Layout() {
           <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
           <Route path="/admin" element={<AdminMainPage />} />
           <Route path="/admin/inspections" element={<AdminInspectionPage />} />
+          <Route path="/admin/inspection/detail/:episodeId" element={<AdminInspectionDetailPage />} />
           <Route path="/admin/uploads" element={<AdminUploadPage />} />
           <Route path="/admin/uploads/:contentId" element={<AdminUploadDetailPage />} />
           <Route path="/admin/members" element={<AdminMemberPage />} />
           <Route path="/admin/reports" element={<AdminReportPage />} />
           <Route path="/admin/notices" element={<AdminNoticePage />} />
           <Route path="/admin/relays" element={<AdminRelayPage />} />
+          <Route path="/admin/relay/detail/:novelId" element={<AdminRelayDetailPage />} />
           <Route path="/admin/tts" element={<AdminTTSPage />} />
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />

@@ -272,3 +272,100 @@
   color: #fff;
   transform: translateY(-1px);
 }
+
+/* =========================================
+   추가된 버튼 스타일 (인라인 스타일 대체)
+========================================= */
+.blindBtn {
+  padding: 6px 13px;
+  background: #E53935;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.blindBtn:hover {
+  background: #C62828;
+  transform: translateY(-1px);
+}
+
+.detailBtn {
+  padding: 6px 13px;
+  background: #2196F3;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.detailBtn:hover {
+  background: #1565C0;
+  transform: translateY(-1px);
+}
+
+/* =========================================
+   디테일 페이지(상세 검열) 전용 스타일
+========================================= */
+.backBtn {
+  background: transparent;
+  border: 1px solid #90CAF9;
+  color: #1565C0;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 16px;
+  transition: all 0.2s;
+}
+
+.backBtn:hover {
+  background: #E3F2FD;
+}
+
+.detailCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.entryMeta {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #2196F3;
+  font-size: 14px;
+}
+
+.entryText {
+  margin-bottom: 16px;
+  width: 100%;
+  color: #0D1B2A;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.blindedBox {
+  background: #ffebee;
+  color: #D32F2F;
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #ffcdd2;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
