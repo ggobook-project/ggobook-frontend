@@ -123,3 +123,16 @@
   border-radius: 6px;
   border: 1px solid #BBDEFB;
 }
+
+.observer {
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.observerText {
+  font-size: 13px;
+  color: #90A4C8;
+}

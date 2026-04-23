@@ -39,8 +39,15 @@ const dummyContents = Array.from({ length: 12 }, (_, i) => ({
 export default function AdminUploadPage() {
   const navigate = useNavigate()
   const [activeDay, setActiveDay] = useState("월")
+  const [query, setQuery] = useState("")
   const popularSwiperRef = useRef(null)
   const newSwiperRef = useRef(null)
+
+  const handleSearch = (e) => {
+    if (e.key === "Enter" && query.trim()) {
+      navigate(`/search?q=${encodeURIComponent(query)}`)
+    }
+  }
 
   const CardItem = ({ item }) => (
     <div
@@ -61,9 +68,27 @@ export default function AdminUploadPage() {
       <style>{swiperNavStyle}</style>
 
       <div className={styles.header}>
-        <div className={styles.headerTitle}>작품 관리</div>
-        <div className={styles.headerSubtitle}>회차 공개/비공개를 관리하세요</div>
-      </div>
+  <div className={styles.headerTitle}>작품 관리</div>
+  <div className={styles.headerSubtitle}>회차 공개/비공개를 관리하세요</div>
+  <div className={styles.headerInner}>
+    <div className={styles.searchBox}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#90A4C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        onKeyDown={handleSearch}
+        placeholder="작품명, 작가명 검색"
+        className={styles.searchInput}
+      />
+      {query && (
+        <span onClick={() => setQuery("")} style={{ color: "#90A4C8", cursor: "pointer", fontSize: 15, lineHeight: 1 }}>✕</span>
+      )}
+    </div>
+  </div>
+</div>
 
       <div className={styles.content}>
         <div className={styles.tabGroup}>

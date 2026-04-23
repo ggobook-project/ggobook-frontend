@@ -3,25 +3,44 @@
   min-height: calc(100vh - 60px);
 }
 
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #4A6FA5;
+  font-size: 14px;
+}
+
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .backBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background: none;
   border: none;
   color: #4A6FA5;
   font-size: 13px;
   cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
   margin-bottom: 8px;
-  padding: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.backBtn:hover {
+  background: #E3F2FD;
+  color: #1565C0;
 }
 
 .headerTitle {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: #0D1B2A;
+  color: #1565C0;
   margin-bottom: 4px;
 }
 
@@ -33,27 +52,105 @@
 .content {
   max-width: 720px;
   margin: 0 auto;
-  padding: 24px 40px;
+  padding: 24px 40px 60px;
 }
 
+/* 가이드라인 배너 */
+.guidelineBanner {
+  background: #E3F2FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+}
+
+.guidelineBannerTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1565C0;
+  margin-bottom: 10px;
+}
+
+.guidelineList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.guidelineItem {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.guidelineTitle {
+  color: #1565C0;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.guidelineContent {
+  color: #4A6FA5;
+}
+
+/* 에피소드 흐름 */
 .entryCard {
-  padding: 20px;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.entryOrder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.entryOrderNum {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2196F3;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.entryOrderLine {
+  width: 2px;
+  flex: 1;
+  background: #BBDEFB;
+  margin: 4px 0;
+  min-height: 20px;
+}
+
+.entryBody {
+  flex: 1;
+  padding: 16px 20px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.entryCard:hover {
-  border-color: #2196F3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+.entryBody:hover {
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.1);
 }
 
 .entryHeader {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
   margin-bottom: 10px;
 }
@@ -62,14 +159,15 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
+  background: #E3F2FD;
+  border: 1px solid #BBDEFB;
+  flex-shrink: 0;
 }
 
 .entryUser {
   font-size: 13px;
-  font-weight: 500;
-  color: #0D1B2A;
+  font-weight: 600;
+  color: #1565C0;
 }
 
 .entryMeta {
@@ -83,45 +181,74 @@
   line-height: 1.8;
 }
 
+/* 이어쓰기 폼 */
 .writeCard {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(187, 222, 251, 0.6);
-  border-radius: 10px;
+  border: 1px solid #BBDEFB;
+  border-radius: 12px;
   padding: 20px;
-  margin-top: 16px;
+  margin-top: 20px;
 }
 
 .writeTitle {
   font-size: 14px;
   font-weight: 600;
-  color: #0D1B2A;
-  margin-bottom: 12px;
+  color: #1565C0;
+  margin-bottom: 6px;
+}
+
+.charGuide {
+  display: flex;
+  gap: 6px;
+  font-size: 12px;
+  margin-bottom: 10px;
 }
 
 .textarea {
   width: 100%;
-  background: var(--bgSurface);
+  background: #E8F4FD;
   border: 1px solid #BBDEFB;
   border-radius: 10px;
-  padding: 11px 14px;
+  padding: 12px 14px;
   color: #0D1B2A;
-  font-size: 13px;
+  font-size: 14px;
   outline: none;
   box-sizing: border-box;
   resize: vertical;
+  line-height: 1.7;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
+
+.textarea:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.textarea::placeholder { color: #90A4C8; }
 
 .writeFooter {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
-.charCount {
-  font-size: 12px;
-  color: #90A4C8;
+.charCountWrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.charCountSep { color: #90A4C8; }
+.charCountMax { color: #90A4C8; }
+
+.charWarning {
+  font-size: 11px;
+  color: #E53935;
+  margin-left: 6px;
 }
 
 .submitBtn {
@@ -133,9 +260,30 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
 }
 
-.submitBtn:hover {
+.submitBtn:hover:not(:disabled) {
   background: #1565C0;
+  transform: translateY(-1px);
+}
+
+.submitBtn:disabled {
+  background: #BBDEFB;
+  color: #90A4C8;
+  cursor: default;
+}
+
+.progressBar {
+  height: 3px;
+  background: #E8F4FD;
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.2s, background 0.2s;
 }

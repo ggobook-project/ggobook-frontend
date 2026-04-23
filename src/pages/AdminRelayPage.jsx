@@ -4,7 +4,7 @@ import axios from "axios";
 import styles from "../styles/AdminRelayPage.module.css";
 
 const initialGuidelines = [
-  { id: 1, title: "분량 가이드", content: "각 이어쓰기는 200자 이상 1000자 이내로 작성해주세요." },
+  { id: 1, title: "분량 가이드", content: "각 이어쓰기는 50자 이상 500자 이내로 작성해주세요." },
   { id: 2, title: "내용 가이드", content: "이전 내용의 흐름을 자연스럽게 이어가야 합니다." },
   { id: 3, title: "금지 사항", content: "폭력적이거나 선정적인 내용은 작성할 수 없습니다." },
 ];
@@ -29,20 +29,24 @@ export default function AdminRelayPage() {
   const loadRelayNovels = async () => {
     try {
       const response = await axios.get("http://localhost:8080/api/admin/relay-novels");
-      const dataList = response.data.content ? response.data.content : response.data;
+      const data = response.data
+      const dataList = Array.isArray(data) ? data : (data.content ? data.content : [])
       setRelays(dataList);
     } catch (error) {
       console.error("릴레이 소설 목록을 불러오지 못했습니다.", error);
+      setRelays([]);
     }
   };
 
   const loadAdminTopics = async () => {
     try {
       const response = await axios.get("http://localhost:8080/api/admin/relay-topics");
-      const dataList = response.data.content ? response.data.content : response.data;
+      const data = response.data
+      const dataList = Array.isArray(data) ? data : (data.content ? data.content : [])
       setTopics(dataList);
     } catch (error) {
       console.error("관리자 주제 목록을 불러오지 못했습니다.", error);
+      setTopics([]);
     }
   };
 
@@ -96,7 +100,6 @@ export default function AdminRelayPage() {
   };
 
   const handleEditCancel = () => setEditingId(null);
-
   const handleDelete = (id) => setGuidelines(prev => prev.filter(g => g.id !== id));
 
   return (
@@ -120,19 +123,19 @@ export default function AdminRelayPage() {
         {/* 릴레이 목록 */}
         {tab === "릴레이 목록" && (
           relays.length === 0
-            ? <div style={{ padding: "20px", textAlign: "center" }}>등록된 릴레이 소설이 없습니다.</div>
+            ? <div style={{ padding: "20px", textAlign: "center", color: "#90A4C8", fontSize: 14 }}>등록된 릴레이 소설이 없습니다.</div>
             : relays.map(r => (
               <div key={r.relayNovelId || r.id} className={styles.card}>
                 <div>
                   <div className={styles.cardTitle}>{r.title}</div>
                   <div className={styles.cardMeta}>
-                    작성자 ID: {r.userId} · 생성일: {new Date(r.createdAt).toLocaleDateString()}
+                    작성자 ID: {r.userId} · 생성일: {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}
                   </div>
                 </div>
                 <button
                   className={styles.detailBtn}
                   onClick={() => navigate(`/admin/relay/detail/${r.relayNovelId || r.id}`)}
-                >상세 보기 ➔</button>
+                >상세 보기 →</button>
               </div>
             ))
         )}
@@ -147,24 +150,27 @@ export default function AdminRelayPage() {
                   className={styles.topicInput}
                   value={newTopicTitle}
                   onChange={e => setNewTopicTitle(e.target.value)}
+                  onKeyDown={e => e.key === "Enter" && handleAddTopic()}
                 />
                 <button className={styles.registerBtn} onClick={handleAddTopic}>등록</button>
               </div>
               <input
                 placeholder="주제 설명 (선택사항)"
                 className={styles.topicInput}
-                style={{ marginTop: "10px", width: "100%" }}
+                style={{ marginTop: "10px", width: "100%", boxSizing: "border-box" }}
                 value={newTopicDesc}
                 onChange={e => setNewTopicDesc(e.target.value)}
               />
             </div>
             {topics.length === 0
-              ? <div style={{ padding: "20px", textAlign: "center" }}>등록된 관리자 주제가 없습니다.</div>
+              ? <div style={{ padding: "20px", textAlign: "center", color: "#90A4C8", fontSize: 14 }}>등록된 관리자 주제가 없습니다.</div>
               : topics.map(t => (
                 <div key={t.topicId || t.id} className={styles.card}>
                   <div>
                     <div className={styles.cardTitle}>{t.title}</div>
-                    <div className={styles.cardMeta}>{t.description} · {new Date(t.createdAt).toLocaleDateString()}</div>
+                    <div className={styles.cardMeta}>
+                      {t.description} · {t.createdAt ? new Date(t.createdAt).toLocaleDateString() : "-"}
+                    </div>
                   </div>
                   <button className={styles.deleteBtn} onClick={() => handleDeleteTopic(t.topicId || t.id)}>삭제</button>
                 </div>
@@ -205,6 +211,7 @@ export default function AdminRelayPage() {
                       className={styles.topicInput}
                       value={editTitle}
                       onChange={e => setEditTitle(e.target.value)}
+                      style={{ marginBottom: 8, width: "100%", boxSizing: "border-box" }}
                     />
                     <textarea
                       className={styles.guideTextarea}

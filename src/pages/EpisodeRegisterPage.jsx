@@ -1,5 +1,8 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useEffect, useState } from "react"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { ko } from "date-fns/locale"
 import styles from "../styles/EpisodeRegisterPage.module.css"
 
 export default function EpisodeRegisterPage() {
@@ -16,40 +19,29 @@ export default function EpisodeRegisterPage() {
 
   const [novelText, setNovelText] = useState("")
   const [comicFiles, setComicFiles] = useState([])
-
   const [ttsFileUrl, setTtsFileUrl] = useState("")
 
-
   const handleEpisodeRegister = async () => {
-    if (!episodeTitle) {
-      alert("회차 제목은 필수입니다.")
-      return
-    }
-    if (isNovel && !novelText.trim()) {
-      alert("원고 내용은 필수입니다.")
-      return
-    }
-    if (!isNovel && comicFiles.length === 0) {
-      alert("웹툰 이미지를 1장 이상 업로드해주세요.")
-      return
-    }
+    if (!episodeTitle) { alert("회차 제목은 필수입니다."); return }
+    if (isNovel && !novelText.trim()) { alert("원고 내용은 필수입니다."); return }
+    if (!isNovel && comicFiles.length === 0) { alert("웹툰 이미지를 1장 이상 업로드해주세요."); return }
 
-    const userEpisode = { 
-      episodeNumber : episodeNumber ? parseInt(episodeNumber) : null, 
-      episodeTitle,  
-      isFree, 
-      scheduledAt : scheduledAt || null }
+    const userEpisode = {
+      episodeNumber: episodeNumber ? parseInt(episodeNumber) : null,
+      episodeTitle,
+      isFree,
+      scheduledAt: scheduledAt || null
+    }
 
     const formData = new FormData()
     formData.append("episode", new Blob([JSON.stringify(userEpisode)], { type: "application/json" }))
+    if (thumbFile) formData.append("thumbnail", thumbFile)
 
-    if(thumbFile) formData.append("thumbnail", thumbFile)
-
-    if(isNovel) {
-      const UserNovel = {contentText : novelText, ttsFileUrl}
+    if (isNovel) {
+      const UserNovel = { contentText: novelText, ttsFileUrl }
       formData.append("novel", new Blob([JSON.stringify(UserNovel)], { type: "application/json" }))
-    }else {
-      comicFiles.forEach((file, idx) => formData.append("episodeFiles", file))      
+    } else {
+      comicFiles.forEach((file) => formData.append("episodeFiles", file))
     }
 
     try {
@@ -60,11 +52,9 @@ export default function EpisodeRegisterPage() {
       if (response.ok) { alert("회차 등록 성공"); navigate("/author/contents/" + contentId) }
       else alert("백엔드 통신 실패 : 회차 등록")
     } catch (error) { alert("에러 발생 (회차 등록 실패) : ", error) }
-
-
   }
 
-    const checkNovelForTTS = async () => {
+  const checkNovelForTTS = async () => {
     try {
       const token = localStorage.getItem('accessToken')
       const response = await fetch("http://localhost:8080/api/contents/" + contentId, {
@@ -73,18 +63,10 @@ export default function EpisodeRegisterPage() {
       if (!response.ok) { alert("백엔드 통신 실패(작품 상세)"); return }
       const data = await response.json()
       setIsNovel(data.type === "웹소설")
-    } catch (error) {
-      console.error("작품 상세 불러오기 실패 : ", error)
-    }
+    } catch (error) { console.error("작품 상세 불러오기 실패 : ", error) }
   }
 
-  useEffect(() => {
-    checkNovelForTTS()
-
-  }, [contentId])
-
-
-
+  useEffect(() => { checkNovelForTTS() }, [contentId])
 
   return (
     <div className={styles.pageWrapper}>
@@ -96,6 +78,7 @@ export default function EpisodeRegisterPage() {
       <div className={styles.content}>
         <div className={styles.formCard}>
 
+          {/* 회차 번호 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>회차 번호</div>
             <input
@@ -103,61 +86,100 @@ export default function EpisodeRegisterPage() {
               placeholder="회차 번호 입력"
               className={styles.input}
               onChange={e => setEpisodeNumber(e.target.value)}
+              onWheel={e => e.target.blur()}
             />
           </div>
 
+          {/* 회차 제목 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>회차 제목</div>
-            <input placeholder="회차 제목 입력" className={styles.input} onChange={e => setEpisodeTitle(e.target.value)}/>
-          </div>
-
-          <div className={styles.formGroup}>
-            <div className={styles.formLabel}>썸네일</div>
             <input
-              type="file"
-              accept="image/*"
+              placeholder="회차 제목 입력"
               className={styles.input}
-              onChange={e => setThumbFile(e.target.files[0])}
+              onChange={e => setEpisodeTitle(e.target.value)}
             />
           </div>
 
+          {/* 썸네일 */}
           <div className={styles.formGroup}>
-            <div className={styles.formLabel}>원고 업로드</div>
-            <div className={styles.fileUpload}>
-              {isNovel ? (
-                // ✅ 텍스트 입력칸으로 변경
-                <textarea
-                  placeholder="원고 내용을 입력하세요"
-                  className={styles.textarea}
-                  rows={15}
-                  value={novelText}
-                  onChange={e => setNovelText(e.target.value)}
-                />
-              ) : (
-                <>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={e => setComicFiles(Array.from(e.target.files))}
-                  />
-                  {comicFiles.length > 0 && (
-                    <span className={styles.fileLabel}>{comicFiles.length}장 선택됨</span>
-                  )}
-                </>
-              )}
-            </div>
+            <div className={styles.formLabel}>썸네일</div>
+            <label className={styles.fileBtn}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+              {thumbFile ? thumbFile.name : "이미지 선택"}
+              <input type="file" accept="image/*" onChange={e => setThumbFile(e.target.files[0])} />
+            </label>
+            {thumbFile && (
+              <div className={styles.previewBox}>
+                <img src={URL.createObjectURL(thumbFile)} alt="썸네일 미리보기" className={styles.previewImg} />
+                <button className={styles.previewRemove} onClick={() => setThumbFile(null)}>✕</button>
+              </div>
+            )}
           </div>
 
+          {/* 원고 업로드 */}
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>원고 업로드</div>
+            {isNovel ? (
+              <textarea
+                placeholder="원고 내용을 입력하세요"
+                className={styles.textarea}
+                rows={15}
+                value={novelText}
+                onChange={e => setNovelText(e.target.value)}
+              />
+            ) : (
+              <>
+                <label className={styles.fileBtn}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  {comicFiles.length > 0 ? `${comicFiles.length}장 선택됨` : "이미지 업로드"}
+                  <input
+  type="file"
+  accept="image/*"
+  multiple
+  onChange={e => setComicFiles(prev => [...prev, ...Array.from(e.target.files)])}
+/>
+                </label>
+                {comicFiles.length > 0 && (
+                  <div className={styles.comicPreviewGrid}>
+                    {comicFiles.map((file, idx) => (
+                      <div key={idx} className={styles.comicPreviewItem}>
+                        <img src={URL.createObjectURL(file)} alt={`${idx + 1}번 이미지`} className={styles.comicPreviewImg} />
+                        <button
+                          className={styles.previewRemove}
+                          onClick={() => setComicFiles(comicFiles.filter((_, i) => i !== idx))}
+                        >✕</button>
+                        <div className={styles.comicPreviewNum}>{idx + 1}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* 공개 설정 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>공개 설정</div>
             <div className={styles.typeGroup}>
               {[{ label: "무료", val: true }, { label: "유료", val: false }].map(opt => (
-                <button key={opt.label} onClick={() => setIsFree(opt.val)} className={`${styles.typeBtn} ${isFree === opt.val ? styles.typeBtnActive : ""}`}>{opt.label}</button>
+                <button
+                  key={opt.label}
+                  onClick={() => setIsFree(opt.val)}
+                  className={`${styles.typeBtn} ${isFree === opt.val ? styles.typeBtnActive : ""}`}
+                >{opt.label}</button>
               ))}
             </div>
           </div>
 
+          {/* 예약 업로드 */}
           <div className={styles.formGroup}>
             <div className={styles.scheduleRow}>
               <div className={styles.formLabel}>예약 업로드</div>
@@ -167,36 +189,43 @@ export default function EpisodeRegisterPage() {
               >{scheduled ? "ON" : "OFF"}</button>
             </div>
             {scheduled && (
-              <input
-                type="datetime-local"
-                onChange={e => setScheduledAt(e.target.value)}
+              <DatePicker
+                selected={scheduledAt ? new Date(scheduledAt) : null}
+                onChange={date => setScheduledAt(date ? date.toISOString() : "")}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={15}
+                dateFormat="yyyy년 MM월 dd일 HH:mm"
+                placeholderText="날짜와 시간을 선택하세요"
+                locale={ko}
                 className={styles.input}
+                wrapperClassName={styles.datePickerWrapper}
+                popperPlacement="bottom-start"
               />
             )}
           </div>
 
+          {/* TTS */}
           {isNovel && (
-          <div className={styles.formGroup}>
-            <div className={styles.formLabel}>TTS 목소리 설정</div>
-            <div className={styles.ttsBox}>
-              <div className={styles.ttsHint}>등장인물별 목소리를 설정하세요</div>
-              {["나레이터", "주인공", "상대방"].map(ch => (
-                <div key={ch} className={styles.ttsRow}>
-                  <span className={styles.ttsChar}>{ch}</span>
-                  <select className={styles.ttsSelect}>
-                    <option>목소리 선택</option>
-                    <option>차분한 여성</option>
-                    <option>활발한 남성</option>
-                  </select>
-                </div>
-              ))}
+            <div className={styles.formGroup}>
+              <div className={styles.formLabel}>TTS 목소리 설정</div>
+              <div className={styles.ttsBox}>
+                <div className={styles.ttsHint}>등장인물별 목소리를 설정하세요</div>
+                {["나레이터", "주인공", "상대방"].map(ch => (
+                  <div key={ch} className={styles.ttsRow}>
+                    <span className={styles.ttsChar}>{ch}</span>
+                    <select className={styles.ttsSelect}>
+                      <option>목소리 선택</option>
+                      <option>차분한 여성</option>
+                      <option>활발한 남성</option>
+                    </select>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
           )}
 
-
           <div className={styles.btnGroup}>
-            {/* 작가의 회차 리스트가 보여지는 페이지를 만들게 된다면 navigate("/author/contents/" + contentId)로 바꾸기 */}
             <button className={styles.cancelBtn} onClick={() => navigate("/author/contents")}>취소</button>
             <button className={styles.submitBtn} onClick={handleEpisodeRegister}>등록하기</button>
           </div>
