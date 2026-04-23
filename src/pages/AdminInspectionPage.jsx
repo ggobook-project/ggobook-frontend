@@ -100,9 +100,9 @@ export default function AdminInspectionPage() {
                   <div>
                     {/* 백엔드 DTO 규격에 맞춰 제목과 정보 출력 */}
                     <div className={styles.itemTitle}>{contentInfo.title || item.episodeTitle || "제목 없음"}</div>
-                    <div className={styles.itemMeta}>
-                      작가ID: {contentInfo.authorId || "미상"} · {contentInfo.type === "NOVEL" ? "웹소설" : "웹툰"} · {item.episodeNumber}화
-                    </div>
+                      <div className={styles.itemMeta}>
+                      작가: {contentInfo.author?.nickname || contentInfo.author?.id || "미상"} · {contentInfo.type === "웹소설" || contentInfo.type === "NOVEL" ? "웹소설" : "웹툰"} · {item.episodeNumber}화
+                      </div>
                   </div>
                 </div>
                 

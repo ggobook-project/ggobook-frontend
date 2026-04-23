@@ -158,3 +158,117 @@
   border-color: #90CAF9;
   transform: translateY(-1px);
 }
+
+/* ==========================================
+   🌟 통합 처리 모달창 (팝업) 스타일
+   ========================================== */
+.modalOverlay {
+  position: fixed; 
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex; 
+  justify-content: center; 
+  align-items: center; 
+  z-index: 1000;
+}
+
+.modal {
+  background: white; 
+  padding: 30px; 
+  border-radius: 16px; 
+  width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: flex; 
+  flex-direction: column; 
+  gap: 16px;
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modalHeader { 
+  font-size: 18px; 
+  font-weight: 700; 
+  color: #0F172A; 
+  border-bottom: 1px solid #E2E8F0; 
+  padding-bottom: 12px; 
+  margin-bottom: 4px; 
+}
+
+.modalLabel { 
+  font-size: 13px; 
+  font-weight: 600; 
+  color: #475569; 
+  margin-bottom: -10px; 
+}
+
+.selectField, .textareaField {
+  padding: 10px 12px; 
+  border: 1px solid #CBD5E1; 
+  border-radius: 8px; 
+  font-size: 14px;
+  outline: none; 
+  color: #1E293B; 
+  background: #F8FAFC; 
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.selectField:focus, .textareaField:focus { 
+  border-color: #3B82F6; 
+  background: white; 
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); 
+}
+
+.textareaField {
+  resize: vertical; /* 관리자가 창 크기를 조절할 수 있게 함 */
+}
+
+.btnGroup { 
+  display: flex; 
+  gap: 10px; 
+  margin-top: 10px; 
+}
+
+.cancelBtn { 
+  flex: 1; 
+  background: white; 
+  color: #475569; 
+  border: 1px solid #CBD5E1; 
+  padding: 12px; 
+  border-radius: 8px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: 0.2s; 
+}
+.cancelBtn:hover { background: #F1F5F9; }
+
+.confirmBtn { 
+  flex: 1; 
+  background: #EF4444; /* 정지는 빨간색 */
+  color: white; 
+  border: none; 
+  padding: 12px; 
+  border-radius: 8px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: 0.2s; 
+}
+.confirmBtn:hover { background: #DC2626; }
+
+.rejectConfirmBtn { 
+  flex: 1; 
+  background: #3B82F6; /* 기각/완료는 파란색 */
+  color: white; 
+  border: none; 
+  padding: 12px; 
+  border-radius: 8px; 
+  font-weight: 600; 
+  cursor: pointer; 
+  transition: 0.2s; 
+}
+.rejectConfirmBtn:hover { background: #2563EB; }

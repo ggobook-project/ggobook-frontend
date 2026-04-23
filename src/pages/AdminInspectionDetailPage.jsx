@@ -130,8 +130,10 @@ export default function AdminInspectionDetailPage() {
                 <span className={styles.value}>{content.title}</span>
               </div>
               <div className={styles.infoRow}>
-                <span className={styles.label}>작가 ID:</span>
-                <span className={styles.value}>{content.authorId}</span>
+                <span className={styles.label}>작가 정보:</span>
+                <span className={styles.value}>
+                  {content.author?.nickname ? `${content.author.nickname} (ID: ${content.author.id})` : (content.author?.id || "미상")}
+                </span>
               </div>
               <div className={styles.infoRow}>
                 <span className={styles.label}>장르 / 타입:</span>
@@ -154,15 +156,33 @@ export default function AdminInspectionDetailPage() {
           </div>
           
           <div className={styles.manuscriptArea}>
-            {/* 소설인 경우 텍스트 출력, 웹툰인 경우 이미지 리스트 출력 로직 */}
-            {content.type === "NOVEL" ? (
-              <div className={styles.novelText}>{data.novel?.contentText}</div>
+            {/* 🌟 1. 타입 검사: DB에 저장된 '웹소설'과 영문 'NOVEL' 모두 대응 */}
+            {content.type === "웹소설" || content.type === "NOVEL" ? (
+              <div className={styles.novelText}>
+                {/* 🌟 2. 텍스트 추출: 팀장님의 도메인 필드명인 'contentText'를 최우선으로 찾습니다. */}
+                {data.contentText || data.novel?.contentText || "등록된 웹소설 원고가 없습니다."}
+              </div>
             ) : (
               <div className={styles.webtoonImages}>
-                {data.comicToons?.map((img, idx) => (
-                  <img key={idx} src={img.imageUrl} alt={`${idx}번 컷`} />
-                ))}
-                {(!data.comicToons || data.comicToons.length === 0) && "등록된 웹툰 이미지가 없습니다."}
+                {/* 🌟 3. 이미지 추출: 백엔드에서 보낼법한 배열 이름을 모두 방어하고 imageUrl을 매핑합니다. */}
+                {(() => {
+                  // 백엔드에서 넘어온 이미지 배열 찾기 (comicToons, images, webtoonImages 중 하나)
+                  const imageList = data.comicToons || data.images || data.webtoonImages || [];
+                  
+                  if (imageList.length === 0) {
+                    return <div style={{padding: "20px", color: "#666"}}>등록된 웹툰 이미지가 없습니다.</div>;
+                  }
+
+                  // 배열을 순회하며 이미지 출력 (팀장님 도메인 필드인 imageUrl 사용!)
+                  return imageList.map((img, idx) => (
+                    <img 
+                      key={img.image_id || idx} 
+                      src={img.imageUrl} // 🌟 DB 및 도메인 필드명 완벽 일치
+                      alt={`웹툰 컷 ${idx + 1}`} 
+                      style={{ width: "100%", marginBottom: "10px", display: "block", borderRadius: "8px" }} 
+                    />
+                  ));
+                })()}
               </div>
             )}
           </div>

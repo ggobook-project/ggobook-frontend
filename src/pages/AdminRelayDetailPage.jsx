@@ -7,21 +7,29 @@ export default function AdminRelayDetailPage() {
   const { novelId } = useParams();
   const navigate = useNavigate();
   
-  // 상태 관리
   const [entries, setEntries] = useState([]);
   const [novelInfo, setNovelInfo] = useState({});
+  const [errorStatus, setErrorStatus] = useState(null); 
+  
+  // 🌟 AI 통신은 시간이 걸리므로 버튼을 비활성화하기 위한 로딩 상태 추가!
+  const [blindingId, setBlindingId] = useState(null); 
 
-  // ==========================================
-  // [API 연동] 특정 소설의 상세 정보와 이어쓰기 목록 가져오기
-  // ==========================================
   const loadEntries = useCallback(async () => {
     try {
       const response = await axios.get(`http://localhost:8080/api/admin/relay-novels/${novelId}`);
-      setNovelInfo(response.data);
-      // 백엔드 구조에 따라 entry 리스트 추출 (방어 코드 포함)
-      setEntries(response.data.entries || []); 
+      
+      let responseData = response.data;
+      if (typeof responseData === 'string') {
+        try { responseData = JSON.parse(responseData); } catch (e) {}
+      }
+
+      const data = responseData.data || responseData.content || responseData;
+      setNovelInfo(data);
+      setEntries(data.entries || data.relayEntries || data.entryList || []); 
+      setErrorStatus(null);
     } catch (error) {
-      console.error("이어쓰기 목록을 불러오지 못했습니다.", error);
+      console.error("상세 정보 에러:", error);
+      setErrorStatus("데이터를 불러오지 못했습니다. 서버 상태를 확인해주세요.");
     }
   }, [novelId]);
 
@@ -30,74 +38,89 @@ export default function AdminRelayDetailPage() {
   }, [loadEntries]);
 
   // ==========================================
-  // [기능 구현] 특정 회차(Entry) 블라인드 처리
+  // 🌟 원클릭 AI 자동 블라인드 로직
   // ==========================================
   const handleBlindEntry = async (entryId) => {
-    // 실무 UX: 삭제가 아닌 '가림' 처리이므로, 독자에게 보여줄 안내 문구를 필수로 받습니다.
-    const safeSummary = window.prompt("이 회차를 블라인드합니다. 독자들에게 보여질 건전한 요약본을 입력하세요.\n(예: 부적절한 내용으로 관리자에 의해 가려졌습니다.)");
-    
-    if (!safeSummary) return; // 관리자가 입력을 취소하면 실행 중단
+    // 1. 직접 입력 대신 의사만 묻습니다.
+    if (!window.confirm("이 회차를 블라인드 처리하시겠습니까?\n(AI가 부적절한 내용을 필터링하여 안전한 요약본으로 대체합니다.)")) return;
+
+    setBlindingId(entryId); // 로딩 시작 (해당 회차의 버튼을 'AI 요약 중...'으로 변경)
 
     try {
-      await axios.put(`http://localhost:8080/api/admin/relay-entries/${entryId}/blind`, {
-        adminMessage: safeSummary
+      // 2. 백엔드로 '빈 문자열'을 보냅니다. 
+      // (백엔드의 AdminRelayService가 빈 값을 감지하고 파이썬 AI서버로 요약을 요청할 것입니다!)
+      await axios.put(`http://localhost:8080/api/admin/relay-entries/${entryId}/blind`, { 
+        adminMessage: "" 
       });
-      alert("해당 회차가 성공적으로 블라인드 처리되었습니다.");
-      loadEntries(); // 데이터 새로고침 (블라인드된 UI로 변경됨)
+      
+      alert("AI 요약 및 블라인드 처리가 성공적으로 완료되었습니다.");
+      loadEntries(); // 데이터 최신화 (AI 요약본이 화면에 뜹니다)
     } catch (error) {
       console.error("블라인드 실패", error);
-      alert("블라인드 처리 중 서버 오류가 발생했습니다.");
+      alert("블라인드 처리 중 서버 오류가 발생했습니다. 파이썬 AI 서버가 켜져 있는지 확인해주세요.");
+    } finally {
+      setBlindingId(null); // 로딩 종료
     }
   };
 
-  // ==========================================
-  // [UI 렌더링] 화면 출력부
-  // ==========================================
+  const displayTitle = novelInfo.title || (novelInfo.relayTopic && novelInfo.relayTopic.adminTopic ? novelInfo.relayTopic.adminTopic.title : "") || novelInfo.description || "로딩 중...";
+
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        {/* 새로운 CSS 클래스가 적용된 예쁜 뒤로가기 버튼 */}
         <button onClick={() => navigate(-1)} className={styles.backBtn}>➔ 목록으로 돌아가기</button>
         <div className={styles.headerTitle}>소설 상세 및 이어쓰기 검열</div>
         <div className={styles.headerSubtitle}>
-          [{novelInfo.title || "로딩 중..."}] 소설의 각 회차를 꼼꼼히 확인하세요.
+          [{displayTitle}] 소설의 각 회차를 꼼꼼히 확인하세요.
         </div>
       </div>
 
       <div className={styles.content}>
-        {entries.length === 0 ? <p style={{color: "#666", textAlign: "center"}}>아직 이어쓰기 원고가 등록되지 않았습니다.</p> : 
-          entries.map(entry => (
-            // 새로운 CSS 클래스(detailCard) 적용
-            <div key={entry.entryId} className={styles.detailCard}>
-              
+        {errorStatus ? (
+          <div style={{ color: "red", textAlign: "center", padding: "40px", fontWeight: "bold", background: "#fee", borderRadius: "8px" }}>
+            🚨 {errorStatus}
+          </div>
+        ) : entries.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "60px", backgroundColor: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+            <p style={{ color: "#64748b", fontSize: "16px" }}>아직 이어쓰기 원고가 등록되지 않았습니다.</p>
+          </div>
+        ) : (
+          entries.map((entry, index) => (
+            <div key={entry.entryId || index} className={styles.detailCard}>
               <div className={styles.entryMeta}>
-                {entry.entryOrder}번째 이어쓰기 (작성자 ID: {entry.userId})
+                {entry.entryOrder || index + 1}번째 이어쓰기 (작성자 ID: {entry.userId || entry.authorId || entry.user_id || "미상"})
               </div>
               
-              {/* 🌟 조건부 렌더링: 상태가 BLINDED 이면 빨간 요약 박스를, 아니면 원본 텍스트를 보여줍니다. */}
               {entry.status === "BLINDED" ? (
                 <div className={styles.blindedBox}>
-                  🚨 <strong>[관리자에 의해 블라인드 처리됨]</strong> <br/><br/>
-                  관리자 코멘트: {entry.adminMessage}
+                  🚨 <strong>[가이드라인 위반으로 블라인드 처리된 회차입니다.]</strong> <br/><br/>
+                  <span style={{ color: "#555", fontSize: "14px" }}>
+                    <strong>🤖 AI 자동 요약본: </strong> {entry.adminMessage || entry.blindMessage}
+                  </span>
                 </div>
               ) : (
-                <div className={styles.entryText}>{entry.entryText}</div>
+                <div className={styles.entryText}>{entry.entryText || entry.entry_text || entry.content}</div>
               )}
 
-              {/* 블라인드 되지 않은 정상 원고에만 블라인드 버튼을 노출합니다. */}
               {entry.status !== "BLINDED" && (
                 <div style={{ width: "100%", display: "flex", justifyContent: "flex-end" }}>
                   <button 
-                    onClick={() => handleBlindEntry(entry.entryId)}
+                    onClick={() => handleBlindEntry(entry.entryId || entry.entry_id)} 
                     className={styles.blindBtn}
+                    disabled={blindingId === (entry.entryId || entry.entry_id)} // 🌟 로딩 중 버튼 클릭 방지
+                    style={{ 
+                      backgroundColor: blindingId === (entry.entryId || entry.entry_id) ? "#94a3b8" : "#ef4444",
+                      cursor: blindingId === (entry.entryId || entry.entry_id) ? "wait" : "pointer"
+                    }}
                   >
-                    이 회차 블라인드 처리
+                    {/* 🌟 로딩 중일 때는 텍스트를 바꿔줍니다. */}
+                    {blindingId === (entry.entryId || entry.entry_id) ? "🤖 AI 요약 중..." : "이 회차 블라인드 (AI 자동 요약)"}
                   </button>
                 </div>
               )}
             </div>
           ))
-        }
+        )}
       </div>
     </div>
   );
