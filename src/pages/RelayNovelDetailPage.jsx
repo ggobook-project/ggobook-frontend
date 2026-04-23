@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useState, useEffect, useCallback } from "react"
-import axios from "axios"
+import axios from "../api/axios"
 import styles from "../styles/RelayNovelDetailPage.module.css"
 
 const MAX_CHARS = 500
