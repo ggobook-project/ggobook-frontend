@@ -4,20 +4,20 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .headerTitle {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--text);
+  color: #1565C0;
   margin-bottom: 4px;
 }
 
 .headerSubtitle {
   font-size: 14px;
-  color: var(--textSub);
+  color: #4A6FA5;
 }
 
 .content {
@@ -27,7 +27,7 @@
 }
 
 .formCard {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 14px;
@@ -39,39 +39,227 @@
 }
 
 .formLabel {
-  font-size: 13px;
-  color: var(--textSub);
+  font-size: 12px;
+  color: #4A6FA5;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .input {
   width: 100%;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
   padding: 11px 14px;
-  color: var(--text);
+  color: #0D1B2A;
   font-size: 13px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.fileUpload {
+.input:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.input[type="number"]::-webkit-outer-spin-button,
+.input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.textarea {
   width: 100%;
-  height: 120px;
-  background: var(--bgSurface);
-  border: 2px dashed var(--border);
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
+  padding: 12px 14px;
+  color: #0D1B2A;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+  resize: vertical;
+  line-height: 1.7;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textarea:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #2196F3;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  width: auto;
+}
+
+.fileBtn:hover {
+  background: #1565C0;
+  transform: translateY(-1px);
+}
+
+.fileBtn input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* 미리보기 */
+.previewBox {
+  position: relative;
+  display: block;
+  margin-top: 10px;
+  width: fit-content;
+}
+
+.previewImg {
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #BBDEFB;
+  display: block;
+}
+
+.previewRemove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #E53935;
+  color: #fff;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.fileLabel {
+.previewRemove:hover {
+  background: #C62828;
+}
+
+.comicPreviewGrid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-top: 10px;
+  overflow-x: auto;
+  padding: 12px 4px 8px;
+}
+
+.comicPreviewGrid::-webkit-scrollbar {
+  height: 4px;
+}
+
+.comicPreviewGrid::-webkit-scrollbar-track {
+  background: #E8F4FD;
+  border-radius: 4px;
+}
+
+.comicPreviewGrid::-webkit-scrollbar-thumb {
+  background: #90CAF9;
+  border-radius: 4px;
+}
+
+.comicPreviewItem {
+  position: relative;
+}
+
+.comicPreviewImg {
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #BBDEFB;
+  display: block;
+}
+
+.comicPreviewNum {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* datepicker */
+.datePickerWrapper {
+  width: 100%;
+}
+
+:global(.react-datepicker) {
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  font-family: 'Noto Sans KR', sans-serif;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.1);
   font-size: 13px;
-  color: var(--textMuted);
+}
+
+:global(.react-datepicker__header) {
+  background: #E3F2FD;
+  border-bottom: 1px solid #BBDEFB;
+  border-radius: 10px 10px 0 0;
+}
+
+:global(.react-datepicker__current-month),
+:global(.react-datepicker__day-name),
+:global(.react-datepicker-time__header) {
+  color: #1565C0;
+}
+
+:global(.react-datepicker__day--selected),
+:global(.react-datepicker__day--keyboard-selected) {
+  background: #2196F3;
+  border-radius: 6px;
+  color: #fff;
+}
+
+:global(.react-datepicker__day:hover) {
+  background: #E3F2FD;
+  border-radius: 6px;
+  color: #1565C0;
+}
+
+:global(.react-datepicker__time-container) {
+  border-left: 1px solid #BBDEFB;
+}
+
+:global(.react-datepicker__time-list-item--selected) {
+  background: #2196F3 !important;
+}
+
+:global(.react-datepicker__navigation-icon::before) {
+  border-color: #4A6FA5;
+}
+
+:global(.react-datepicker__navigation:hover .react-datepicker__navigation-icon::before) {
+  border-color: #1565C0;
 }
 
 .typeGroup {
@@ -84,17 +272,30 @@
   padding: 10px;
   border-radius: 10px;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  background: var(--bgSurface);
-  color: var(--textSub);
-  border: 1px solid var(--border);
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  background: #E8F4FD;
+  color: #4A6FA5;
+  border: 1px solid #BBDEFB;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.typeBtn:hover {
+  background: #BBDEFB;
+  color: #1565C0;
+  transform: translateY(-1px);
 }
 
 .typeBtnActive {
-  background: var(--primary);
+  background: #2196F3;
   color: #fff;
-  border-color: var(--primary);
+  border-color: #2196F3;
+}
+
+.typeBtnActive:hover {
+  background: #1565C0;
+  border-color: #1565C0;
+  color: #fff;
 }
 
 .scheduleRow {
@@ -105,55 +306,77 @@
 }
 
 .toggleBtn {
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  background: var(--bgSurface);
-  color: var(--textSub);
-  border: 1px solid var(--border);
-  transition: background 0.2s, color 0.2s;
+  background: #E8F4FD;
+  color: #90A4C8;
+  border: 1px solid #BBDEFB;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.toggleBtn:hover {
+  background: #BBDEFB;
+  color: #4A6FA5;
 }
 
 .toggleBtnActive {
-  background: var(--primary);
+  background: #2196F3;
   color: #fff;
-  border-color: var(--primary);
+  border-color: #2196F3;
+}
+
+.toggleBtnActive:hover {
+  background: #1565C0;
+  border-color: #1565C0;
 }
 
 .ttsBox {
-  padding: 14px;
-  background: var(--bgSurface);
+  padding: 16px;
+  background: #E8F4FD;
   border-radius: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid #BBDEFB;
 }
 
 .ttsHint {
   font-size: 12px;
-  color: var(--textMuted);
-  margin-bottom: 10px;
+  color: #90A4C8;
+  margin-bottom: 12px;
 }
 
 .ttsRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.ttsRow:last-child {
+  margin-bottom: 0;
 }
 
 .ttsChar {
   font-size: 13px;
-  color: var(--text);
+  color: #0D1B2A;
+  font-weight: 500;
 }
 
 .ttsSelect {
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid #BBDEFB;
+  border-radius: 8px;
+  color: #4A6FA5;
   font-size: 12px;
   outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.ttsSelect:focus {
+  border-color: #90CAF9;
 }
 
 .btnGroup {
@@ -166,31 +389,33 @@
   flex: 1;
   padding: 12px;
   background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--border);
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
-  color: var(--textSub);
+  color: #4A6FA5;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .cancelBtn:hover {
-  background: var(--bgSurface);
+  background: #E3F2FD;
+  border-color: #90CAF9;
 }
 
 .submitBtn {
   flex: 2;
   padding: 12px;
-  background: var(--primary);
+  background: #2196F3;
   border: none;
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
 }
 
 .submitBtn:hover {
-  background: var(--primaryDark);
+  background: #1565C0;
+  transform: translateY(-1px);
 }

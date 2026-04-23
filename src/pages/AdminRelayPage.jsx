@@ -3,6 +3,12 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import styles from "../styles/AdminRelayPage.module.css";
 
+const initialGuidelines = [
+  { id: 1, title: "분량 가이드", content: "각 이어쓰기는 50자 이상 500자 이내로 작성해주세요." },
+  { id: 2, title: "내용 가이드", content: "이전 내용의 흐름을 자연스럽게 이어가야 합니다." },
+  { id: 3, title: "금지 사항", content: "폭력적이거나 선정적인 내용은 작성할 수 없습니다." },
+];
+
 export default function AdminRelayPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("릴레이 목록");
@@ -98,6 +104,17 @@ export default function AdminRelayPage() {
       alert("저장 실패");
     }
   };
+
+  const handleEditStart = (g) => { setEditingId(g.id); setEditTitle(g.title); setEditContent(g.content); };
+
+  const handleEditSave = (id) => {
+    if (!editTitle.trim() || !editContent.trim()) return;
+    setGuidelines(prev => prev.map(g => g.id === id ? { ...g, title: editTitle.trim(), content: editContent.trim() } : g));
+    setEditingId(null);
+  };
+
+  const handleEditCancel = () => setEditingId(null);
+  const handleDelete = (id) => setGuidelines(prev => prev.filter(g => g.id !== id));
 
   return (
     <div className={styles.pageWrapper}>

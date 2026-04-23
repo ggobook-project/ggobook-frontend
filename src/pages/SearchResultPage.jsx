@@ -21,14 +21,11 @@ export default function SearchResultPage() {
     try {
       setLoading(true)
       const token = localStorage.getItem('accessToken')
-
       const params = new URLSearchParams({ page: 0, size: 20 })
       if (keyword) params.append("keyword", keyword)
       if (filterType) params.append("type", filterType)
-
       const response = await fetch(`http://localhost:8080/api/contents/?${params.toString()}`, {
-        method: "GET",
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: "GET", headers: { 'Authorization': `Bearer ${token}` }
       })
       if (!response.ok) { alert("검색 결과를 불러오는데 실패했습니다."); return }
       const data = await response.json()
@@ -42,14 +39,12 @@ export default function SearchResultPage() {
     }
   }
 
-  // 최초 진입 시 URL 파라미터로 검색
   useEffect(() => {
     const keyword = searchParams.get("keyword") || ""
     setQuery(keyword)
     loadResults(keyword, typeParam(filter))
   }, [])
 
-  // 필터 변경 시 재검색
   useEffect(() => {
     loadResults(query, typeParam(filter))
   }, [filter])
@@ -70,7 +65,10 @@ export default function SearchResultPage() {
       <div className={styles.header}>
         <div className={styles.headerTitle}>검색</div>
         <div className={styles.searchBox}>
-          <span className={styles.searchIcon}>🔍</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#90A4C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
@@ -78,6 +76,9 @@ export default function SearchResultPage() {
             placeholder="작품명, 작가명, 태그 검색"
             className={styles.searchInput}
           />
+          {query && (
+            <span onClick={() => setQuery("")} style={{ color: "#90A4C8", cursor: "pointer", fontSize: 15, lineHeight: 1 }}>✕</span>
+          )}
         </div>
       </div>
 
