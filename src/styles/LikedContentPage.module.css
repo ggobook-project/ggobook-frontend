@@ -68,7 +68,11 @@
 
 .badges {
   display: flex;
-  gap: 4px;
+  gap: 1px; /* 뱃지 사이 간격을 살짝 더 줘서 숨통을 틔웁니다 */
+  justify-content: flex-start; 
+  align-items: center;
+  margin-top: 2px;
+  margin-left: -7px /* 위쪽 작가명과 살짝 여백 주기 */
 }
 
 .badge {

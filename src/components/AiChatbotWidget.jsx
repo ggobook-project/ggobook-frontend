@@ -15,7 +15,7 @@ export default function AiChatbotWidget() {
       
       <video
         className="mascot-video"
-        src="/assets/mascot_original.mp4" /* 💡 다운받은 mp4 파일을 public/assets 폴더에 넣고 경로 지정 */
+        src="/assets/mascot_original3.mp4" /* 💡 다운받은 mp4 파일을 public/assets 폴더에 넣고 경로 지정 */
         autoPlay
         loop
         muted
