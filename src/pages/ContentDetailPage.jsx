@@ -1,14 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-<<<<<<< HEAD
-import axios from "axios";
-=======
 
 // 🌟 변경 1: 일반 axios 해고! 우리 회사 전용 스마트 요원(api) 고용
 // (파일 경로가 ../api/axios 가 맞는지 한 번 더 확인해 주세요!)
 import api from "../api/axios"; 
 
->>>>>>> origin/feat/login/sh
 import styles from "../styles/ContentDetailPage.module.css";
 
 const PAID_EPISODE_NUMBER = 5  // 테스트용 유료 회차
@@ -37,7 +33,12 @@ export default function ContentDetailPage() {
   const [showToast, setShowToast] = useState(false)
 
   // 🌟 변경 2: 작품 상세 조회 다이어트
-  const loadContentDetail = async () => {
+
+
+
+
+  useEffect(() => {
+      const loadContentDetail = async () => {
     try {
       setIsLoading(true);
       
@@ -55,7 +56,7 @@ export default function ContentDetailPage() {
     }
   };
 
-  // 🌟 변경 3: 에피소드 목록 조회 다이어트
+    // 🌟 변경 3: 에피소드 목록 조회 다이어트
   const loadEpisodeList = async () => {
     try {
       setEpisodesLoading(true);
@@ -71,8 +72,6 @@ export default function ContentDetailPage() {
       setEpisodesLoading(false);
     }
   };
-
-  useEffect(() => {
     loadContentDetail();
     loadEpisodeList();
     // readEpisodes 최신화

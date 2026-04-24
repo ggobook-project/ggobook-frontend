@@ -54,7 +54,7 @@ export default function Header() {
     }
   }, [currentPath]) // 유저가 다른 페이지로 이동할 때마다 감시!
 
-  const unreadCount = NotificationBell.filter(n => !n.read).length
+  // const unreadCount = NotificationBell.filter(n => !n.read).length
 
   const handleLogout = () => {
     if (window.confirm("로그아웃 하시겠습니까?")) {
