@@ -1,6 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios"; // 🌟 Axios 통일성 복구!
+
+// 🌟 변경 1: 일반 axios 해고! 우리 회사 전용 스마트 요원(api) 고용
+// (파일 경로가 ../api/axios 가 맞는지 한 번 더 확인해 주세요!)
+import api from "../api/axios"; 
+
 import styles from "../styles/ContentDetailPage.module.css";
 
 export default function ContentDetailPage() {
@@ -15,19 +19,18 @@ export default function ContentDetailPage() {
   const [episodesLoading, setEpisodesLoading] = useState(true);
   const [showFullSummary, setShowFullSummary] = useState(false);
 
-  // 🌟 Axios를 활용한 작품 상세 조회 (시큐리티 토큰 헤더 전송)
+  // 🌟 변경 2: 작품 상세 조회 다이어트
   const loadContentDetail = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("accessToken");
       
-      const response = await axios.get(`http://localhost:8080/api/contents/${contentId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      // 요원이 알아서 지갑 열고 토큰 꺼내가므로 토큰 세팅 코드 전부 삭제!
+      // 요원이 앞부분 주소(baseURL)를 알고 있으므로 뒷주소만 작성!
+      const response = await api.get(`/api/contents/${contentId}`);
 
       const data = response.data;
       setContent(data);
-      setLiked(data.liked || data.isLiked || false); // 백엔드가 준 isLiked로 하트 고정
+      setLiked(data.liked || data.isLiked || false); 
     } catch (error) {
       console.error("작품 상세 불러오기 실패 : ", error);
     } finally {
@@ -35,15 +38,13 @@ export default function ContentDetailPage() {
     }
   };
 
-  // 🌟 Axios를 활용한 에피소드 목록 조회
+  // 🌟 변경 3: 에피소드 목록 조회 다이어트
   const loadEpisodeList = async () => {
     try {
       setEpisodesLoading(true);
-      const token = localStorage.getItem("accessToken");
       
-      const response = await axios.get(`http://localhost:8080/api/contents/${contentId}/episodes`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      // 마찬가지로 토큰 세팅 로직, 긴 주소창 싹 다 삭제!
+      const response = await api.get(`/api/contents/${contentId}/episodes`);
 
       const data = response.data;
       setEpisodes(Array.isArray(data) ? data : data.content ? data.content : []);
@@ -59,8 +60,9 @@ export default function ContentDetailPage() {
     loadEpisodeList();
   }, [contentId]);
 
-  // 🌟 시큐리티 기반 찜 토글 로직 (URL 파라미터 삭제, 토큰으로만 통신)
+  // 🌟 변경 4: 찜 토글 로직 다이어트
   const handleLike = async () => {
+    // 팁: 찜하기는 무조건 로그인이 필요하므로, 프론트 단에서 빠르게 한 번 컷 해주는 센스는 남겨둡니다!
     const token = localStorage.getItem("accessToken");
     if (!token) {
       alert("로그인이 필요합니다.");
@@ -68,11 +70,10 @@ export default function ContentDetailPage() {
     }
 
     try {
-      const response = await axios.post(`http://localhost:8080/api/likes/${contentId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // 요원이 알아서 토큰을 붙여서 보내주므로 headers 셋팅 삭제!
+      const response = await api.post(`/api/likes/${contentId}`);
 
-      if (response.status === 200) {
+      if (response.status === 200 || response.status === 201) {
         setLiked(!liked);
       }
     } catch (error) {
@@ -96,13 +97,11 @@ export default function ContentDetailPage() {
   };
 
   const handleEpisodeClick = (episodeId) => {
-    // 백엔드 데이터(DB)와 정확히 일치하는 한글로 조건문 검사
     if (content.type === "웹툰") {
       navigate(`/webtoon/viewer/${episodeId}?contentId=${contentId}`);
     } else if (content.type === "웹소설") {
       navigate(`/novel/viewer/${episodeId}?contentId=${contentId}`);
     } else {
-      // 만약 DB에 "웹툰", "웹소설"이 아닌 오타(예: "웹툰 ")가 들어있을 경우 화면에 띄워주는 방어막
       alert(`[오류] 알 수 없는 작품 타입입니다.\n현재 DB 저장값: "${content.type}"`);
     }
   };

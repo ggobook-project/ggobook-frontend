@@ -2,17 +2,14 @@ import axios from 'axios';
 
 // 1. 기본 API 인스턴스 생성
 const api = axios.create({
-  baseURL: 'http://localhost:8080', // 백엔드 주소 (Vite 환경변수로 빼도 됨)
-  withCredentials: true, // 🌟 중요: 리프레시 토큰(Cookie)을 주고받기 위해 필수
+  baseURL: 'http://localhost:8080',
+  withCredentials: true, 
 });
 
-// 2. 요청(Request) 인터셉터: 백엔드로 요청이 출발하기 직전에 실행됨
+// 2. 요청(Request) 인터셉터
 api.interceptors.request.use(
   (config) => {
-    // 창고에서 VIP 티켓(accessToken)을 꺼냄
     const token = localStorage.getItem('accessToken');
-    
-    // 티켓이 있다면, 헤더에 'Bearer 티켓번호' 형태로 딱 붙여서 보냄
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,18 +20,44 @@ api.interceptors.request.use(
   }
 );
 
-// 3. 응답(Response) 인터셉터: 백엔드에서 응답이 도착한 직후 실행됨
+// 3. 응답(Response) 인터셉터
 api.interceptors.response.use(
   (response) => {
-    return response; // 정상 응답은 그대로 화면으로 통과
+    return response; 
   },
-  (error) => {
-    // 클린 코드의 디테일: 만약 토큰이 만료되었거나 권한이 없어서 백엔드가 401 에러를 뱉었다면?
+  async (error) => {
     if (error.response && error.response.status === 401) {
-      alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
-      localStorage.removeItem('accessToken'); // 썩은 티켓 버리기
-      window.location.href = '/login'; // 로그인 페이지로 강제 추방
+      
+      const originalRequest = error.config; 
+
+      if (!originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          const refreshResponse = await axios.post('http://localhost:8080/api/auth/refresh', {}, {
+            withCredentials: true 
+          });
+
+          if (refreshResponse.status === 200) {
+            const newAccessToken = refreshResponse.data;
+            localStorage.setItem('accessToken', newAccessToken);
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+            return api(originalRequest);
+          }
+        } catch (refreshError) {
+          // 🌟 변경: 알림창(alert) 제거! 유저 모르게 부드럽게 쫓아냅니다.
+          console.error("토큰 완전 만료. 조용히 로그아웃 처리");
+          localStorage.removeItem('accessToken');
+          window.location.href = '/login'; 
+          
+          // 🌟 마법의 코드: 에러를 페이지(MyPage 등)로 던지지 않고 빈 깡통을 던져서 에러 파기!
+          // 덕분에 다른 모든 페이지에서 try-catch를 수정할 필요가 완전히 사라집니다.
+          return new Promise(() => {}); 
+        }
+      }
     }
+    
+    // 401 이외의 진짜 에러(서버 다운 등)는 정상적으로 화면에 보고합니다.
     return Promise.reject(error);
   }
 );

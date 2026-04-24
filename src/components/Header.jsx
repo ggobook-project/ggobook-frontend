@@ -17,7 +17,36 @@ export default function Header() {
   ])
   const notificationRef = useRef(null)
 
-  const isLoggedIn = !!localStorage.getItem("accessToken")
+  // 🌟 변경 1: 단순 변수였던 isLoggedIn을 상태(State)로 변경
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  // 🌟 변경 2: 화면을 켜거나 이동(currentPath 변경)할 때마다 토큰 유효기간을 검사
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken")
+
+    // 토큰 해독기 함수 (JWT의 중간 몸통을 까서 시간을 확인)
+    const isTokenExpired = (t) => {
+      try {
+        const payload = JSON.parse(atob(t.split('.')[1]))
+        return payload.exp < Math.floor(Date.now() / 1000)
+      } catch {
+        return true // 해석 실패 시 썩은 토큰으로 간주
+      }
+    }
+
+    if (token) {
+      if (isTokenExpired(token)) {
+        // 토큰이 만료되었다면? 조용히 지갑 비우고 로그아웃 상태로 전환 (알림 X)
+        localStorage.removeItem("accessToken")
+        setIsLoggedIn(false)
+      } else {
+        setIsLoggedIn(true)
+      }
+    } else {
+      setIsLoggedIn(false)
+    }
+  }, [currentPath]) // 유저가 다른 페이지로 이동할 때마다 감시!
+
   const unreadCount = notifications.filter(n => !n.read).length
 
   const handleLogout = () => {
@@ -70,24 +99,25 @@ export default function Header() {
 
   const notifIconBg = () => "#E3F2FD"
 
-const NotifIcon = ({ type }) => {
-  if (type === "like") return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="#2196F3" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  )
-  if (type === "comment") return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  )
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="9 17 4 12 9 7" />
-      <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
-    </svg>
-  )
-}
+  const NotifIcon = ({ type }) => {
+    if (type === "like") return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="#2196F3" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    )
+    if (type === "comment") return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    )
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="9 17 4 12 9 7" />
+        <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+      </svg>
+    )
+  }
+  
   return (
     <nav style={{
       position: "sticky", top: 0, zIndex: 100,
