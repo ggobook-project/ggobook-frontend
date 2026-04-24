@@ -41,7 +41,7 @@ export default function RelayNovelDetailPage() {
   }, [relayNovelId])
 
   const loadGuidelines = async () => {
-    try {
+    try {   
       const response = await axios.get("http://localhost:8080/api/relay-guidelines")
       setGuidelines(response.data || [])
     } catch {
