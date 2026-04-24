@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import axios from "axios"
+import api from "../api/axios" 
 import styles from "../styles/RelayNovelPage.module.css"
 
 export default function RelayNovelPage() {
@@ -15,22 +15,27 @@ export default function RelayNovelPage() {
   const loadRelays = useCallback(async (pageNum, sortType) => {
     if (isLoading) return
     setIsLoading(true)
+    
+    const sortValue = sortType === "인기순" ? "popular" : "latest"
+
     try {
-      const response = await axios.get(`http://localhost:8080/api/relay-novels`, {
-        params: { page: pageNum, size: 10 }
+      const response = await api.get(`/api/relay-novels`, {
+        params: { page: pageNum, size: 10, sortType: sortValue }
       })
       const data = response.data
       const list = Array.isArray(data) ? data : (data.content ? data.content : [])
+      
       setRelays(prev => pageNum === 0 ? list : [...prev, ...list])
       setHasNext(data.last === false)
     } catch {
+      // 🌟 초보자 포인트: 더미 데이터를 넣더라도 무한루프에 빠지지 않도록 방어 로직이 필요합니다.
       const dummy = Array.from({ length: 5 }, (_, i) => ({
         relayNovelId: i + 1 + pageNum * 5,
         title: `릴레이 소설 ${i + 1 + pageNum * 5}`,
         starter: "홍길동",
         participantCount: i * 3 + 5,
         entryCount: i * 10 + 8,
-        preview: "어느 날 갑자기 눈을 떴을 때, 나는 낯선 방 안에 있었다..."
+        preview: "어느 날 갑자기 눈을 떴을 때..."
       }))
       setRelays(prev => pageNum === 0 ? dummy : [...prev, ...dummy])
       setHasNext(pageNum < 2)
@@ -44,7 +49,7 @@ export default function RelayNovelPage() {
     setRelays([])
     setHasNext(true)
     loadRelays(0, sort)
-  }, [sort])
+  }, [sort, loadRelays])
 
   const handleObserver = useCallback((entries) => {
     const target = entries[0]
@@ -53,7 +58,7 @@ export default function RelayNovelPage() {
       setPage(next)
       loadRelays(next, sort)
     }
-  }, [hasNext, isLoading, page, sort])
+  }, [hasNext, isLoading, page, sort, loadRelays])
 
   useEffect(() => {
     const observer = new IntersectionObserver(handleObserver, { threshold: 0.5 })
@@ -70,6 +75,7 @@ export default function RelayNovelPage() {
 
       <div className={styles.content}>
         <div className={styles.contentHeader}>
+          {/* 팀장님 특유의 예쁜 밑줄 탭 디자인 영역 */}
           <div className={styles.sortGroup}>
             {["최신순", "인기순"].map(s => (
               <button
@@ -90,10 +96,12 @@ export default function RelayNovelPage() {
           >
             <div className={styles.relayTitle}>{r.title}</div>
             <div className={styles.relayMeta}>
-              <span>시작: {r.starter || r.userId}</span>
-              <span>참여자 {r.participantCount || r.participants || 0}명</span>
-              <span>이어쓰기 {r.entryCount || r.entries || 0}개</span>
-            </div>
+  <span>시작: {r.starter || r.userId}</span>
+  {/* participants가 배열로 올 경우를 대비해 length 처리 */}
+  <span>참여자 {r.participantCount || (r.participants ? r.participants.length : 0)}명</span>
+  {/* 🌟 entries 배열의 길이(length)를 출력하도록 수정! */}
+  <span>이어쓰기 {r.entryCount || (r.entries ? r.entries.length : 0)}개</span>
+</div>
             <div className={styles.relayPreview}>{r.preview || r.description || "내용 없음"}</div>
           </div>
         ))}

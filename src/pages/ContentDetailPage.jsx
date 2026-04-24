@@ -1,7 +1,10 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "axios"; // 🌟 Axios 통일성 복구!
+import axios from "axios";
 import styles from "../styles/ContentDetailPage.module.css";
+
+const PAID_EPISODE_NUMBER = 5  // 테스트용 유료 회차
+const EPISODE_COST = 500        // 포인트 차감량
 
 export default function ContentDetailPage() {
   const navigate = useNavigate();
@@ -15,19 +18,26 @@ export default function ContentDetailPage() {
   const [episodesLoading, setEpisodesLoading] = useState(true);
   const [showFullSummary, setShowFullSummary] = useState(false);
 
-  // 🌟 Axios를 활용한 작품 상세 조회 (시큐리티 토큰 헤더 전송)
+  // 유료 결제 / 읽음 상태
+  const [purchasedEps, setPurchasedEps] = useState(() =>
+    JSON.parse(localStorage.getItem(`purchased_${contentId}`) || "[]")
+  )
+  const [readEps, setReadEps] = useState(() =>
+    JSON.parse(localStorage.getItem("readEpisodes") || "[]")
+  )
+  const [payTarget, setPayTarget] = useState(null)
+  const [showToast, setShowToast] = useState(false)
+
   const loadContentDetail = async () => {
     try {
       setIsLoading(true);
       const token = localStorage.getItem("accessToken");
-      
       const response = await axios.get(`http://localhost:8080/api/contents/${contentId}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-
       const data = response.data;
       setContent(data);
-      setLiked(data.liked || data.isLiked || false); // 백엔드가 준 isLiked로 하트 고정
+      setLiked(data.liked || data.isLiked || false);
     } catch (error) {
       console.error("작품 상세 불러오기 실패 : ", error);
     } finally {
@@ -35,16 +45,13 @@ export default function ContentDetailPage() {
     }
   };
 
-  // 🌟 Axios를 활용한 에피소드 목록 조회
   const loadEpisodeList = async () => {
     try {
       setEpisodesLoading(true);
       const token = localStorage.getItem("accessToken");
-      
       const response = await axios.get(`http://localhost:8080/api/contents/${contentId}/episodes`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
-
       const data = response.data;
       setEpisodes(Array.isArray(data) ? data : data.content ? data.content : []);
     } catch (error) {
@@ -57,24 +64,18 @@ export default function ContentDetailPage() {
   useEffect(() => {
     loadContentDetail();
     loadEpisodeList();
+    // readEpisodes 최신화
+    setReadEps(JSON.parse(localStorage.getItem("readEpisodes") || "[]"))
   }, [contentId]);
 
-  // 🌟 시큐리티 기반 찜 토글 로직 (URL 파라미터 삭제, 토큰으로만 통신)
   const handleLike = async () => {
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
-
+    if (!token) { alert("로그인이 필요합니다."); return; }
     try {
       const response = await axios.post(`http://localhost:8080/api/likes/${contentId}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      if (response.status === 200) {
-        setLiked(!liked);
-      }
+      if (response.status === 200) setLiked(!liked);
     } catch (error) {
       console.error("찜 실패 : ", error);
       alert("찜 처리에 실패했습니다.");
@@ -88,24 +89,48 @@ export default function ContentDetailPage() {
   };
 
   const typeLabel = (type) => {
-    switch (type) {
-      case "WEBTOON": return "웹툰";
-      case "NOVEL": return "웹소설";
-      default: return "기타";
-    }
+    if (type === "WEBTOON") return "웹툰";
+    if (type === "NOVEL") return "웹소설";
+    return "기타";
   };
 
-  const handleEpisodeClick = (episodeId) => {
-    // 백엔드 데이터(DB)와 정확히 일치하는 한글로 조건문 검사
+  const navigateToViewer = (episodeId) => {
     if (content.type === "웹툰") {
       navigate(`/webtoon/viewer/${episodeId}?contentId=${contentId}`);
     } else if (content.type === "웹소설") {
       navigate(`/novel/viewer/${episodeId}?contentId=${contentId}`);
     } else {
-      // 만약 DB에 "웹툰", "웹소설"이 아닌 오타(예: "웹툰 ")가 들어있을 경우 화면에 띄워주는 방어막
       alert(`[오류] 알 수 없는 작품 타입입니다.\n현재 DB 저장값: "${content.type}"`);
     }
   };
+
+  const handleEpisodeClick = (ep) => {
+    const isPaidEp = ep.episodeNumber === PAID_EPISODE_NUMBER
+    if (isPaidEp && !purchasedEps.includes(ep.episodeNumber)) {
+      setPayTarget(ep)
+      return
+    }
+    navigateToViewer(ep.episodeId)
+  };
+
+  const handlePay = () => {
+    const currentPoints = Number(localStorage.getItem("userPoints") || 1200)
+    if (currentPoints < EPISODE_COST) {
+      alert("포인트가 부족합니다.")
+      return
+    }
+    localStorage.setItem("userPoints", currentPoints - EPISODE_COST)
+    const newPurchased = [...purchasedEps, payTarget.episodeNumber]
+    setPurchasedEps(newPurchased)
+    localStorage.setItem(`purchased_${contentId}`, JSON.stringify(newPurchased))
+    const target = payTarget
+    setPayTarget(null)
+    setShowToast(true)
+    setTimeout(() => {
+      setShowToast(false)
+      navigateToViewer(target.episodeId)
+    }, 1500)
+  }
 
   const handleShare = async () => {
     try {
@@ -134,6 +159,7 @@ export default function ContentDetailPage() {
   }
 
   const summary = content.summary || content.description || "작품 소개가 없습니다.";
+  const userPoints = Number(localStorage.getItem("userPoints") || 1200)
 
   return (
     <div className={styles.pageWrapper}>
@@ -182,12 +208,10 @@ export default function ContentDetailPage() {
                 className={`${styles.iconBtn} ${liked ? styles.iconBtnLiked : ""}`}
                 title="찜하기"
               >
-                <svg
-                  width="20" height="20" viewBox="0 0 24 24"
+                <svg width="20" height="20" viewBox="0 0 24 24"
                   fill={liked ? "#E53935" : "none"}
                   stroke={liked ? "#E53935" : "#90A4C8"}
-                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                >
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
               </button>
@@ -197,11 +221,9 @@ export default function ContentDetailPage() {
                 className={`${styles.iconBtn} ${copied ? styles.iconBtnCopied : ""}`}
                 title={copied ? "복사됨!" : "공유"}
               >
-                <svg
-                  width="20" height="20" viewBox="0 0 24 24" fill="none"
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
                   stroke={copied ? "#2196F3" : "#90A4C8"}
-                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                >
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="18" cy="5" r="3" />
                   <circle cx="6" cy="12" r="3" />
                   <circle cx="18" cy="19" r="3" />
@@ -211,9 +233,9 @@ export default function ContentDetailPage() {
               </button>
 
               <button
-              onClick={() => episodes.length > 0 && handleEpisodeClick(episodes[0].episodeId)}
-              disabled={episodes.length === 0}
-              className={styles.firstEpBtn}
+                onClick={() => episodes.length > 0 && handleEpisodeClick(episodes[0])}
+                disabled={episodes.length === 0}
+                className={styles.firstEpBtn}
               >
                 첫화 보기 · 1화
               </button>
@@ -230,26 +252,59 @@ export default function ContentDetailPage() {
           ) : episodes.length === 0 ? (
             <div className={styles.emptyMsg}>등록된 회차가 없습니다.</div>
           ) : (
-            episodes.map((ep) => (
-              <div key={ep.episodeId} className={styles.episodeRow} onClick={() => handleEpisodeClick(ep.episodeId)}>
-                <div className={styles.epThumb} />
-                <div className={styles.epInfo}>
-                  <div className={styles.epTitle}>{ep.episodeTitle}</div>
-                  <div className={styles.epMeta}>
-                    {ep.isFree ? (
-                      <span className={styles.badgeFree}>무료</span>
-                    ) : (
-                      <span className={styles.badgePaid}>유료</span>
-                    )}
-                    <span className={styles.epDate}>{formatDate(ep.createdAt)}</span>
+            episodes.map((ep) => {
+              const isPaidEp = ep.episodeNumber === PAID_EPISODE_NUMBER
+              const isPurchased = purchasedEps.includes(ep.episodeNumber)
+              const isRead = readEps.includes(Number(ep.episodeId))
+              return (
+                <div
+                  key={ep.episodeId}
+                  className={`${styles.episodeRow} ${isRead ? styles.episodeRowRead : ""}`}
+                  onClick={() => handleEpisodeClick(ep)}
+                >
+                  <div className={styles.epThumb} />
+                  <div className={styles.epInfo}>
+                    <div className={styles.epTitle}>{ep.episodeTitle}</div>
+                    <div className={styles.epMeta}>
+                      {isPaidEp ? (
+                        isPurchased
+                          ? <span className={styles.badgePurchased}>구매완료</span>
+                          : <span className={styles.badgePaid}>🔒 유료 {EPISODE_COST}P</span>
+                      ) : (
+                        <span className={styles.badgeFree}>무료</span>
+                      )}
+                      {isRead && <span className={styles.badgeRead}>읽음</span>}
+                      <span className={styles.epDate}>{formatDate(ep.createdAt)}</span>
+                    </div>
                   </div>
+                  <div className={styles.epNum}>{ep.episodeNumber}화</div>
                 </div>
-                <div className={styles.epNum}>{ep.episodeNumber}화</div>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </div>
+
+      {/* 유료 결제 모달 */}
+      {payTarget && (
+        <div className={styles.modalOverlay} onClick={() => setPayTarget(null)}>
+          <div className={styles.payModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.payModalTitle}>유료 회차</div>
+            <div className={styles.payModalEp}>{payTarget.episodeTitle || `${payTarget.episodeNumber}화`}</div>
+            <div className={styles.payModalCost}>{EPISODE_COST.toLocaleString()} P</div>
+            <div className={styles.payModalBalance}>보유 포인트: {userPoints.toLocaleString()} P</div>
+            <div className={styles.payModalActions}>
+              <button className={styles.payModalCancel} onClick={() => setPayTarget(null)}>취소</button>
+              <button className={styles.payModalConfirm} onClick={handlePay}>결제하기</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 포인트 사용 토스트 */}
+      {showToast && (
+        <div className={styles.toast}>포인트가 사용되었습니다.</div>
+      )}
     </div>
   );
 }

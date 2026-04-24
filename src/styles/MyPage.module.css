@@ -128,3 +128,23 @@
 .logoutBtn:hover {
   background: #1565C0;
 }
+
+.roleAuthor {
+  font-size: 12px;
+  padding: 4px 12px;
+  background: #E3F2FD;
+  color: #1565C0;
+  border-radius: 999px;
+  border: 1px solid #BBDEFB;
+  font-weight: 600;
+}
+
+.roleAdmin {
+  font-size: 12px;
+  padding: 4px 12px;
+  background: #FFEBEE;
+  color: #E53935;
+  border-radius: 999px;
+  border: 1px solid #FFCDD2;
+  font-weight: 600;
+}

@@ -1,24 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../api/axios"; // 🌟 공통 인스턴스
 import styles from "../styles/AdminRelayPage.module.css";
-
-const initialGuidelines = [
-  { id: 1, title: "분량 가이드", content: "각 이어쓰기는 50자 이상 500자 이내로 작성해주세요." },
-  { id: 2, title: "내용 가이드", content: "이전 내용의 흐름을 자연스럽게 이어가야 합니다." },
-  { id: 3, title: "금지 사항", content: "폭력적이거나 선정적인 내용은 작성할 수 없습니다." },
-];
 
 export default function AdminRelayPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState("릴레이 목록");
-
   const [relays, setRelays] = useState([]);
   const [topics, setTopics] = useState([]);
-
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [newTopicDesc, setNewTopicDesc] = useState("");
-
   const [guideline, setGuideline] = useState("");
   const [isEditingGuide, setIsEditingGuide] = useState(false);
   const [editGuideText, setEditGuideText] = useState("");
@@ -30,14 +21,11 @@ export default function AdminRelayPage() {
     return [];
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "날짜 없음";
-    return dateString.split('T')[0];
-  };
+  const formatDate = (dateString) => dateString ? dateString.split('T')[0] : "날짜 없음";
 
   const loadRelayNovels = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/admin/relay-novels");
+      const response = await api.get("/api/admin/relay-novels");
       setRelays(extractDataList(response.data));
     } catch (error) {
       console.error("릴레이 목록 불러오기 실패:", error);
@@ -46,7 +34,7 @@ export default function AdminRelayPage() {
 
   const loadAdminTopics = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/admin/relay-topics");
+      const response = await api.get("/api/admin/relay-topics");
       setTopics(extractDataList(response.data));
     } catch (error) {
       console.error("주제 목록 불러오기 실패:", error);
@@ -55,7 +43,7 @@ export default function AdminRelayPage() {
 
   const loadGuideline = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/admin/relay-guideline");
+      const response = await api.get("/api/admin/relay-guideline");
       setGuideline(response.data || "등록된 가이드라인이 없습니다.");
     } catch (error) {
       console.error("가이드라인 불러오기 실패:", error);
@@ -71,7 +59,7 @@ export default function AdminRelayPage() {
   const handleAddTopic = async () => {
     if (!newTopicTitle.trim()) { alert("주제 제목을 입력해주세요."); return; }
     try {
-      await axios.post("http://localhost:8080/api/admin/relay-topics", {
+      await api.post("/api/admin/relay-topics", {
         title: newTopicTitle.trim(),
         description: newTopicDesc.trim() || "관리자가 등록한 공식 주제입니다.",
       });
@@ -87,7 +75,7 @@ export default function AdminRelayPage() {
   const handleDeleteTopic = async (topicId) => {
     if (!window.confirm("정말 이 주제를 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/admin/relay-topics/${topicId}`);
+      await api.delete(`/api/admin/relay-topics/${topicId}`);
       loadAdminTopics();
     } catch (error) {
       alert("삭제 실패");
@@ -96,7 +84,7 @@ export default function AdminRelayPage() {
 
   const handleSaveGuide = async () => {
     try {
-      await axios.put("http://localhost:8080/api/admin/relay-guideline", { content: editGuideText.trim() });
+      await api.put("/api/admin/relay-guideline", { content: editGuideText.trim() });
       setGuideline(editGuideText);
       setIsEditingGuide(false);
       alert("저장되었습니다.");
@@ -104,17 +92,6 @@ export default function AdminRelayPage() {
       alert("저장 실패");
     }
   };
-
-  const handleEditStart = (g) => { setEditingId(g.id); setEditTitle(g.title); setEditContent(g.content); };
-
-  const handleEditSave = (id) => {
-    if (!editTitle.trim() || !editContent.trim()) return;
-    setGuidelines(prev => prev.map(g => g.id === id ? { ...g, title: editTitle.trim(), content: editContent.trim() } : g));
-    setEditingId(null);
-  };
-
-  const handleEditCancel = () => setEditingId(null);
-  const handleDelete = (id) => setGuidelines(prev => prev.filter(g => g.id !== id));
 
   return (
     <div className={styles.pageWrapper}>

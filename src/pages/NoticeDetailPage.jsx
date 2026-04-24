@@ -1,22 +1,47 @@
-import { useNavigate } from "react-router-dom"
-import styles from "../styles/NoticeDetailPage.module.css"
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import api from "../api/axios";
+import styles from "../styles/NoticeDetailPage.module.css";
 
 export default function NoticeDetailPage() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { noticeId } = useParams(); 
+  const [notice, setNotice] = useState(null);
+
+  useEffect(() => {
+    const fetchNoticeDetail = async () => {
+      try {
+        const res = await api.get(`/api/notices/${noticeId}`);
+        setNotice(res.data);
+      } catch (error) {
+        console.error("공지사항 상세를 불러오지 못했습니다.", error);
+        alert("존재하지 않거나 삭제된 공지사항입니다.");
+        navigate("/notices");
+      }
+    };
+
+    fetchNoticeDetail();
+  }, [noticeId]);
+
+  if (!notice) return <div style={{ textAlign: "center", padding: "50px" }}>로딩 중...</div>;
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <div className={styles.headerTitle}>공지사항 제목</div>
-        <div className={styles.headerMeta}>2026.04.13 · 관리자</div>
+        <button className={styles.backBtn} onClick={() => navigate("/notices")}>← 목록</button>
+        <div className={styles.headerTitle}>{notice.title}</div>
+        <div className={styles.headerMeta}>
+          {/* 🌟 수정: 상세 페이지 헤더에 조회수 추가 */}
+          {notice.createdAt?.split('T')[0]} · 관리자 · 조회수 {notice.viewCount || 0}
+        </div>
       </div>
       <div className={styles.content}>
         <div className={styles.body}>
-          <p className={styles.text}>안녕하세요, 꼬북 팀입니다. 서비스 이용에 관한 중요한 공지사항을 안내드립니다.</p>
-          <p className={styles.text}>이번 업데이트를 통해 TTS 기능이 개선되었으며, 더욱 자연스러운 음성으로 웹소설을 즐기실 수 있습니다.</p>
-          <p className={styles.text}>이용해 주셔서 감사합니다.</p>
+          <div className={styles.text} style={{ whiteSpace: "pre-wrap" }}>
+            {notice.content}
+          </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
