@@ -1,23 +1,58 @@
-import { useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import styles from "../styles/PointPage.module.css"
 
 export default function PointPage() {
-  const navigate = useNavigate()
   const [tab, setTab] = useState("내역")
 
-  const history = Array.from({ length: 6 }, (_, i) => ({
-    id: i + 1,
-    type: i % 3 === 0 ? "충전" : i % 3 === 1 ? "사용" : "관리자 지급",
-    amount: i % 3 === 1 ? -500 : 1000,
-    desc: i % 3 === 0 ? "포인트 충전" : i % 3 === 1 ? "작품 소장" : "이벤트 지급",
-    date: "2026.04.13"
-  }))
+  const history = [
+    { id: 1, type: "충전", amount: 10000, desc: "포인트 충전", date: "2026.04.13" },
+    { id: 2, type: "사용", amount: -500, desc: "작품 소장 - 어느 날 나는 용사가 되었다 5화", date: "2026.04.12" },
+    { id: 3, type: "관리자 지급", amount: 1000, desc: "이벤트 지급", date: "2026.04.10" },
+    { id: 4, type: "사용", amount: -500, desc: "작품 소장 - 달빛 아래 로맨스 12화", date: "2026.04.08" },
+    { id: 5, type: "충전", amount: 3000, desc: "포인트 충전", date: "2026.04.05" },
+    { id: 6, type: "사용", amount: -500, desc: "작품 소장 - 최강 무협전 30화", date: "2026.04.01" },
+  ]
 
   const packages = [
-    { point: 1000, price: 1000 }, { point: 3000, price: 2900 },
-    { point: 5000, price: 4500 }, { point: 10000, price: 8900 }
+    { point: 1000, price: 1000 },
+    { point: 3000, price: 2900 },
+    { point: 5000, price: 4500 },
+    { point: 10000, price: 8900 },
   ]
+
+  useEffect(() => {
+    const script = document.createElement("script")
+    script.src = "https://cdn.iamport.kr/v1/iamport.js"
+    script.async = true
+    document.head.appendChild(script)
+    return () => {
+      if (document.head.contains(script)) document.head.removeChild(script)
+    }
+  }, [])
+
+  const handleCharge = (pkg) => {
+    const { IMP } = window
+    if (!IMP) {
+      alert("결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.")
+      return
+    }
+    IMP.init("imp64846646")
+
+    IMP.request_pay({
+      pg: "html5_inicis",
+      pay_method: "card",
+      merchant_uid: `point_${Date.now()}`,
+      name: `${pkg.point.toLocaleString()}P 충전`,
+      amount: pkg.price,
+      buyer_name: "구매자",
+    }, (rsp) => {
+      if (rsp.success) {
+        alert(`${pkg.point.toLocaleString()}P 충전이 완료되었습니다!`)
+      } else {
+        alert(`결제 실패: ${rsp.error_msg}`)
+      }
+    })
+  }
 
   return (
     <div className={styles.pageWrapper}>
@@ -42,7 +77,7 @@ export default function PointPage() {
               <div key={pkg.point} className={styles.packageCard}>
                 <div className={styles.packagePoint}>{pkg.point.toLocaleString()} P</div>
                 <div className={styles.packagePrice}>{pkg.price.toLocaleString()}원</div>
-                <button className={styles.chargeBtn}>충전하기</button>
+                <button className={styles.chargeBtn} onClick={() => handleCharge(pkg)}>충전하기</button>
               </div>
             ))}
           </div>

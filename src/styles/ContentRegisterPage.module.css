@@ -4,20 +4,20 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .headerTitle {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--text);
+  color: #1565C0;
   margin-bottom: 4px;
 }
 
 .headerSubtitle {
   font-size: 14px;
-  color: var(--textSub);
+  color: #4A6FA5;
 }
 
 .content {
@@ -27,7 +27,7 @@
 }
 
 .formCard {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 14px;
@@ -39,41 +39,56 @@
 }
 
 .formLabel {
-  font-size: 13px;
-  color: var(--textSub);
+  font-size: 12px;
+  color: #4A6FA5;
   margin-bottom: 8px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .optional {
   font-size: 11px;
-  color: var(--textMuted);
+  color: #90A4C8;
   font-weight: 400;
+  margin-left: 4px;
 }
 
 .input {
   width: 100%;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
   padding: 11px 14px;
-  color: var(--text);
+  color: #0D1B2A;
   font-size: 13px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
 }
 
 .textarea {
   width: 100%;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
-  padding: 11px 14px;
-  color: var(--text);
+  padding: 12px 14px;
+  color: #0D1B2A;
   font-size: 13px;
   outline: none;
   box-sizing: border-box;
   resize: vertical;
+  line-height: 1.7;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textarea:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
 }
 
 .typeGroup {
@@ -83,22 +98,33 @@
 
 .typeBtn {
   flex: 1;
-  padding: 12px;
+  padding: 10px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  background: var(--bgSurface);
-  color: var(--textSub);
-  border: 1px solid var(--border);
-  font-weight: 400;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  background: #E8F4FD;
+  color: #4A6FA5;
+  border: 1px solid #BBDEFB;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.typeBtn:hover {
+  background: #BBDEFB;
+  color: #1565C0;
+  transform: translateY(-1px);
 }
 
 .typeBtnActive {
-  background: var(--primary);
+  background: #2196F3;
   color: #fff;
-  border-color: var(--primary);
-  font-weight: 500;
+  border-color: #2196F3;
+}
+
+.typeBtnActive:hover {
+  background: #1565C0;
+  border-color: #1565C0;
+  color: #fff;
 }
 
 .genreGroup {
@@ -112,52 +138,97 @@
   border-radius: 999px;
   font-size: 12px;
   cursor: pointer;
-  background: var(--bgSurface);
-  color: var(--textSub);
-  border: 1px solid var(--border);
+  background: #E8F4FD;
+  color: #4A6FA5;
+  border: 1px solid #BBDEFB;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.genreBtnActive {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
+.genreBtn:hover {
+  background: #BBDEFB;
+  color: #1565C0;
 }
 
-.fileUpload {
-  width: 100%;
-  height: 120px;
-  background: var(--bgSurface);
-  border: 2px dashed var(--border);
+.genreBtnActive {
+  background: #2196F3;
+  color: #fff;
+  border-color: #2196F3;
+}
+
+.fileBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #2196F3;
+  border: none;
   border-radius: 10px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.fileBtn:hover {
+  background: #1565C0;
+  transform: translateY(-1px);
+}
+
+.fileBtn input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.previewBox {
+  position: relative;
+  display: block;
+  margin-top: 10px;
+  width: fit-content;
+}
+
+.previewImg {
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #BBDEFB;
+  display: block;
+}
+
+.previewRemove {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #E53935;
+  color: #fff;
+  border: none;
+  font-size: 11px;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.fileInput {
-  font-size: 13px;
-  color: var(--textMuted);
-}
-
-.fileLabel {
-  font-size: 13px;
-  color: var(--textMuted);
-  margin-left: 8px;
-}
-
-.fileName {
-  font-size: 12px;
-  color: var(--primary);
-  margin-top: 6px;
+.previewRemove:hover {
+  background: #C62828;
 }
 
 .preview {
   margin-top: 12px;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid #BBDEFB;
 }
 
 .previewMedia {
@@ -169,9 +240,9 @@
 
 .previewLabel {
   font-size: 11px;
-  color: var(--textMuted);
+  color: #90A4C8;
   padding: 6px 10px;
-  background: var(--bgSurface);
+  background: #E8F4FD;
 }
 
 .btnGroup {
@@ -184,31 +255,33 @@
   flex: 1;
   padding: 12px;
   background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--border);
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
-  color: var(--textSub);
+  color: #4A6FA5;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .cancelBtn:hover {
-  background: var(--bgSurface);
+  background: #E3F2FD;
+  border-color: #90CAF9;
 }
 
 .submitBtn {
   flex: 2;
   padding: 12px;
-  background: var(--primary);
+  background: #2196F3;
   border: none;
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
 }
 
 .submitBtn:hover {
-  background: var(--primaryDark);
+  background: #1565C0;
+  transform: translateY(-1px);
 }

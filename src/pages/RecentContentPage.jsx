@@ -4,11 +4,21 @@ import styles from "../styles/RecentContentPage.module.css"
 export default function RecentContentPage() {
   const navigate = useNavigate()
 
-  const items = Array.from({ length: 5 }, (_, i) => ({
-    id: i + 1, title: `최근 본 작품 ${i + 1}`, author: "작가명",
-    lastEpisode: `${i * 3 + 1}화`, date: `${i + 1}시간 전`,
-    progress: Math.floor(Math.random() * 80) + 10
-  }))
+  const items = [
+    { id: 1, title: "어느 날 나는 용사가 되었다", author: "김판타지", type: "novel", lastEpisodeId: 5, lastEpisode: "5화", date: "2시간 전", progress: 45 },
+    { id: 2, title: "달빛 아래 로맨스", author: "이로맨스", type: "webtoon", lastEpisodeId: 12, lastEpisode: "12화", date: "1일 전", progress: 72 },
+    { id: 3, title: "최강 무협전", author: "박무협", type: "novel", lastEpisodeId: 30, lastEpisode: "30화", date: "3일 전", progress: 28 },
+    { id: 4, title: "현대판 마법사", author: "최마법", type: "webtoon", lastEpisodeId: 8, lastEpisode: "8화", date: "5일 전", progress: 60 },
+    { id: 5, title: "학교 뒤편의 비밀", author: "한스릴러", type: "novel", lastEpisodeId: 3, lastEpisode: "3화", date: "1주 전", progress: 15 },
+  ]
+
+  const handleContinue = (e, item) => {
+    e.stopPropagation()
+    const path = item.type === "webtoon"
+      ? `/webtoon/viewer/${item.lastEpisodeId}`
+      : `/novel/viewer/${item.lastEpisodeId}`
+    navigate(path)
+  }
 
   return (
     <div className={styles.pageWrapper}>
@@ -18,7 +28,7 @@ export default function RecentContentPage() {
       </div>
       <div className={styles.content}>
         {items.map(item => (
-          <div key={item.id} className={styles.card} onClick={() => navigate("/contents/1")}>
+          <div key={item.id} className={styles.card} onClick={() => navigate(`/contents/${item.id}`)}>
             <div className={styles.thumbnail} />
             <div className={styles.info}>
               <div className={styles.title}>{item.title}</div>
@@ -28,7 +38,7 @@ export default function RecentContentPage() {
               </div>
               <div className={styles.progressLabel}>진행률 {item.progress}%</div>
             </div>
-            <button className={styles.continueBtn}>이어보기</button>
+            <button className={styles.continueBtn} onClick={(e) => handleContinue(e, item)}>이어보기</button>
           </div>
         ))}
       </div>

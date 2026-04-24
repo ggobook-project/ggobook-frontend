@@ -4,20 +4,20 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .headerTitle {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
-  color: var(--text);
+  color: #1565C0;
   margin-bottom: 4px;
 }
 
 .headerSubtitle {
   font-size: 14px;
-  color: var(--textSub);
+  color: #4A6FA5;
 }
 
 .content {
@@ -27,56 +27,77 @@
 }
 
 .formCard {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 14px;
   padding: 32px;
 }
 
+/* 프로필 사진 */
 .avatarWrap {
   display: flex;
   justify-content: center;
-  margin-bottom: 28px;
+  margin-bottom: 8px;
   position: relative;
   width: fit-content;
   margin-left: auto;
   margin-right: auto;
+  cursor: pointer;
+}
+
+.avatarWrap:hover .avatar {
+  border-color: #1565C0;
+  opacity: 0.85;
+}
+
+.avatarWrap:hover .avatarEdit {
+  background: #1565C0;
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
+  width: 84px;
+  height: 84px;
   border-radius: 50%;
-  background: var(--bgSurface);
-  border: 2px solid var(--primary);
+  background: #E8F4FD;
+  border: 2.5px solid #2196F3;
+  transition: border-color 0.2s, opacity 0.2s;
 }
 
 .avatarEdit {
   position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 24px;
-  height: 24px;
+  bottom: 2px;
+  right: 2px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: var(--primary);
+  background: #2196F3;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   color: #fff;
-  font-size: 12px;
+  border: 2px solid #fff;
+  transition: background 0.2s;
 }
 
+.avatarName {
+  text-align: center;
+  font-size: 12px;
+  color: #2196F3;
+  margin-bottom: 20px;
+}
+
+/* 폼 */
 .formGroup {
   margin-bottom: 16px;
 }
 
-.label {
+.formLabel {
   font-size: 12px;
-  color: var(--textSub);
-  margin-bottom: 6px;
-  font-weight: 500;
+  color: #4A6FA5;
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 .inputRow {
@@ -86,57 +107,138 @@
 
 .input {
   flex: 1;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
-  padding: 10px 14px;
-  color: var(--text);
+  padding: 11px 14px;
+  color: #0D1B2A;
   font-size: 13px;
   outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.inputReadonly {
+  background: #F0F8FF;
+  color: #90A4C8;
+  cursor: not-allowed;
 }
 
 .inputFull {
   width: 100%;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
-  padding: 10px 14px;
-  color: var(--text);
+  padding: 11px 14px;
+  color: #0D1B2A;
   font-size: 13px;
   outline: none;
   box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.inputFull:focus {
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+.inputError {
+  border-color: #E53935 !important;
+  box-shadow: 0 2px 8px rgba(229, 57, 53, 0.1) !important;
+}
+
+.errorMsg {
+  font-size: 11px;
+  color: #E53935;
+  margin-top: 5px;
+}
+
+/* 사이드 버튼 */
 .sideBtn {
-  padding: 10px 14px;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
+  padding: 0 16px;
+  background: #fff;
+  border: 1.5px solid #2196F3;
   border-radius: 10px;
-  color: var(--textSub);
+  color: #2196F3;
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.2s;
+  transition: background 0.2s, color 0.2s;
 }
 
 .sideBtn:hover {
-  background: var(--primarySoft);
+  background: #E3F2FD;
 }
 
+.sideBtnDone {
+  background: #2196F3;
+  color: #fff;
+  border-color: #2196F3;
+}
+
+.sideBtnDone:hover {
+  background: #1565C0;
+  border-color: #1565C0;
+  color: #fff;
+}
+
+.sideBtnMuted {
+  padding: 0 16px;
+  background: #F0F8FF;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  color: #90A4C8;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: default;
+  white-space: nowrap;
+}
+
+/* 비밀번호 섹션 */
 .pwSection {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 12px;
+  padding: 20px;
   margin-top: 8px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.pwTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
 .pwTitle {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1565C0;
 }
 
+.pwHint {
+  font-size: 11px;
+  color: #90A4C8;
+  margin-bottom: 16px;
+}
+
+.pwSection .inputFull {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.pwSection .inputFull:focus {
+  background: #fff;
+  border-color: #90CAF9;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+}
+
+/* 하단 버튼 */
 .btnGroup {
   display: flex;
   gap: 10px;
@@ -146,31 +248,33 @@
   flex: 1;
   padding: 12px;
   background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--border);
+  border: 1px solid #BBDEFB;
   border-radius: 10px;
-  color: var(--textSub);
+  color: #4A6FA5;
   font-size: 14px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, border-color 0.2s;
 }
 
 .cancelBtn:hover {
-  background: var(--bgSurface);
+  background: #E3F2FD;
+  border-color: #90CAF9;
 }
 
 .submitBtn {
   flex: 2;
   padding: 12px;
-  background: var(--primary);
+  background: #2196F3;
   border: none;
   border-radius: 10px;
   color: #fff;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.15s;
 }
 
 .submitBtn:hover {
-  background: var(--primaryDark);
+  background: #1565C0;
+  transform: translateY(-1px);
 }

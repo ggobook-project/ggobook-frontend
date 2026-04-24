@@ -91,8 +91,7 @@ const NotifIcon = ({ type }) => {
   return (
     <nav style={{
       position: "sticky", top: 0, zIndex: 100,
-      background: "rgba(255, 255, 255, 0.92)",
-      backdropFilter: "blur(8px)",
+      background: "#FFFFFF",
       borderBottom: `1px solid ${c.border}`,
       padding: "0 40px",
       display: "flex", alignItems: "center", justifyContent: "space-between",

@@ -104,32 +104,6 @@
   margin-bottom: 14px;
 }
 
-.swiperWrap {
-  position: relative;
-  margin-bottom: 36px;
-}
-
-.navBtn {
-  position: absolute;
-  top: 40%;
-  transform: translateY(-50%);
-  z-index: 10;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  opacity: 0.4;
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.navBtn:hover {
-  opacity: 1;
-  transform: translateY(-50%) scale(1.2);
-}
-
-.navBtnPrev { left: -48px; }
-.navBtnNext { right: -48px; }
-
 .dailyGrid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -187,4 +161,35 @@
 .cardGenre {
   font-size: 11px;
   color: #90A4C8;
+}
+
+.sentinel {
+  height: 1px;
+  margin-top: 20px;
+}
+
+.loadingWrap {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #BBDEFB;
+  border-top-color: #2196F3;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.noMore {
+  text-align: center;
+  color: #90A4C8;
+  font-size: 13px;
+  padding: 24px 0 36px;
 }

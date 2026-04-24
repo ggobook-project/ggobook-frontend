@@ -26,6 +26,7 @@ import SearchResultPage from "./pages/SearchResultPage"
 import ContentManagePage from "./pages/ContentManagePage"
 import ContentRegisterPage from "./pages/ContentRegisterPage"
 import EpisodeRegisterPage from "./pages/EpisodeRegisterPage"
+import AuthorContentDetailPage from "./pages/AuthorContentDetailPage"
 import RelayNovelPage from "./pages/RelayNovelPage"
 import RelayNovelRegisterPage from "./pages/RelayNovelRegisterPage"
 import RelayNovelDetailPage from "./pages/RelayNovelDetailPage"
@@ -88,7 +89,7 @@ function Layout() {
 }} />
 
       {showHeader && <Header />}
-      <div style={{ flex: 1, background: "transparent" }}>
+      <div style={{ flex: 1, background: "transparent", position: "relative", zIndex: 1 }}>
         <Routes>
           <Route path="/" element={<MainPage />} />
           <Route path="/webtoon" element={<WebtoonPage />} />
@@ -104,16 +105,19 @@ function Layout() {
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/mypage/edit" element={<MyInfoEditPage />} />
           <Route path="/mypage/likes" element={<LikedContentPage />} />
-          <Route path="/mypage/owns" element={<OwnedContentPage />} />
+          <Route path="/mypage/library" element={<OwnedContentPage />} />
           <Route path="/mypage/recent" element={<RecentContentPage />} />
           <Route path="/mypage/comments" element={<MyCommentPage />} />
-          <Route path="/mypage/relays" element={<MyRelayNovelPage />} />
+          <Route path="/mypage/relay" element={<MyRelayNovelPage />} />
           <Route path="/mypage/points" element={<PointPage />} />
           <Route path="/ranking" element={<RankingPage />} />
           <Route path="/search" element={<SearchResultPage />} />
           <Route path="/author/contents" element={<ContentManagePage />} />
           <Route path="/author/contents/register" element={<ContentRegisterPage />} />
+          <Route path="/author/contents/:contentId" element={<AuthorContentDetailPage />} />
+          <Route path="/author/contents/:contentId/edit" element={<ContentRegisterPage />} />
           <Route path="/author/contents/:contentId/episode/register" element={<EpisodeRegisterPage />} />
+          <Route path="/author/contents/:contentId/episode/:episodeId/edit" element={<EpisodeRegisterPage />} />
           <Route path="/relay" element={<RelayNovelPage />} />
           <Route path="/relay/register" element={<RelayNovelRegisterPage />} />
           <Route path="/relay/:relayNovelId" element={<RelayNovelDetailPage />} />

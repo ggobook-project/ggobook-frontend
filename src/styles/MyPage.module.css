@@ -10,9 +10,9 @@
 }
 
 .profile {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 28px 24px;
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 24px 32px;
+  border-bottom: 1px solid rgba(187, 222, 251, 0.6);
   display: flex;
   gap: 18px;
   align-items: center;
@@ -22,21 +22,21 @@
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: var(--bgWhite);
-  border: 2px solid var(--primary);
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid #2196F3;
   flex-shrink: 0;
 }
 
 .name {
   font-size: 18px;
   font-weight: 700;
-  color: var(--text);
+  color: #0D1B2A;
   margin-bottom: 4px;
 }
 
 .email {
   font-size: 13px;
-  color: var(--textSub);
+  color: #4A6FA5;
   margin-bottom: 10px;
 }
 
@@ -48,24 +48,29 @@
 .pointBadge {
   font-size: 12px;
   padding: 4px 12px;
-  background: var(--bgSurface);
-  color: var(--primary);
+  background: rgba(255, 255, 255, 0.7);
+  color: #2196F3;
   border-radius: 999px;
   font-weight: 500;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(187, 222, 251, 0.8);
 }
 
 .roleBadge {
   font-size: 12px;
   padding: 4px 12px;
-  background: var(--bgSurface);
-  border: 1px solid var(--border);
-  color: var(--textSub);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(187, 222, 251, 0.8);
+  color: #4A6FA5;
   border-radius: 999px;
 }
 
 .menuList {
-  background: #FFFFFF;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 16px 16px 8px;
 }
 
 .menuItem {
@@ -73,47 +78,53 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid #E8F4FD;
+  border-bottom: 1px solid rgba(232, 244, 253, 0.9);
   cursor: pointer;
   transition: background 0.2s;
 }
 
+.menuItem:last-child {
+  border-bottom: none;
+}
+
 .menuItem:hover {
-  background: #E8F4FD;
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .menuLabel {
   font-size: 14px;
-  color: var(--text);
+  color: #0D1B2A;
   margin-bottom: 2px;
 }
 
 .menuSub {
   font-size: 12px;
-  color: var(--textMuted);
+  color: #90A4C8;
 }
 
 .menuArrow {
-  color: var(--textMuted);
+  color: #90A4C8;
   font-size: 18px;
 }
 
 .logoutWrap {
   padding: 16px 24px;
+  display: flex;
+  justify-content: center;
 }
 
 .logoutBtn {
-  width: 100%;
-  padding: 12px;
-  background: #FFFFFF;
-  border: 1px solid #BBDEFB;
+  padding: 10px 40px;
+  background: #2196F3;
+  border: none;
   border-radius: 10px;
-  color: var(--textSub);
+  color: #FFFFFF;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .logoutBtn:hover {
-  background: var(--bgSurface);
+  background: #1565C0;
 }

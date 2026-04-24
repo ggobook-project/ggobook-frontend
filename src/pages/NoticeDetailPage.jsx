@@ -7,7 +7,6 @@ export default function NoticeDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate("/notices")}>← 목록</button>
         <div className={styles.headerTitle}>공지사항 제목</div>
         <div className={styles.headerMeta}>2026.04.13 · 관리자</div>
       </div>

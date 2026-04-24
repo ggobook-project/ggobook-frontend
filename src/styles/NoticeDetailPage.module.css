@@ -4,24 +4,34 @@
 }
 
 .header {
-  background: linear-gradient(135deg, var(--primarySoft) 0%, var(--bgWhite) 100%);
-  padding: 32px 40px 24px;
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
 .backBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   background: none;
   border: none;
   color: #4A6FA5;
   font-size: 13px;
   cursor: pointer;
-  margin-bottom: 12px;
-  padding: 0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-top: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.backBtn:hover {
+  background: #E3F2FD;
+  color: #1565C0;
 }
 
 .headerTitle {
   font-size: 22px;
   font-weight: 700;
-  color: #0D1B2A;
+  color: #1565C0;
   margin-bottom: 6px;
 }
 
@@ -37,7 +47,7 @@
 }
 
 .body {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 14px;
