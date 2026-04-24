@@ -1,65 +1,42 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "../api/axios"; // 🌟 공통 인스턴스
 import styles from "../styles/AdminRelayPage.module.css";
 
 export default function AdminRelayDetailPage() {
   const { novelId } = useParams();
   const navigate = useNavigate();
-  
   const [entries, setEntries] = useState([]);
   const [novelInfo, setNovelInfo] = useState({});
   const [errorStatus, setErrorStatus] = useState(null); 
-  
-  // 🌟 AI 통신은 시간이 걸리므로 버튼을 비활성화하기 위한 로딩 상태 추가!
   const [blindingId, setBlindingId] = useState(null); 
 
   const loadEntries = useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:8080/api/admin/relay-novels/${novelId}`);
-      
-      let responseData = response.data;
-      if (typeof responseData === 'string') {
-        try { responseData = JSON.parse(responseData); } catch (e) {}
-      }
-
-      const data = responseData.data || responseData.content || responseData;
+      const response = await api.get(`/api/admin/relay-novels/${novelId}`);
+      const data = response.data.data || response.data.content || response.data;
       setNovelInfo(data);
       setEntries(data.entries || data.relayEntries || data.entryList || []); 
       setErrorStatus(null);
     } catch (error) {
-      console.error("상세 정보 에러:", error);
-      setErrorStatus("데이터를 불러오지 못했습니다. 서버 상태를 확인해주세요.");
+      setErrorStatus("데이터를 불러오지 못했습니다.");
     }
   }, [novelId]);
 
-  useEffect(() => {
-    loadEntries();
-  }, [loadEntries]);
+  useEffect(() => { loadEntries(); }, [loadEntries]);
 
-  // ==========================================
-  // 🌟 원클릭 AI 자동 블라인드 로직
-  // ==========================================
   const handleBlindEntry = async (entryId) => {
-    // 1. 직접 입력 대신 의사만 묻습니다.
-    if (!window.confirm("이 회차를 블라인드 처리하시겠습니까?\n(AI가 부적절한 내용을 필터링하여 안전한 요약본으로 대체합니다.)")) return;
-
-    setBlindingId(entryId); // 로딩 시작 (해당 회차의 버튼을 'AI 요약 중...'으로 변경)
+    if (!window.confirm("이 회차를 AI 요약 및 블라인드 처리하시겠습니까?")) return;
+    setBlindingId(entryId);
 
     try {
-      // 2. 백엔드로 '빈 문자열'을 보냅니다. 
-      // (백엔드의 AdminRelayService가 빈 값을 감지하고 파이썬 AI서버로 요약을 요청할 것입니다!)
-      await axios.put(`http://localhost:8080/api/admin/relay-entries/${entryId}/blind`, { 
-        adminMessage: "" 
-      });
-      
-      alert("AI 요약 및 블라인드 처리가 성공적으로 완료되었습니다.");
-      loadEntries(); // 데이터 최신화 (AI 요약본이 화면에 뜹니다)
+      await api.put(`/api/admin/relay-entries/${entryId}/blind`, { adminMessage: "" });
+      alert("블라인드 처리가 완료되었습니다.");
+      loadEntries();
     } catch (error) {
-      console.error("블라인드 실패", error);
-      alert("블라인드 처리 중 서버 오류가 발생했습니다. 파이썬 AI 서버가 켜져 있는지 확인해주세요.");
+      alert("서버 오류가 발생했습니다.");
     } finally {
-      setBlindingId(null); // 로딩 종료
+      setBlindingId(null);
     }
   };
 

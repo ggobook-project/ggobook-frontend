@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+// 🌟 1. 공통 api 인스턴스 임포트
+import api from "../api/axios"; 
 import styles from "../styles/AdminNoticePage.module.css";
 
 export default function AdminNoticePage() {
@@ -7,18 +8,15 @@ export default function AdminNoticePage() {
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
-  // 🌟 폼(Form) 및 아코디언(Accordion) 제어 상태
   const [showForm, setShowForm] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({ noticeId: null, title: "", content: "", isPinned: false });
-  
-  // 🌟 펼쳐볼 공지사항 ID 저장
   const [expandedId, setExpandedId] = useState(null); 
 
-  // 1. 공지사항 불러오기
+  // 1. 공지사항 불러오기 (axios -> api 변경)
   const loadNotices = async (page = 0) => {
     try {
-      const res = await axios.get(`http://localhost:8080/api/admin/notices?page=${page}&size=10`);
+      const res = await api.get(`/api/admin/notices?page=${page}&size=10`);
       setNotices(res.data.content || []);
       setTotalPages(res.data.totalPages || 0);
       setCurrentPage(page);
@@ -29,7 +27,6 @@ export default function AdminNoticePage() {
 
   useEffect(() => { loadNotices(0); }, []);
 
-  // 2. 폼 초기화 및 열기
   const resetForm = () => {
     setFormData({ noticeId: null, title: "", content: "", isPinned: false });
     setEditMode(false);
@@ -42,7 +39,6 @@ export default function AdminNoticePage() {
     setShowForm(true);
   };
 
-  // 3. 수정 버튼 클릭 (🌟 백엔드에서 pinned로 오든 isPinned로 오든 무조건 잡도록 수정)
   const handleEditClick = (notice) => {
     setFormData({
       noticeId: notice.noticeId,
@@ -56,7 +52,7 @@ export default function AdminNoticePage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // 4. 작성 및 수정 완료
+  // 2. 작성 및 수정 완료 (axios -> api 변경)
   const handleSubmit = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
       alert("제목과 내용을 모두 입력해주세요.");
@@ -71,10 +67,10 @@ export default function AdminNoticePage() {
       };
 
       if (editMode) {
-        await axios.put(`http://localhost:8080/api/admin/notices/${formData.noticeId}`, payload);
+        await api.put(`/api/admin/notices/${formData.noticeId}`, payload);
         alert("공지사항이 수정되었습니다.");
       } else {
-        await axios.post("http://localhost:8080/api/admin/notices", payload);
+        await api.post("/api/admin/notices", payload);
         alert("공지사항이 등록되었습니다.");
       }
       resetForm();
@@ -84,11 +80,11 @@ export default function AdminNoticePage() {
     }
   };
 
-  // 5. 삭제 처리
+  // 3. 삭제 처리 (axios -> api 변경)
   const handleDelete = async (noticeId) => {
     if (!window.confirm("정말 삭제하시겠습니까?")) return;
     try {
-      await axios.delete(`http://localhost:8080/api/admin/notices/${noticeId}`);
+      await api.delete(`/api/admin/notices/${noticeId}`);
       alert("삭제되었습니다.");
       loadNotices(currentPage);
     } catch (err) {
