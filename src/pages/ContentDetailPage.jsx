@@ -1,6 +1,14 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 import axios from "axios";
+=======
+
+// 🌟 변경 1: 일반 axios 해고! 우리 회사 전용 스마트 요원(api) 고용
+// (파일 경로가 ../api/axios 가 맞는지 한 번 더 확인해 주세요!)
+import api from "../api/axios"; 
+
+>>>>>>> origin/feat/login/sh
 import styles from "../styles/ContentDetailPage.module.css";
 
 const PAID_EPISODE_NUMBER = 5  // 테스트용 유료 회차
@@ -28,16 +36,18 @@ export default function ContentDetailPage() {
   const [payTarget, setPayTarget] = useState(null)
   const [showToast, setShowToast] = useState(false)
 
+  // 🌟 변경 2: 작품 상세 조회 다이어트
   const loadContentDetail = async () => {
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://localhost:8080/api/contents/${contentId}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      
+      // 요원이 알아서 지갑 열고 토큰 꺼내가므로 토큰 세팅 코드 전부 삭제!
+      // 요원이 앞부분 주소(baseURL)를 알고 있으므로 뒷주소만 작성!
+      const response = await api.get(`/api/contents/${contentId}`);
+
       const data = response.data;
       setContent(data);
-      setLiked(data.liked || data.isLiked || false);
+      setLiked(data.liked || data.isLiked || false); 
     } catch (error) {
       console.error("작품 상세 불러오기 실패 : ", error);
     } finally {
@@ -45,13 +55,14 @@ export default function ContentDetailPage() {
     }
   };
 
+  // 🌟 변경 3: 에피소드 목록 조회 다이어트
   const loadEpisodeList = async () => {
     try {
       setEpisodesLoading(true);
-      const token = localStorage.getItem("accessToken");
-      const response = await axios.get(`http://localhost:8080/api/contents/${contentId}/episodes`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
+      
+      // 마찬가지로 토큰 세팅 로직, 긴 주소창 싹 다 삭제!
+      const response = await api.get(`/api/contents/${contentId}/episodes`);
+
       const data = response.data;
       setEpisodes(Array.isArray(data) ? data : data.content ? data.content : []);
     } catch (error) {
@@ -68,14 +79,18 @@ export default function ContentDetailPage() {
     setReadEps(JSON.parse(localStorage.getItem("readEpisodes") || "[]"))
   }, [contentId]);
 
+  // 🌟 변경 4: 찜 토글 로직 다이어트
   const handleLike = async () => {
+    // 팁: 찜하기는 무조건 로그인이 필요하므로, 프론트 단에서 빠르게 한 번 컷 해주는 센스는 남겨둡니다!
     const token = localStorage.getItem("accessToken");
     if (!token) { alert("로그인이 필요합니다."); return; }
     try {
-      const response = await axios.post(`http://localhost:8080/api/likes/${contentId}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.status === 200) setLiked(!liked);
+      // 요원이 알아서 토큰을 붙여서 보내주므로 headers 셋팅 삭제!
+      const response = await api.post(`/api/likes/${contentId}`);
+
+      if (response.status === 200 || response.status === 201) {
+        setLiked(!liked);
+      }
     } catch (error) {
       console.error("찜 실패 : ", error);
       alert("찜 처리에 실패했습니다.");

@@ -1,14 +1,31 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useEffect, useState, useRef, useCallback } from "react"
+import api from "../api/axios" // 🌟 만능 요원 임포트 완료!
 import styles from "../styles/NovelViewerPage.module.css"
 
 export default function NovelViewerPage() {
+  // ==========================================
+  // 1. 라우터 및 기본 설정
+  // ==========================================
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const contentId = searchParams.get("contentId")
   const { episodeId } = useParams()
-  const [playing, setPlaying] = useState(false)
+  
+  // 🌟 마이페이지에서 넘겨준 책갈피(progress) 장착
+  const savedProgress = parseInt(searchParams.get("progress") || "0", 10)
 
+  const isLoggedIn = !!localStorage.getItem("accessToken")
+  const currentUser = "나"
+  const COMMENTS_PER_PAGE = 5
+
+  // ==========================================
+  // 2. 상태 관리 (State & Ref)
+  // ==========================================
+  const progressRef = useRef(0) // 🌟 진행률 비밀 수첩
+  const observerRef = useRef(null)
+
+  const [playing, setPlaying] = useState(false)
   const [episode, setEpisode] = useState(null)
   const [novel, setNovel] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -40,12 +57,10 @@ export default function NovelViewerPage() {
 
   const [commentPage, setCommentPage] = useState(1)
   const [hasMoreComments, setHasMoreComments] = useState(true)
-  const observerRef = useRef(null)
-  const COMMENTS_PER_PAGE = 5
 
-  const isLoggedIn = !!localStorage.getItem("accessToken")
-  const currentUser = "나"
-
+  // ==========================================
+  // 3. 헬퍼 함수
+  // ==========================================
   const getUserId = () => {
     const token = localStorage.getItem('accessToken')
     if (!token) return null
@@ -55,17 +70,35 @@ export default function NovelViewerPage() {
     } catch { return null }
   }
 
+  // 본문 텍스트 단락 분리 로직 (위로 끌어올려 렌더링과 의존성 배열 모두에서 사용)
+  const paragraphs = novel?.contentText
+    ? novel.contentText.split("\n").filter(p => p.trim() !== "")
+    : []
+
+  const visibleComments = comments.slice(0, commentPage * COMMENTS_PER_PAGE)
+
+  // ==========================================
+  // 4. API 통신 함수 (fetch -> api 전면 교체)
+  // ==========================================
+  const recordRecentView = async (finalProgress) => {
+    if (!isLoggedIn || !contentId || !episodeId) return;
+    try {
+      await api.post("/api/recent-views", {
+        contentId: Number(contentId),
+        episodeId: Number(episodeId),
+        progress: finalProgress
+      });
+    } catch (error) {
+      console.error("최근 본 작품 저장 실패 : ", error);
+    }
+  };
+
   const loadEpisodeDetail = async () => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('accessToken')
-      const response = await fetch(`http://localhost:8080/api/episodes/${episodeId}`, {
-        method: "GET", headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (!response.ok) { alert("백엔드 통신 실패(회차 상세)"); return }
-      const data = await response.json()
-      setEpisode(data)
-      setNovel(data.novel || null)
+      const response = await api.get(`/api/episodes/${episodeId}`)
+      setEpisode(response.data)
+      setNovel(response.data.novel || null)
     } catch (error) {
       console.error("회차 상세 불러오기 실패 : ", error)
     } finally {
@@ -76,13 +109,8 @@ export default function NovelViewerPage() {
   const loadAverageRating = async () => {
     if (!contentId) return
     try {
-      const token = localStorage.getItem('accessToken')
-      const response = await fetch(`http://localhost:8080/api/ratings/${contentId}`, {
-        method: "GET", headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) return
-      const avg = await response.json()
-      setAvgRating(avg || 0)
+      const response = await api.get(`/api/ratings/${contentId}`)
+      setAvgRating(response.data || 0)
     } catch (error) { console.error("평균 평점 로드 실패 : ", error) }
   }
 
@@ -90,17 +118,69 @@ export default function NovelViewerPage() {
     const userId = getUserId()
     if (!userId || !contentId) return
     try {
-      const token = localStorage.getItem('accessToken')
-      const response = await fetch(`http://localhost:8080/api/ratings/${contentId}/users/${userId}`, {
-        method: "GET", headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!response.ok) return
-      const data = await response.json()
-      if (data?.score) { setMyRating(data.score); setTempRating(data.score) }
-    } catch (error) { console.error("내 평점 로드 실패 : ", error) }
+      const response = await api.get(`/api/ratings/${contentId}/users/${userId}`)
+      
+      // Axios는 response.data 에 빈 값이 와도 에러가 터지지 않습니다.
+      if (response.data && response.data.score) { 
+        setMyRating(response.data.score); 
+        setTempRating(response.data.score); 
+      }
+    } catch (error) { 
+      console.error("내 평점 로드 실패 : ", error) 
+    }
   }
 
-  useEffect(() => { loadEpisodeDetail() }, [episodeId])
+  // ==========================================
+  // 5. 컴포넌트 생명주기 (useEffect)
+  // ==========================================
+  
+  // 🌟 5-1. 스크롤 감지 및 진행률 계산
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = document.documentElement.clientHeight;
+
+      if (scrollHeight <= clientHeight) return;
+
+      const currentProgress = Math.floor((scrollTop / (scrollHeight - clientHeight)) * 100);
+      progressRef.current = Math.min(100, Math.max(0, currentProgress));
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 🌟 5-2. 화면 진입 시 데이터 로딩 & 퇴장 시 진행률 저장
+  useEffect(() => { 
+    loadEpisodeDetail();
+    recordRecentView(0); // 입장 출석체크
+
+    return () => {
+      recordRecentView(progressRef.current); // 퇴장 시 최종 진행률 저장
+    };
+  }, [episodeId, contentId]);
+
+  // 🌟 5-3. 자동 스크롤 로직 (책갈피 순간이동)
+  useEffect(() => {
+    // 텍스트 단락이 렌더링되었고 진행률이 0보다 클 때
+    if (paragraphs.length > 0 && savedProgress > 0) {
+      const timer = setTimeout(() => {
+        const scrollHeight = document.documentElement.scrollHeight;
+        const clientHeight = document.documentElement.clientHeight;
+        const targetScrollTop = (scrollHeight - clientHeight) * (savedProgress / 100);
+        
+        window.scrollTo({
+          top: targetScrollTop,
+          behavior: "auto" // 스르륵 현상 방지
+        });
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [paragraphs.length, savedProgress]);
+
+  // 5-4. 기타 useEffect 유지
   useEffect(() => { if (contentId) { loadAverageRating(); loadMyRating() } }, [episode])
 
   useEffect(() => {
@@ -124,17 +204,14 @@ export default function NovelViewerPage() {
     if (commentPage * COMMENTS_PER_PAGE >= comments.length) setHasMoreComments(false)
   }, [commentPage, comments])
 
-  const visibleComments = comments.slice(0, commentPage * COMMENTS_PER_PAGE)
-
+  // ==========================================
+  // 6. 이벤트 핸들러
+  // ==========================================
   const goContentDetail = () => {
     if (contentId) navigate(`/contents/${contentId}`)
     else if (episode?.content?.contentId) navigate(`/contents/${episode.content.contentId}`)
     else navigate(-1)
   }
-
-  const paragraphs = novel?.contentText
-    ? novel.contentText.split("\n").filter(p => p.trim() !== "")
-    : []
 
   const handleLike = () => {
     if (!isLoggedIn) { navigate("/login"); return }
@@ -142,13 +219,26 @@ export default function NovelViewerPage() {
     setLikeCount(liked ? likeCount - 1 : likeCount + 1)
   }
 
+  const handleRatingConfirm = async () => {
+    const userId = getUserId()
+    if (!userId) { navigate("/login"); return }
+    try {
+      const response = await api.post(`/api/ratings/${contentId}?userId=${userId}`, { score: tempRating })
+      if (response.status === 200 || response.status === 201) {
+        setMyRating(tempRating)
+        setShowRatingModal(false)
+        setAvgRating(prev => Math.round(((prev + tempRating) / 2) * 10) / 10)
+        loadAverageRating()
+      } else {
+        alert("별점 저장에 실패했습니다.")
+      }
+    } catch (error) { console.error("별점 저장 실패 : ", error) }
+  }
+
   const handleCommentSubmit = () => {
     if (!isLoggedIn) { navigate("/login"); return }
     if (!comment.trim()) return
-    setComments([
-      { id: Date.now(), user: currentUser, text: comment, date: "방금", isMine: true, replies: [], likes: 0, dislikes: 0, myLike: null },
-      ...comments
-    ])
+    setComments([{ id: Date.now(), user: currentUser, text: comment, date: "방금", isMine: true, replies: [], likes: 0, dislikes: 0, myLike: null }, ...comments])
     setComment("")
     setHasMoreComments(true)
   }
@@ -163,20 +253,14 @@ export default function NovelViewerPage() {
   const handleReplySubmit = (commentId) => {
     if (!isLoggedIn) { navigate("/login"); return }
     if (!replyText.trim()) return
-    setComments(comments.map(c =>
-      c.id === commentId
-        ? { ...c, replies: [...(c.replies || []), { id: Date.now(), user: currentUser, text: replyText, date: "방금", isMine: true, likes: 0, dislikes: 0, myLike: null }] }
-        : c
-    ))
+    setComments(comments.map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), { id: Date.now(), user: currentUser, text: replyText, date: "방금", isMine: true, likes: 0, dislikes: 0, myLike: null }] } : c))
     setReplyText("")
     setReplyingId(null)
     setExpandedReplies(prev => ({ ...prev, [commentId]: true }))
   }
 
   const handleReplyDelete = (commentId, replyId) => {
-    setComments(comments.map(c =>
-      c.id === commentId ? { ...c, replies: c.replies.filter(r => r.id !== replyId) } : c
-    ))
+    setComments(comments.map(c => c.id === commentId ? { ...c, replies: c.replies.filter(r => r.id !== replyId) } : c))
   }
 
   const handleReplyEditStart = (commentId, reply) => {
@@ -185,11 +269,7 @@ export default function NovelViewerPage() {
   }
 
   const handleReplyEditSubmit = (commentId, replyId) => {
-    setComments(comments.map(c =>
-      c.id === commentId
-        ? { ...c, replies: c.replies.map(r => r.id === replyId ? { ...r, text: editReplyText } : r) }
-        : c
-    ))
+    setComments(comments.map(c => c.id === commentId ? { ...c, replies: c.replies.map(r => r.id === replyId ? { ...r, text: editReplyText } : r) } : c))
     setEditingReply(null); setEditReplyText("")
   }
 
@@ -203,59 +283,25 @@ export default function NovelViewerPage() {
   const handleCommentLike = (id, type) => {
     setComments(comments.map(c => {
       if (c.id !== id) return c
-      if (c.myLike === type) return {
-        ...c, myLike: null,
-        likes: type === "like" ? c.likes - 1 : c.likes,
-        dislikes: type === "dislike" ? c.dislikes - 1 : c.dislikes
-      }
-      return {
-        ...c, myLike: type,
-        likes: type === "like" ? c.likes + 1 : c.myLike === "like" ? c.likes - 1 : c.likes,
-        dislikes: type === "dislike" ? c.dislikes + 1 : c.myLike === "dislike" ? c.dislikes - 1 : c.dislikes
-      }
+      if (c.myLike === type) return { ...c, myLike: null, likes: type === "like" ? c.likes - 1 : c.likes, dislikes: type === "dislike" ? c.dislikes - 1 : c.dislikes }
+      return { ...c, myLike: type, likes: type === "like" ? c.likes + 1 : c.myLike === "like" ? c.likes - 1 : c.likes, dislikes: type === "dislike" ? c.dislikes + 1 : c.myLike === "dislike" ? c.dislikes - 1 : c.dislikes }
     }))
   }
 
   const handleReplyLike = (commentId, replyId, type) => {
     setComments(comments.map(c => {
       if (c.id !== commentId) return c
-      return {
-        ...c, replies: c.replies.map(r => {
-          if (r.id !== replyId) return r
-          if (r.myLike === type) return {
-            ...r, myLike: null,
-            likes: type === "like" ? r.likes - 1 : r.likes,
-            dislikes: type === "dislike" ? r.dislikes - 1 : r.dislikes
-          }
-          return {
-            ...r, myLike: type,
-            likes: type === "like" ? r.likes + 1 : r.myLike === "like" ? r.likes - 1 : r.likes,
-            dislikes: type === "dislike" ? r.dislikes + 1 : r.myLike === "dislike" ? r.dislikes - 1 : r.dislikes
-          }
-        })
-      }
+      return { ...c, replies: c.replies.map(r => {
+        if (r.id !== replyId) return r
+        if (r.myLike === type) return { ...r, myLike: null, likes: type === "like" ? r.likes - 1 : r.likes, dislikes: type === "dislike" ? r.dislikes - 1 : r.dislikes }
+        return { ...r, myLike: type, likes: type === "like" ? r.likes + 1 : r.myLike === "like" ? r.likes - 1 : r.likes, dislikes: type === "dislike" ? r.dislikes + 1 : r.myLike === "dislike" ? r.dislikes - 1 : r.dislikes }
+      }) }
     }))
   }
 
-  const handleRatingConfirm = async () => {
-    const userId = getUserId()
-    if (!userId) { navigate("/login"); return }
-    try {
-      const token = localStorage.getItem('accessToken')
-      const response = await fetch(`http://localhost:8080/api/ratings/${contentId}?userId=${userId}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ score: tempRating })
-      })
-      if (response.ok) {
-        setMyRating(tempRating)
-        setShowRatingModal(false)
-        setAvgRating(prev => Math.round(((prev + tempRating) / 2) * 10) / 10)
-        loadAverageRating()
-      } else alert("별점 저장에 실패했습니다.")
-    } catch (error) { console.error("별점 저장 실패 : ", error) }
-  }
-
+  // ==========================================
+  // 7. UI 렌더링 (원본 100% 유지)
+  // ==========================================
   if (loading) return <div className={styles.pageWrapper}><div className={styles.loading}>불러오는 중...</div></div>
   if (!episode) return null
 
