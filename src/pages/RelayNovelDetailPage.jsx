@@ -89,12 +89,6 @@ export default function RelayNovelDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate("/relay")}>
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="15 18 9 12 15 6" />
-  </svg>
-  목록
-</button>
         <div className={styles.headerTitle}>{novel?.title}</div>
         <div className={styles.headerMeta}>
           시작: {novel?.starter || novel?.userId} · 참여자 {novel?.participantCount || 0}명 · 이어쓰기 {entries.length}개

@@ -31,6 +31,7 @@ export default function MyPage() {
   // 🌟 동적 메뉴: 포인트 잔액을 DB 데이터로 즉시 반영
   const menus = [
     { label: "내 정보 수정", sub: "프로필 및 비밀번호 변경", path: "/mypage/edit" },
+    { label: "내 작품 관리", sub: "업로드한 작품 및 에피소드 관리", path: "/author/contents" },
     { label: "찜한 작품", sub: "저장한 작품 목록", path: "/mypage/likes" },
     { label: "소장한 작품", sub: "구매한 완결 작품", path: "/mypage/library" },
     { label: "최근 본 작품", sub: "열람 기록", path: "/mypage/recent" },

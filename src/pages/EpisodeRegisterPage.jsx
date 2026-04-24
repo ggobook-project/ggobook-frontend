@@ -5,26 +5,35 @@ import "react-datepicker/dist/react-datepicker.css"
 import { ko } from "date-fns/locale"
 import styles from "../styles/EpisodeRegisterPage.module.css"
 
+const mockEpisodes = Array.from({ length: 20 }, (_, i) => ({
+  id: i + 1,
+  number: i + 1,
+  title: `${i + 1}화`,
+  isFree: i < 3,
+  novelText: `${i + 1}화 원고 내용입니다. 흥미진진한 이야기가 펼쳐집니다.`,
+}))
+
 export default function EpisodeRegisterPage() {
   const navigate = useNavigate()
-  const [isFree, setIsFree] = useState(true)
+  const { contentId, episodeId } = useParams()
+  const isEdit = !!episodeId
+  const editEpisode = isEdit ? mockEpisodes.find(e => e.id === Number(episodeId)) : null
+
+  const [isFree, setIsFree] = useState(editEpisode?.isFree ?? true)
   const [scheduled, setScheduled] = useState(false)
   const [isNovel, setIsNovel] = useState(false)
-  const { contentId } = useParams()
-
   const [thumbFile, setThumbFile] = useState(null)
-  const [episodeNumber, setEpisodeNumber] = useState(null)
-  const [episodeTitle, setEpisodeTitle] = useState("")
+  const [episodeNumber, setEpisodeNumber] = useState(editEpisode?.number ?? "")
+  const [episodeTitle, setEpisodeTitle] = useState(editEpisode?.title ?? "")
   const [scheduledAt, setScheduledAt] = useState("")
-
-  const [novelText, setNovelText] = useState("")
+  const [novelText, setNovelText] = useState(editEpisode?.novelText ?? "")
   const [comicFiles, setComicFiles] = useState([])
   const [ttsFileUrl, setTtsFileUrl] = useState("")
 
-  const handleEpisodeRegister = async () => {
+  const handleSubmit = async () => {
     if (!episodeTitle) { alert("회차 제목은 필수입니다."); return }
     if (isNovel && !novelText.trim()) { alert("원고 내용은 필수입니다."); return }
-    if (!isNovel && comicFiles.length === 0) { alert("웹툰 이미지를 1장 이상 업로드해주세요."); return }
+    if (!isEdit && !isNovel && comicFiles.length === 0) { alert("웹툰 이미지를 1장 이상 업로드해주세요."); return }
 
     const userEpisode = {
       episodeNumber: episodeNumber ? parseInt(episodeNumber) : null,
@@ -41,29 +50,42 @@ export default function EpisodeRegisterPage() {
       const UserNovel = { contentText: novelText, ttsFileUrl }
       formData.append("novel", new Blob([JSON.stringify(UserNovel)], { type: "application/json" }))
     } else {
-      comicFiles.forEach((file) => formData.append("episodeFiles", file))
+      comicFiles.forEach(file => formData.append("episodeFiles", file))
     }
 
     try {
-      const token = localStorage.getItem('accessToken')
-      const response = await fetch("http://localhost:8080/api/contents/" + contentId + "/episodes", {
-        method: "POST", headers: { 'Authorization': `Bearer ${token}` }, body: formData
+      const token = localStorage.getItem("accessToken")
+      const url = isEdit
+        ? `http://localhost:8080/api/contents/${contentId}/episodes/${episodeId}`
+        : `http://localhost:8080/api/contents/${contentId}/episodes`
+      const response = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
       })
-      if (response.ok) { alert("회차 등록 성공"); navigate("/author/contents/" + contentId) }
-      else alert("백엔드 통신 실패 : 회차 등록")
-    } catch (error) { alert("에러 발생 (회차 등록 실패) : ", error) }
+      if (response.ok) {
+        alert(isEdit ? "회차 수정 성공" : "회차 등록 성공")
+        navigate(`/author/contents/${contentId}`)
+      } else {
+        alert("백엔드 통신 실패")
+      }
+    } catch (error) {
+      alert("에러 발생 : ", error)
+    }
   }
 
   const checkNovelForTTS = async () => {
     try {
-      const token = localStorage.getItem('accessToken')
-      const response = await fetch("http://localhost:8080/api/contents/" + contentId, {
-        method: "GET", headers: { 'Authorization': `Bearer ${token}` }
+      const token = localStorage.getItem("accessToken")
+      const response = await fetch(`http://localhost:8080/api/contents/${contentId}`, {
+        method: "GET", headers: { Authorization: `Bearer ${token}` }
       })
       if (!response.ok) { alert("백엔드 통신 실패(작품 상세)"); return }
       const data = await response.json()
       setIsNovel(data.type === "웹소설")
-    } catch (error) { console.error("작품 상세 불러오기 실패 : ", error) }
+    } catch (error) {
+      console.error("작품 상세 불러오기 실패 : ", error)
+    }
   }
 
   useEffect(() => { checkNovelForTTS() }, [contentId])
@@ -71,36 +93,35 @@ export default function EpisodeRegisterPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <div className={styles.headerTitle}>회차 등록</div>
-        <div className={styles.headerSubtitle}>새 회차를 등록하세요</div>
+        <div className={styles.headerTitle}>{isEdit ? "회차 수정" : "회차 등록"}</div>
+        <div className={styles.headerSubtitle}>{isEdit ? "회차 내용을 수정하세요" : "새 회차를 등록하세요"}</div>
       </div>
 
       <div className={styles.content}>
         <div className={styles.formCard}>
 
-          {/* 회차 번호 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>회차 번호</div>
             <input
               type="number"
               placeholder="회차 번호 입력"
               className={styles.input}
+              value={episodeNumber}
               onChange={e => setEpisodeNumber(e.target.value)}
               onWheel={e => e.target.blur()}
             />
           </div>
 
-          {/* 회차 제목 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>회차 제목</div>
             <input
               placeholder="회차 제목 입력"
               className={styles.input}
+              value={episodeTitle}
               onChange={e => setEpisodeTitle(e.target.value)}
             />
           </div>
 
-          {/* 썸네일 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>썸네일</div>
             <label className={styles.fileBtn}>
@@ -120,7 +141,6 @@ export default function EpisodeRegisterPage() {
             )}
           </div>
 
-          {/* 원고 업로드 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>원고 업로드</div>
             {isNovel ? (
@@ -141,11 +161,11 @@ export default function EpisodeRegisterPage() {
                   </svg>
                   {comicFiles.length > 0 ? `${comicFiles.length}장 선택됨` : "이미지 업로드"}
                   <input
-  type="file"
-  accept="image/*"
-  multiple
-  onChange={e => setComicFiles(prev => [...prev, ...Array.from(e.target.files)])}
-/>
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={e => setComicFiles(prev => [...prev, ...Array.from(e.target.files)])}
+                  />
                 </label>
                 {comicFiles.length > 0 && (
                   <div className={styles.comicPreviewGrid}>
@@ -165,7 +185,6 @@ export default function EpisodeRegisterPage() {
             )}
           </div>
 
-          {/* 공개 설정 */}
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>공개 설정</div>
             <div className={styles.typeGroup}>
@@ -179,7 +198,6 @@ export default function EpisodeRegisterPage() {
             </div>
           </div>
 
-          {/* 예약 업로드 */}
           <div className={styles.formGroup}>
             <div className={styles.scheduleRow}>
               <div className={styles.formLabel}>예약 업로드</div>
@@ -205,7 +223,6 @@ export default function EpisodeRegisterPage() {
             )}
           </div>
 
-          {/* TTS */}
           {isNovel && (
             <div className={styles.formGroup}>
               <div className={styles.formLabel}>TTS 목소리 설정</div>
@@ -226,8 +243,8 @@ export default function EpisodeRegisterPage() {
           )}
 
           <div className={styles.btnGroup}>
-            <button className={styles.cancelBtn} onClick={() => navigate("/author/contents")}>취소</button>
-            <button className={styles.submitBtn} onClick={handleEpisodeRegister}>등록하기</button>
+            <button className={styles.cancelBtn} onClick={() => navigate(`/author/contents/${contentId}`)}>취소</button>
+            <button className={styles.submitBtn} onClick={handleSubmit}>{isEdit ? "수정하기" : "등록하기"}</button>
           </div>
         </div>
       </div>

@@ -8,6 +8,26 @@
   padding: 28px 40px 32px;
 }
 
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-top: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.backBtn:hover {
+  background: #E3F2FD;
+  color: #1565C0;
+}
+
 .headerTitle {
   font-size: 22px;
   font-weight: 700;
@@ -15,8 +35,8 @@
   margin-bottom: 4px;
 }
 
-.headerSubtitle {
-  font-size: 14px;
+.headerMeta {
+  font-size: 13px;
   color: #4A6FA5;
 }
 
@@ -63,56 +83,60 @@
   transform: translateY(-1px);
 }
 
-.itemCard {
+.episodeCard {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
+  padding: 14px 18px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 10px;
-  margin-bottom: 10px;
-  cursor: pointer;
+  margin-bottom: 8px;
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
 }
 
-.itemCard:hover {
+.episodeCard:hover {
   border-color: #90CAF9;
   box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.92);
 }
 
-.itemLeft {
+.episodeLeft {
   display: flex;
-  gap: 14px;
   align-items: center;
+  gap: 16px;
 }
 
-.thumbnail {
-  width: 52px;
-  height: 68px;
-  background: #E8F4FD;
-  border-radius: 6px;
-  border: 1px solid #BBDEFB;
+.episodeNumber {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2196F3;
+  width: 36px;
   flex-shrink: 0;
 }
 
-.itemTitle {
+.episodeTitle {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: #0D1B2A;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
-.itemMeta {
+.episodeMeta {
   font-size: 12px;
   color: #90A4C8;
-  margin-bottom: 6px;
 }
 
-.statusBadge {
+.episodeRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.epStatusBadge {
   font-size: 11px;
   padding: 2px 8px;
   border-radius: 6px;
@@ -124,18 +148,14 @@
   border: 1px solid #FFCDD2;
 }
 
-.statusActive {
+.statusPublic {
   background: #E3F2FD;
   color: #1565C0;
   border: 1px solid #BBDEFB;
 }
 
-.itemActions {
-  flex-shrink: 0;
-}
-
 .editBtn {
-  padding: 7px 20px;
+  padding: 6px 16px;
   background: transparent;
   border: 1.5px solid #2196F3;
   border-radius: 8px;
