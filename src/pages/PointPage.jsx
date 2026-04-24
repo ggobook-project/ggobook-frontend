@@ -1,8 +1,15 @@
 import { useState, useEffect } from "react"
+import api from "../api/axios"
 import styles from "../styles/PointPage.module.css"
 
 export default function PointPage() {
   const [tab, setTab] = useState("내역")
+  const [payment, setPayment] = useState({})
+  const [point, setPoint] = useState(0)
+  const [walletBalance, setWalletBalance] = useState(0)
+  const storeId = import.meta.env.VITE_PORTONE_STORE_ID
+  const channelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY
+
 
   const history = [
     { id: 1, type: "충전", amount: 10000, desc: "포인트 충전", date: "2026.04.13" },
@@ -25,41 +32,62 @@ export default function PointPage() {
     script.src = "https://cdn.iamport.kr/v1/iamport.js"
     script.async = true
     document.head.appendChild(script)
+
+     const loadWalletBalance = async () => {
+        try {
+          const response = await api.get("/api/wallets/balance")
+          console.log("포인트 잔액 불러오기 : ", response.data)
+          setWalletBalance(response.data)
+        } catch (error) {
+          console.error("포인트 잔액 불러오기 실패 : ", error)
+        }
+      }
+      loadWalletBalance()
     return () => {
       if (document.head.contains(script)) document.head.removeChild(script)
     }
   }, [])
 
-  const handleCharge = (pkg) => {
-    const { IMP } = window
-    if (!IMP) {
-      alert("결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해주세요.")
-      return
-    }
-    IMP.init("imp64846646")
+  const handleCharge = async (pkg) => {
+    try {
+        const response = await api.post(`/api/payments/prepare?amount=${pkg.price}`)
+        const payment = response.data
 
-    IMP.request_pay({
-      pg: "html5_inicis",
-      pay_method: "card",
-      merchant_uid: `point_${Date.now()}`,
-      name: `${pkg.point.toLocaleString()}P 충전`,
-      amount: pkg.price,
-      buyer_name: "구매자",
-    }, (rsp) => {
-      if (rsp.success) {
-        alert(`${pkg.point.toLocaleString()}P 충전이 완료되었습니다!`)
-      } else {
-        alert(`결제 실패: ${rsp.error_msg}`)
-      }
-    })
-  }
+        const { IMP } = window
+        if (!IMP) { alert("결제 모듈을 불러오는 중입니다."); return }
+        IMP.init(storeId)
+
+        IMP.request_pay({
+            channelKey: channelKey,
+            pg: "html5_inicis",
+            pay_method: "card",
+            merchant_uid: payment.merchantUid,   
+            name: `${pkg.point}P 충전`,
+            amount: pkg.price, 
+        }, async (rsp) => {
+            if (rsp.success) {
+                await api.post("/api/payments/verify", {
+                    impUid: rsp.imp_uid,
+                    merchantUid: rsp.merchant_uid,
+                })
+                alert(`${pkg.point.toLocaleString()}P 충전 완료!`)
+                const balanceRes = await api.get("/api/wallets/balance")
+                setWalletBalance(balanceRes.data)
+            } else {
+                alert(`결제 실패: ${rsp.error_msg}`)
+            }
+        })
+    } catch (error) {
+        console.error("결제 실패 : ", error)
+    }
+}
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>포인트</div>
         <div className={styles.pointDisplay}>
-          <span className={styles.pointValue}>1,200</span>
+          <span className={styles.pointValue}>{walletBalance.toLocaleString()}</span>
           <span className={styles.pointLabel}>P 보유</span>
         </div>
       </div>
