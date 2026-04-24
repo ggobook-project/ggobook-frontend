@@ -28,6 +28,21 @@ export default function ContentRegisterPage() {
 
   const genres = ["로맨스", "판타지", "무협", "현대", "스릴러", "BL", "액션"]
 
+  const saveToInspection = () => {
+    const newContent = {
+      id: Date.now(),
+      title,
+      type,
+      genre,
+      summary,
+      registeredAt: new Date().toLocaleDateString("ko-KR"),
+      status: "검수중"
+    }
+    const existing = JSON.parse(localStorage.getItem("pendingContents") || "[]")
+    localStorage.setItem("pendingContents", JSON.stringify([...existing, newContent]))
+    localStorage.setItem("userRole", "AUTHOR")
+  }
+
   const handleSubmit = async () => {
     if (!title || !genre || (!isEdit && !file)) {
       alert(isEdit ? "작품명과 장르는 필수입니다." : "작품명, 장르, 대표 이미지는 필수입니다.")
@@ -48,13 +63,24 @@ export default function ContentRegisterPage() {
         body: formData
       })
       if (response.ok) {
-        alert(isEdit ? "작품 수정 성공" : "작품 등록 성공")
+        if (!isEdit) {
+          saveToInspection()
+          alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.")
+        } else {
+          alert("작품 수정 성공")
+        }
         navigate("/author/contents")
       } else {
         alert("백엔드 통신 실패")
       }
-    } catch (error) {
-      alert("에러 발생 : ", error)
+    } catch {
+      if (!isEdit) {
+        saveToInspection()
+        alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.")
+        navigate("/author/contents")
+      } else {
+        alert("수정 중 오류가 발생했습니다.")
+      }
     }
   }
 

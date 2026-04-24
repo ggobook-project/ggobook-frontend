@@ -279,3 +279,135 @@
   color: #90A4C8;
   font-size: 14px;
 }
+
+.episodeRowRead {
+  background: rgba(187, 222, 251, 0.45);
+}
+
+.episodeRowRead .epTitle {
+  color: #90A4C8;
+}
+
+.episodeRowRead .epThumb {
+  opacity: 0.5;
+}
+
+.badgePurchased {
+  font-size: 11px;
+  padding: 2px 7px;
+  background: #E8F5E9;
+  color: #388E3C;
+  border: 1px solid #C8E6C9;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.badgeRead {
+  font-size: 11px;
+  padding: 2px 7px;
+  background: #F5F5F5;
+  color: #90A4C8;
+  border-radius: 4px;
+}
+
+/* 유료 결제 모달 */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.payModal {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px 24px;
+  width: 320px;
+  box-shadow: 0 8px 40px rgba(21, 101, 192, 0.18);
+  text-align: center;
+}
+
+.payModalTitle {
+  font-size: 13px;
+  color: #90A4C8;
+  margin-bottom: 8px;
+}
+
+.payModalEp {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0D1B2A;
+  margin-bottom: 12px;
+}
+
+.payModalCost {
+  font-size: 32px;
+  font-weight: 700;
+  color: #2196F3;
+  margin-bottom: 6px;
+}
+
+.payModalBalance {
+  font-size: 12px;
+  color: #90A4C8;
+  margin-bottom: 24px;
+}
+
+.payModalActions {
+  display: flex;
+  gap: 10px;
+}
+
+.payModalCancel {
+  flex: 1;
+  padding: 12px 0;
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  color: #4A6FA5;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.payModalCancel:hover { background: #BBDEFB; }
+
+.payModalConfirm {
+  flex: 2;
+  padding: 12px 0;
+  background: #2196F3;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.payModalConfirm:hover { background: #1565C0; }
+
+/* 포인트 사용 토스트 */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1565C0;
+  color: #fff;
+  padding: 12px 28px;
+  border-radius: 30px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 300;
+  box-shadow: 0 4px 20px rgba(21, 101, 192, 0.3);
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

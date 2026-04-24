@@ -108,7 +108,15 @@ export default function WebtoonViewerPage() {
     } catch (error) { console.error("내 평점 로드 실패 : ", error) }
   }
 
-  useEffect(() => { loadEpisodeDetail() }, [episodeId])
+  useEffect(() => {
+    loadEpisodeDetail()
+    // 읽은 회차 localStorage 기록
+    const readEpisodes = JSON.parse(localStorage.getItem("readEpisodes") || "[]")
+    const epNum = Number(episodeId)
+    if (!readEpisodes.includes(epNum)) {
+      localStorage.setItem("readEpisodes", JSON.stringify([...readEpisodes, epNum]))
+    }
+  }, [episodeId])
   useEffect(() => { if (contentId) { loadAverageRating(); loadMyRating() } }, [episode])
 
   useEffect(() => {

@@ -130,6 +130,12 @@
   border: 1px solid #BBDEFB;
 }
 
+.statusReject {
+  background: #F5F5F5;
+  color: #90A4C8;
+  border: 1px solid #E0E0E0;
+}
+
 .itemActions {
   flex-shrink: 0;
 }

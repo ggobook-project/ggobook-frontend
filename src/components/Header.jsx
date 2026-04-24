@@ -20,6 +20,18 @@ export default function Header() {
   const isLoggedIn = !!localStorage.getItem("accessToken")
   const unreadCount = notifications.filter(n => !n.read).length
 
+  const getRole = () => {
+    const token = localStorage.getItem("accessToken")
+    if (!token) return null
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]))
+      const r = payload.role || payload.roles?.[0] || payload.authority
+      return typeof r === "string" ? r.replace("ROLE_", "") : null
+    } catch { return null }
+  }
+  const role = getRole() || localStorage.getItem("userRole") || "USER"
+  const isAdmin = role === "ADMIN"
+
   const handleLogout = () => {
     if (window.confirm("로그아웃 하시겠습니까?")) {
       localStorage.removeItem("accessToken")
@@ -300,11 +312,11 @@ const NotifIcon = ({ type }) => {
             <span style={{ fontSize: 13, color: c.border }}>|</span>
 
             <button
-              onClick={() => navigate("/mypage")}
+              onClick={() => navigate(isAdmin ? "/admin" : "/mypage")}
               style={btnStyle}
               onMouseEnter={e => e.currentTarget.style.color = c.primary}
               onMouseLeave={e => e.currentTarget.style.color = c.textSub}
-            >마이페이지</button>
+            >{isAdmin ? "관리자페이지" : "마이페이지"}</button>
           </>
         ) : (
           <>

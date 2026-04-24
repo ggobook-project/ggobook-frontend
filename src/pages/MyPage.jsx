@@ -1,14 +1,29 @@
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { getMyPageMainData } from "../api/mypageApi" // 🌟 API 호출 모듈 분리
+import { getMyPageMainData } from "../api/mypageApi"
 import styles from "../styles/MyPage.module.css"
+
+const getRoleFromToken = () => {
+  const token = localStorage.getItem("accessToken")
+  if (!token) return null
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]))
+    const r = payload.role || payload.roles?.[0] || payload.authority
+    return typeof r === "string" ? r.replace("ROLE_", "") : null
+  } catch { return null }
+}
 
 export default function MyPage() {
   const navigate = useNavigate()
+  const role = getRoleFromToken() || localStorage.getItem("userRole") || "USER"
   
   // 🌟 진짜 데이터를 담을 바구니 (초기값은 텅 빈 상태)
   const [userInfo, setUserInfo] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (role === "ADMIN") navigate("/admin")
+  }, [role, navigate])
 
   // 화면이 처음 켜질 때 딱 한 번 백엔드에 데이터 요청
   useEffect(() => {
@@ -53,7 +68,12 @@ export default function MyPage() {
               <span className={styles.pointBadge}>
                 {userInfo?.points?.toLocaleString() || 0} P
               </span>
-              <span className={styles.roleBadge}>일반 회원</span>
+              <span className={
+                role === "ADMIN" ? styles.roleAdmin :
+                role === "AUTHOR" ? styles.roleAuthor : styles.roleBadge
+              }>
+                {role === "ADMIN" ? "관리자" : role === "AUTHOR" ? "작가" : "일반 회원"}
+              </span>
             </div>
           </div>
         </div>
