@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+// 🌟 1. 기본 axios 대신 팀원이 만든 커스텀 api 요원을 불러옵니다!
+import api from "../api/axios"; 
 import styles from "../styles/AdminMemberPage.module.css";
 
 export default function AdminMemberPage() {
@@ -16,59 +17,67 @@ export default function AdminMemberPage() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [suspendData, setSuspendData] = useState({ duration: "DAYS_3", reason: "SPAM", customReason: "" });
 
-  // 🌟 데이터 불러오기 (페이징 & 검색 통합)
+  // 🚨 불필요해진 getAuthHeader() 함수는 완전히 삭제했습니다! 🚨
+
+  // 🌟 데이터 불러오기 (토큰과 도메인이 자동으로 붙습니다)
   const loadMembers = async (page = 0, searchFlag = isSearching, currentKeyword = keyword) => {
     try {
-      let url = `http://localhost:8080/api/admin/members?page=${page}&size=10`;
+      // 🌟 2. http://localhost:8080 생략 가능!
+      let url = `/api/admin/members?page=${page}&size=10`;
       
       if (searchFlag && currentKeyword.trim() !== "") {
-        url = `http://localhost:8080/api/admin/members/search?type=${searchType}&keyword=${currentKeyword}&page=${page}&size=10`;
+        url = `/api/admin/members/search?type=${searchType}&keyword=${currentKeyword}&page=${page}&size=10`;
       }
 
-      const res = await axios.get(url);
+      // 🌟 3. 토큰 헤더 없이 그냥 api.get()만 호출하면 인터셉터가 알아서 토큰을 붙여서 쏩니다!
+      const res = await api.get(url);
       const data = res.data;
-      
-      // 🌟 완벽한 관리자 필터링 (DB의 role 값 'ADMIN'을 필터링)
-      const list = data.content || data;
-      const filtered = list.filter(m => 
-        String(m.role).toUpperCase() !== "ADMIN" && 
-        String(m.role).toUpperCase() !== "ROLE_ADMIN" &&
-        m.id !== 1 // 슈퍼관리자(id 1) 절대 방어
-      );
 
-      setMembers(filtered);
+      // 데이터 껍데기 까기
+      let list = [];
+      if (Array.isArray(data)) {
+        list = data;
+      } else if (data && Array.isArray(data.content)) {
+        list = data.content;
+      } else if (data && Array.isArray(data.data)) {
+        list = data.data;
+      }
+
+      setMembers(list); 
       setTotalPages(data.totalPages || 0);
       setCurrentPage(page);
     } catch (err) {
       console.error("회원 목록 로딩 실패", err);
+      setMembers([]); 
     }
   };
 
-  useEffect(() => { loadMembers(0, false, ""); }, []);
+  useEffect(() => { 
+    loadMembers(0, false, ""); 
+  }, []);
 
-  // 검색 실행
   const handleSearch = () => {
     setIsSearching(true);
     loadMembers(0, true, keyword);
   };
 
-  // 페이징 이동
   const handlePageChange = (newPage) => {
     if (newPage >= 0 && newPage < totalPages) {
       loadMembers(newPage, isSearching, keyword);
     }
   };
 
-  // 정지 처리 확정
+  // 🌟 정지 처리 확정
   const handleSuspendConfirm = async () => {
     try {
-      // selectedUser.id 는 DB의 PK (Primary Key)를 사용합니다.
-      await axios.post(`http://localhost:8080/api/admin/members/${selectedUser.id}/suspend`, suspendData);
+      // 🌟 api.post()를 사용하고 도메인과 헤더를 싹 날렸습니다!
+      await api.post(`/api/admin/members/${selectedUser.id}/suspend`, suspendData);
+      
       alert(`${selectedUser.nickname}님이 정지 처리되었습니다.`);
       setSelectedUser(null);
-      loadMembers(currentPage, isSearching, keyword); // 현재 페이지 새로고침
+      loadMembers(currentPage, isSearching, keyword); 
     } catch (err) {
-      alert("정지 처리 실패: 서버 연결 상태를 확인해주세요.");
+      alert("정지 처리 실패: 권한이 없거나 서버 연결 상태를 확인해주세요.");
     }
   };
 
@@ -77,15 +86,13 @@ export default function AdminMemberPage() {
     if (!window.confirm(`${user.nickname}님의 정지를 해제하시겠습니까?`)) return;
 
     try {
-      await axios.post(`http://localhost:8080/api/admin/members/${user.id}/release`, {
-        reason: "관리자 직권 해제" 
-      });
-      alert("정지가 해제되었습니다.");
+      // 🌟 마찬가지로 매우 깔끔해진 post 요청
+      await api.post(`/api/admin/members/${user.id}/release`, { reason: "관리자 직권 해제" });
       
-      // 목록 새로고침 (페이징과 검색 상태 유지)
+      alert("정지가 해제되었습니다.");
       loadMembers(currentPage, isSearching, keyword); 
     } catch (err) {
-      alert("정지 해제 실패: 서버를 확인해주세요.");
+      alert("정지 해제 실패: 권한이 없거나 서버를 확인해주세요.");
     }
   };
 
@@ -130,7 +137,6 @@ export default function AdminMemberPage() {
                 </div>
               </div>
               <div className={styles.memberRight}>
-                {/* 🌟 불필요한 USER 뱃지 제거 및 정지/해제 버튼 분기 처리 완벽 적용 */}
                 <span className={`${styles.statusBadge} ${m.status === "ACTIVE" ? styles.statusActive : styles.statusBanned}`}>
                   {m.status === "ACTIVE" ? "활성" : "정지"}
                 </span>
@@ -138,12 +144,12 @@ export default function AdminMemberPage() {
                 {m.status === "ACTIVE" ? (
                   <button className={styles.actionBtn} onClick={() => {
                     setSelectedUser(m);
-                    setSuspendData({ duration: "DAYS_3", reason: "SPAM", customReason: "" }); // 초기화
+                    setSuspendData({ duration: "DAYS_3", reason: "SPAM", customReason: "" });
                   }}>정지 처리</button>
                 ) : (
                   <button 
                     className={styles.actionBtn} 
-                    style={{ borderColor: "#10B981", color: "#10B981" }} // 초록색(해제 느낌) 스타일 적용
+                    style={{ borderColor: "#10B981", color: "#10B981" }} 
                     onClick={() => handleRelease(m)}
                   >
                     정지 해제
@@ -168,7 +174,7 @@ export default function AdminMemberPage() {
         )}
       </div>
 
-      {/* 🌟 예쁘고 직관적인 모달창 */}
+      {/* 모달창 */}
       {selectedUser && (
         <div className={styles.modalOverlay}>
           <div className={styles.modal}>

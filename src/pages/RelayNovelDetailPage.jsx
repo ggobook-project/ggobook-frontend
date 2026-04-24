@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useState, useEffect, useCallback } from "react"
-import axios from "../api/axios"
+import api from "../api/axios" 
 import styles from "../styles/RelayNovelDetailPage.module.css"
 
 const MAX_CHARS = 500
@@ -12,7 +12,10 @@ export default function RelayNovelDetailPage() {
   const [myText, setMyText] = useState("")
   const [novel, setNovel] = useState(null)
   const [entries, setEntries] = useState([])
-  const [guidelines, setGuidelines] = useState([])
+  
+  // 🌟 1. 배열([])이 아닌 단일 문자열("") 상태로 변경
+  const [guideline, setGuideline] = useState("") 
+  
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -22,52 +25,56 @@ export default function RelayNovelDetailPage() {
     try {
       setIsLoading(true)
       const token = localStorage.getItem("accessToken")
-      const response = await axios.get(`http://localhost:8080/api/relay-novels/${relayNovelId}`, {
+      const response = await api.get(`/api/relay-novels/${relayNovelId}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setNovel(response.data)
-      setEntries(response.data.entries || [])
+      setEntries(response.data.entries || response.data.entryList || [])
     } catch {
-      // 더미 fallback
       setNovel({ title: "릴레이 소설 제목", starter: "홍길동", participantCount: 12, entryCount: 4 })
       setEntries(Array.from({ length: 4 }, (_, i) => ({
         entryId: i + 1, user: `참여자${i + 1}`, entryOrder: i + 1,
         entryText: `${i + 1}번째 이야기가 이어집니다. 주인공은 새로운 모험을 시작하게 되는데...`,
-        createdAt: `2026.04.${10 + i}`
+        createdAt: `2026.04.${10 + i}`,
+        status: i === 1 ? "BLINDED" : "PUBLISHED", 
+        adminMessage: i === 1 ? "부적절한 내용이 감지되어 AI가 요약 처리했습니다." : ""
       })))
     } finally {
       setIsLoading(false)
     }
   }, [relayNovelId])
 
+  // 🌟 2. 가이드라인 로드 함수 수정
   const loadGuidelines = async () => {
     try {
-      const response = await axios.get("http://localhost:8080/api/relay-guidelines")
-      setGuidelines(response.data || [])
+      // 🌟 체크포인트: 관리자 주소('/api/admin/...')가 아니라
+      // 새로 만든 유저용 주소('/api/relay-guideline')로 되어 있는지 확인!
+      const response = await api.get("/api/relay-guideline") 
+      
+      const text = typeof response.data === 'string' ? response.data : response.data?.content
+      setGuideline(text || "등록된 공식 가이드라인이 없습니다.")
     } catch {
-      setGuidelines([
-        { id: 1, title: "분량 가이드", content: "각 이어쓰기는 50자 이상 500자 이내로 작성해주세요." },
-        { id: 2, title: "내용 가이드", content: "이전 내용의 흐름을 자연스럽게 이어가야 합니다." },
-        { id: 3, title: "금지 사항", content: "폭력적이거나 선정적인 내용은 작성할 수 없습니다." },
-      ])
+      setGuideline("가이드라인을 불러오지 못했습니다.")
     }
   }
 
   useEffect(() => {
     loadDetail()
     loadGuidelines()
-  }, [relayNovelId])
+  }, [relayNovelId, loadDetail])
 
   const handleSubmit = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
     if (myText.length < MIN_CHARS) { alert(`${MIN_CHARS}자 이상 작성해주세요.`); return }
     if (myText.length > MAX_CHARS) { alert(`${MAX_CHARS}자 이내로 작성해주세요.`); return }
+    
     try {
       setIsSubmitting(true)
       const token = localStorage.getItem("accessToken")
-      await axios.post(`http://localhost:8080/api/relay-novels/${relayNovelId}/entries`, {
+      await api.post(`/api/relay-novels/${relayNovelId}/entries`, {
         entryText: myText
       }, { headers: { Authorization: `Bearer ${token}` } })
+      
       alert("이어쓰기가 등록되었습니다!")
       setMyText("")
       loadDetail()
@@ -89,6 +96,12 @@ export default function RelayNovelDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
+        <button className={styles.backBtn} onClick={() => navigate("/relay")}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          목록
+        </button>
         <div className={styles.headerTitle}>{novel?.title}</div>
         <div className={styles.headerMeta}>
           시작: {novel?.starter || novel?.userId} · 참여자 {novel?.participantCount || 0}명 · 이어쓰기 {entries.length}개
@@ -96,8 +109,9 @@ export default function RelayNovelDetailPage() {
       </div>
 
       <div className={styles.content}>
-        {/* 가이드라인 배너 */}
-        {guidelines.length > 0 && (
+        
+        {/* 🌟 3. 가이드라인 화면 렌더링 수정 (배열 map 제거, pre-wrap 적용) */}
+        {guideline && (
           <div className={styles.guidelineBanner}>
             <div className={styles.guidelineBannerTitle}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -105,18 +119,13 @@ export default function RelayNovelDetailPage() {
               </svg>
               작성 가이드라인
             </div>
-            <div className={styles.guidelineList}>
-              {guidelines.map(g => (
-                <div key={g.id} className={styles.guidelineItem}>
-                  <span className={styles.guidelineTitle}>{g.title}</span>
-                  <span className={styles.guidelineContent}>{g.content}</span>
-                </div>
-              ))}
+            {/* whiteSpace: "pre-wrap"으로 엔터(줄바꿈)를 그대로 살려줍니다. */}
+            <div className={styles.guidelineContent} style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", fontSize: "13px" }}>
+              {guideline}
             </div>
           </div>
         )}
 
-        {/* 에피소드 흐름 */}
         {entries.map((entry, idx) => (
           <div key={entry.entryId || entry.id} className={styles.entryCard}>
             <div className={styles.entryOrder}>
@@ -131,12 +140,24 @@ export default function RelayNovelDetailPage() {
                   {entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : entry.date}
                 </span>
               </div>
-              <div className={styles.entryText}>{entry.entryText || entry.text}</div>
+              
+              {entry.status === "BLINDED" ? (
+                <div className={styles.blindBox}>
+                  <div className={styles.blindTitle}>
+                    🚨 [가이드라인 위반으로 블라인드 처리된 회차입니다.]
+                  </div>
+                  <div className={styles.blindText}>
+                    <strong>🤖 AI 자동 요약본: </strong> {entry.adminMessage || entry.blindMessage}
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.entryText}>{entry.entryText || entry.text}</div>
+              )}
+
             </div>
           </div>
         ))}
 
-        {/* 이어쓰기 폼 */}
         <div className={styles.writeCard}>
           <div className={styles.writeTitle}>이어쓰기</div>
           <div className={styles.charGuide}>
@@ -178,7 +199,6 @@ export default function RelayNovelDetailPage() {
               {isSubmitting ? "등록 중..." : "등록"}
             </button>
           </div>
-          {/* 글자수 프로그레스바 */}
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}

@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import axios from "axios";
+// 🌟 1. 공통 api 인스턴스 임포트
+import api from "../api/axios"; 
 import styles from "../styles/AdminReportPage.module.css";
 
-// 🌟 [핵심 1] 영어 사유를 한글로 변환해주는 딕셔너리 (매핑 객체)
 const REASON_MAP = {
   SPAM: "스팸 및 도배",
   ABUSIVE_LANGUAGE: "욕설 및 비하 발언",
@@ -21,16 +21,15 @@ export default function AdminReportPage() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 모달 제어 상태
   const [selectedReport, setSelectedReport] = useState(null);
-  // 🌟 모달 타입: 'APPROVE'(정지), 'RESOLVE'(단순완료), 'REJECT'(기각)
   const [modalType, setModalType] = useState(""); 
   const [processData, setProcessData] = useState({ duration: "DAYS_3", processReason: "" });
 
   const loadReports = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:8080/api/admin/reports/pending");
+      // 🌟 2. axios 대신 api 사용
+      const res = await api.get("/api/admin/reports/pending");
       setReports(res.data);
     } catch (err) {
       console.error("신고 목록 로딩 실패:", err);
@@ -45,7 +44,6 @@ export default function AdminReportPage() {
     filter === "전체" ? true : r.targetType === filter
   );
 
-  // 🌟 [핵심 2] 3가지 처리를 모두 담당하는 확정 함수
   const handleConfirm = async () => {
     if (!processData.processReason.trim()) {
       alert("관리자 처리 사유를 입력해 주세요.");
@@ -53,24 +51,22 @@ export default function AdminReportPage() {
     }
 
     try {
+      // 🌟 3. 모든 요청을 api로 변경
       if (modalType === "APPROVE") {
-        // 1. 유저 정지 + 신고 완료
-        await axios.post(`http://localhost:8080/api/admin/reports/${selectedReport.reportId}/approve`, {
+        await api.post(`/api/admin/reports/${selectedReport.reportId}/approve`, {
           duration: processData.duration,
           processReason: processData.processReason
         });
         alert("유저 정지 및 신고 처리가 완료되었습니다.");
 
       } else if (modalType === "RESOLVE") {
-        // 2. 유저 정지 없이 신고만 완료 (중복 신고용)
-        await axios.post(`http://localhost:8080/api/admin/reports/${selectedReport.reportId}/resolve`, {
+        await api.post(`/api/admin/reports/${selectedReport.reportId}/resolve`, {
           processReason: processData.processReason
         });
         alert("단순 완료 처리되었습니다. (유저 상태 유지)");
 
       } else {
-        // 3. 허위 신고 기각
-        await axios.post(`http://localhost:8080/api/admin/reports/${selectedReport.reportId}/reject`, {
+        await api.post(`/api/admin/reports/${selectedReport.reportId}/reject`, {
           processReason: processData.processReason
         });
         alert("허위 신고로 기각 처리되었습니다.");
