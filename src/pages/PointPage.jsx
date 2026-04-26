@@ -9,51 +9,7 @@ export default function PointPage() {
   const [walletBalance, setWalletBalance] = useState(0);
   const storeId = import.meta.env.VITE_PORTONE_STORE_ID;
   const channelKey = import.meta.env.VITE_PORTONE_CHANNEL_KEY;
-
-  const history = [
-    {
-      id: 1,
-      type: "충전",
-      amount: 10000,
-      desc: "포인트 충전",
-      date: "2026.04.13",
-    },
-    {
-      id: 2,
-      type: "사용",
-      amount: -500,
-      desc: "작품 소장 - 어느 날 나는 용사가 되었다 5화",
-      date: "2026.04.12",
-    },
-    {
-      id: 3,
-      type: "관리자 지급",
-      amount: 1000,
-      desc: "이벤트 지급",
-      date: "2026.04.10",
-    },
-    {
-      id: 4,
-      type: "사용",
-      amount: -500,
-      desc: "작품 소장 - 달빛 아래 로맨스 12화",
-      date: "2026.04.08",
-    },
-    {
-      id: 5,
-      type: "충전",
-      amount: 3000,
-      desc: "포인트 충전",
-      date: "2026.04.05",
-    },
-    {
-      id: 6,
-      type: "사용",
-      amount: -500,
-      desc: "작품 소장 - 최강 무협전 30화",
-      date: "2026.04.01",
-    },
-  ];
+  const [history, setHistory] = useState([])
 
   const packages = [
     { point: 1000, price: 1000 },
@@ -78,6 +34,16 @@ export default function PointPage() {
       }
     };
     loadWalletBalance();
+    const loadPointHistory = async () => {
+      try {
+          const response = await api.get("/api/points")
+          const data = Array.isArray(response.data) ? response.data : []
+          setHistory(data)
+      } catch (error) {
+          console.error("포인트 내역 불러오기 실패 : ", error)
+      }
+  }
+    loadPointHistory()
     return () => {
       if (document.head.contains(script)) document.head.removeChild(script);
     };
@@ -171,21 +137,22 @@ export default function PointPage() {
           </div>
         )}
 
-        {tab === "내역" &&
-          history.map((h) => (
-            <div key={h.id} className={styles.historyItem}>
-              <div>
-                <div className={styles.historyDesc}>{h.desc}</div>
-                <div className={styles.historyDate}>{h.date}</div>
-              </div>
-              <div
-                className={`${styles.historyAmount} ${h.amount > 0 ? styles.amountPlus : styles.amountMinus}`}
-              >
-                {h.amount > 0 ? "+" : ""}
-                {h.amount.toLocaleString()} P
-              </div>
+        {tab === "내역" && 
+        history.map((h) => (
+            <div key={h.pointId} className={styles.historyItem}>
+                <div>
+                    <div className={styles.historyDesc}>{h.description}</div>
+                    <div className={styles.historyDate}>
+                        {new Date(h.createdAt).toLocaleDateString()}
+                    </div>
+                </div>
+                <div className={`${styles.historyAmount} ${h.pointType === "CHARGE" ? styles.amountPlus : styles.amountMinus}`}>
+                    {h.pointType === "CHARGE" ? "+" : "-"}
+                    {h.amount.toLocaleString()} P
+                </div>
             </div>
-          ))}
+        ))
+    }
       </div>
     </div>
   );
