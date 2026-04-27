@@ -1,14 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-// 🌟 변경 1: 일반 axios 해고! 우리 회사 전용 스마트 요원(api) 고용
-// (파일 경로가 ../api/axios 가 맞는지 한 번 더 확인해 주세요!)
 import api from "../api/axios"; 
 
 import styles from "../styles/ContentDetailPage.module.css";
-
-const PAID_EPISODE_NUMBER = 5  // 테스트용 유료 회차
-const EPISODE_COST = 500        // 포인트 차감량
 
 export default function ContentDetailPage() {
   const navigate = useNavigate();
@@ -32,9 +27,16 @@ export default function ContentDetailPage() {
   const [payTarget, setPayTarget] = useState(null)
   const [showToast, setShowToast] = useState(false)
 
-  // 🌟 변경 2: 작품 상세 조회 다이어트
+  const [walletBalance, setWalletBalance] = useState(0)
 
-
+  const loadWalletBalance = async () => {
+    try {
+      const res = await api.get("/api/wallets/balance")
+      setWalletBalance(res.data)
+    } catch (error) {
+      console.error("잔액 불러오기 실패 : ", error)
+    }
+  }
 
 
   useEffect(() => {
@@ -42,8 +44,6 @@ export default function ContentDetailPage() {
     try {
       setIsLoading(true);
       
-      // 요원이 알아서 지갑 열고 토큰 꺼내가므로 토큰 세팅 코드 전부 삭제!
-      // 요원이 앞부분 주소(baseURL)를 알고 있으므로 뒷주소만 작성!
       const response = await api.get(`/api/contents/${contentId}`);
 
       const data = response.data;
@@ -56,16 +56,15 @@ export default function ContentDetailPage() {
     }
   };
 
-    // 🌟 변경 3: 에피소드 목록 조회 다이어트
   const loadEpisodeList = async () => {
     try {
       setEpisodesLoading(true);
       
-      // 마찬가지로 토큰 세팅 로직, 긴 주소창 싹 다 삭제!
       const response = await api.get(`/api/contents/${contentId}/episodes`);
 
       const data = response.data;
       setEpisodes(Array.isArray(data) ? data : data.content ? data.content : []);
+      console.log("회차 목록 : ", response.data);
     } catch (error) {
       console.error("에피소드 목록 불러오기 실패 : ", error);
     } finally {
@@ -74,7 +73,7 @@ export default function ContentDetailPage() {
   };
     loadContentDetail();
     loadEpisodeList();
-    // readEpisodes 최신화
+    loadWalletBalance();
     setReadEps(JSON.parse(localStorage.getItem("readEpisodes") || "[]"))
   }, [contentId]);
 
@@ -119,31 +118,40 @@ export default function ContentDetailPage() {
   };
 
   const handleEpisodeClick = (ep) => {
-    const isPaidEp = ep.episodeNumber === PAID_EPISODE_NUMBER
-    if (isPaidEp && !purchasedEps.includes(ep.episodeNumber)) {
+    if (!ep.isFree && !purchasedEps.includes(ep.episodeNumber)) {
       setPayTarget(ep)
       return
     }
     navigateToViewer(ep.episodeId)
   };
 
-  const handlePay = () => {
-    const currentPoints = Number(localStorage.getItem("userPoints") || 1200)
-    if (currentPoints < EPISODE_COST) {
-      alert("포인트가 부족합니다.")
-      return
+  const handlePay = async () => {
+    try {
+      await api.post(`/api/episodes/${payTarget.episodeId}/purchase`)
+ 
+      await loadWalletBalance()
+ 
+      const newPurchased = [...purchasedEps, payTarget.episodeNumber]
+      setPurchasedEps(newPurchased)
+      localStorage.setItem(`purchased_${contentId}`, JSON.stringify(newPurchased))
+ 
+      const target = payTarget
+      setPayTarget(null)
+      setShowToast(true)
+      setTimeout(() => {
+        setShowToast(false)
+        navigateToViewer(target.episodeId)
+      }, 1500)
+    } catch (error) {
+      if (error.response?.data?.includes("포인트가 부족")) {
+        alert("포인트가 부족합니다. 충전 후 이용해주세요.")
+      } else if (error.response?.data?.includes("이미 구매")) {
+        alert("이미 구매한 회차입니다.")
+      } else {
+        alert("구매에 실패했습니다.")
+      }
+      console.error("구매 실패 : ", error)
     }
-    localStorage.setItem("userPoints", currentPoints - EPISODE_COST)
-    const newPurchased = [...purchasedEps, payTarget.episodeNumber]
-    setPurchasedEps(newPurchased)
-    localStorage.setItem(`purchased_${contentId}`, JSON.stringify(newPurchased))
-    const target = payTarget
-    setPayTarget(null)
-    setShowToast(true)
-    setTimeout(() => {
-      setShowToast(false)
-      navigateToViewer(target.episodeId)
-    }, 1500)
   }
 
   const handleShare = async () => {
@@ -267,7 +275,7 @@ export default function ContentDetailPage() {
             <div className={styles.emptyMsg}>등록된 회차가 없습니다.</div>
           ) : (
             episodes.map((ep) => {
-              const isPaidEp = ep.episodeNumber === PAID_EPISODE_NUMBER
+              const isPaidEp = !ep.isFree
               const isPurchased = purchasedEps.includes(ep.episodeNumber)
               const isRead = readEps.includes(Number(ep.episodeId))
               return (
@@ -283,7 +291,7 @@ export default function ContentDetailPage() {
                       {isPaidEp ? (
                         isPurchased
                           ? <span className={styles.badgePurchased}>구매완료</span>
-                          : <span className={styles.badgePaid}>🔒 유료 {EPISODE_COST}P</span>
+                          : <span className={styles.badgePaid}>🔒 유료 200P</span>
                       ) : (
                         <span className={styles.badgeFree}>무료</span>
                       )}
@@ -305,8 +313,8 @@ export default function ContentDetailPage() {
           <div className={styles.payModal} onClick={e => e.stopPropagation()}>
             <div className={styles.payModalTitle}>유료 회차</div>
             <div className={styles.payModalEp}>{payTarget.episodeTitle || `${payTarget.episodeNumber}화`}</div>
-            <div className={styles.payModalCost}>{EPISODE_COST.toLocaleString()} P</div>
-            <div className={styles.payModalBalance}>보유 포인트: {userPoints.toLocaleString()} P</div>
+            <div className={styles.payModalCost}>200 P</div>
+            <div className={styles.payModalBalance}>보유 포인트: {walletBalance.toLocaleString()} P</div>
             <div className={styles.payModalActions}>
               <button className={styles.payModalCancel} onClick={() => setPayTarget(null)}>취소</button>
               <button className={styles.payModalConfirm} onClick={handlePay}>결제하기</button>
