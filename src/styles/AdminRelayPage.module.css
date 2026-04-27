@@ -117,6 +117,7 @@
   border-radius: 10px;
   padding: 16px;
   margin-bottom: 16px;
+  overflow: hidden; 
 }
 
 .topicInputRow {
@@ -126,7 +127,7 @@
 }
 
 .topicInput {
-  flex: 1;
+  width: 100%;
   background: #E8F4FD;
   border: 1px solid #BBDEFB;
   border-radius: 10px;
@@ -134,6 +135,7 @@
   color: #0D1B2A;
   font-size: 13px;
   outline: none;
+  box-sizing: border-box; 
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
@@ -398,6 +400,7 @@
 /* ========================================== */
 
 .relayCard {
+  cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -407,6 +410,12 @@
   border: 1px solid #e2e8f0;
   margin-bottom: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.relayCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .relayCardInfo {

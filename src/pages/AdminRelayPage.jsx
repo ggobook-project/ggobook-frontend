@@ -110,15 +110,27 @@ export default function AdminRelayPage() {
         </div>
 
         {tab === "릴레이 목록" && relays.map(r => (
-          <div key={r.relayNovelId || r.novelId || r.id} className={styles.relayCard}>
-            <div className={styles.relayCardInfo}>
-              <div className={styles.relayCardTitle}>{r.title || "제목 없음"}</div>
-              <div className={styles.relayCardDesc}>{r.description || "등록된 설명이 없습니다."}</div>
-              <div className={styles.relayCardMeta}>작성자 ID: {r.userId || "미상"} · {formatDate(r.createdAt)}</div>
-            </div>
-            <button className={styles.relayCardBtn} onClick={() => navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`)}>상세 보기 ➔</button>
-          </div>
-        ))}
+  <div
+    key={r.relayNovelId || r.novelId || r.id}
+    className={`${styles.relayCard} ${styles.clickable}`}
+    onClick={() => navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`)}
+  >
+    <div className={styles.relayCardInfo}>
+      <div className={styles.relayCardTitle}>{r.title || "제목 없음"}</div>
+      <div className={styles.relayCardDesc}>{r.description || "등록된 설명이 없습니다."}</div>
+      <div className={styles.relayCardMeta}>작성자: {r.starterNickname || "미상"} · {formatDate(r.createdAt)}</div>
+    </div>
+    <button 
+      className={styles.relayCardBtn} 
+      onClick={(e) => {
+        e.stopPropagation(); // 🌟 버튼 클릭 시 카드 클릭 이벤트가 실행되지 않도록 막아줍니다
+        navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`);
+      }}
+    >
+      상세 보기 ➔
+    </button>
+  </div>
+))}
 
         {tab === "주제 관리" && (
           <>

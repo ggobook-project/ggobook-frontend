@@ -65,7 +65,7 @@ export default function AdminRelayDetailPage() {
           entries.map((entry, index) => (
             <div key={entry.entryId || index} className={styles.detailCard}>
               <div className={styles.entryMeta}>
-                {entry.entryOrder || index + 1}번째 이어쓰기 (작성자 ID: {entry.userId || entry.authorId || entry.user_id || "미상"})
+                {entry.entryOrder || index + 1}번째 이어쓰기 (작성자: {entry.nickname || "미상"})
               </div>
               
               {entry.status === "BLINDED" ? (

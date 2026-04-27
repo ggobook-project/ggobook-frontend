@@ -10,6 +10,7 @@ export default function RelayNovelPage() {
   const [page, setPage] = useState(0)
   const [hasNext, setHasNext] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
+  
   const observerRef = useRef(null)
 
   const loadRelays = useCallback(async (pageNum, sortType) => {
@@ -96,9 +97,9 @@ export default function RelayNovelPage() {
           >
             <div className={styles.relayTitle}>{r.title}</div>
             <div className={styles.relayMeta}>
-  <span>시작: {r.starter || r.userId}</span>
+  <span>시작: {r.starterNickname || "알 수 없음"}</span>
   {/* participants가 배열로 올 경우를 대비해 length 처리 */}
-  <span>참여자 {r.participantCount || (r.participants ? r.participants.length : 0)}명</span>
+  <span>참여자 {r.uniqueParticipantCount || 0}명</span>
   {/* 🌟 entries 배열의 길이(length)를 출력하도록 수정! */}
   <span>이어쓰기 {r.entryCount || (r.entries ? r.entries.length : 0)}개</span>
 </div>

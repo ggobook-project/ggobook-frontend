@@ -37,8 +37,8 @@ import NoticeDetailPage from "./pages/NoticeDetailPage"
 import AdminMainPage from "./pages/AdminMainPage"
 import AdminInspectionPage from "./pages/AdminInspectionPage"
 import AdminInspectionDetailPage from "./pages/AdminInspectionDetailPage"
-import AdminUploadPage from "./pages/AdminUploadPage"
-import AdminUploadDetailPage from "./pages/AdminUploadDetailPage"
+import AdminContentPage from "./pages/AdminContentPage"
+import AdminContentDetailPage from "./pages/AdminContentDetailPage"
 import AdminMemberPage from "./pages/AdminMemberPage"
 import AdminReportPage from "./pages/AdminReportPage"
 import AdminNoticePage from "./pages/AdminNoticePage"
@@ -128,8 +128,8 @@ function Layout() {
           <Route path="/admin" element={<AdminMainPage />} />
           <Route path="/admin/inspections" element={<AdminInspectionPage />} />
           <Route path="/admin/inspection/detail/:episodeId" element={<AdminInspectionDetailPage />} />
-          <Route path="/admin/uploads" element={<AdminUploadPage />} />
-          <Route path="/admin/uploads/:contentId" element={<AdminUploadDetailPage />} />
+          <Route path="/admin/content" element={<AdminContentPage />} />
+          <Route path="/admin/content/:contentId" element={<AdminContentDetailPage />} />
           <Route path="/admin/members" element={<AdminMemberPage />} />
           <Route path="/admin/reports" element={<AdminReportPage />} />
           <Route path="/admin/notices" element={<AdminNoticePage />} />

@@ -3,7 +3,7 @@ import styles from "../styles/AdminMainPage.module.css"
 
 const menuItems = [
   { label: "작품 검수", desc: "등록 요청된 작품 승인/반려", path: "/admin/inspections", badge: 3 },
-  { label: "업로드 관리", desc: "예약 업로드 및 회차 관리", path: "/admin/uploads", badge: 0 },
+  { label: "작품 관리", desc: "작품 및 회차 관리", path: "/admin/content", badge: 0 },
   { label: "회원 관리", desc: "회원 정보 조회 및 제재", path: "/admin/members", badge: 0 },
   { label: "신고 관리", desc: "신고된 콘텐츠 처리", path: "/admin/reports", badge: 12 },
   { label: "공지사항", desc: "공지사항 등록 및 관리", path: "/admin/notices", badge: 0 },
