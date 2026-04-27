@@ -3,7 +3,7 @@ import api from "../api/axios";
 import styles from "../styles/PointPage.module.css";
 
 export default function PointPage() {
-  const [tab, setTab] = useState("내역");
+  const [tab, setTab] = useState("충전");
   const [payment, setPayment] = useState({});
   const [point, setPoint] = useState(0);
   const [walletBalance, setWalletBalance] = useState(0);
@@ -17,6 +17,35 @@ export default function PointPage() {
     { point: 5000, price: 4500 },
     { point: 10000, price: 8900 },
   ];
+
+  const loadPointHistory = async () => {
+      try {
+          const response = await api.get("/api/points")
+          const data = Array.isArray(response.data) ? response.data : []
+          setHistory(data)
+          console.log("포인트 내역:", data)
+      } catch (error) {
+          console.error("포인트 내역 불러오기 실패 : ", error)
+      }
+    }
+
+  const handleCancel = async (paymentId) => {
+    if (!window.confirm("결제를 취소하시겠습니까?")) return
+    try {
+        await api.post(`/api/payments/${paymentId}/cancel`)
+        alert("취소되었습니다.")
+        const balanceRes = await api.get("/api/wallets/balance")
+        setWalletBalance(balanceRes.data)
+        await loadPointHistory()
+    } catch (error) {
+        if (error.response?.data?.includes("사용한 포인트")) {
+            alert("사용한 포인트가 있어 취소할 수 없습니다.")
+        } else {
+            alert("취소에 실패했습니다.")
+        }
+        console.error("취소 실패 : ", error)
+    }
+}
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -34,15 +63,6 @@ export default function PointPage() {
       }
     };
     loadWalletBalance();
-    const loadPointHistory = async () => {
-      try {
-          const response = await api.get("/api/points")
-          const data = Array.isArray(response.data) ? response.data : []
-          setHistory(data)
-      } catch (error) {
-          console.error("포인트 내역 불러오기 실패 : ", error)
-      }
-  }
     loadPointHistory()
     return () => {
       if (document.head.contains(script)) document.head.removeChild(script);
@@ -52,8 +72,7 @@ export default function PointPage() {
   const handleCharge = async (pkg) => {
     try {
       const response = await api.post(
-        `/api/payments/prepare?amount=${pkg.price}`,
-      );
+        `/api/payments/prepare?amount=${pkg.price}&pointAmount=${pkg.point}`)
       const payment = response.data;
 
       const { IMP } = window;
@@ -81,12 +100,18 @@ export default function PointPage() {
             alert(`${pkg.point.toLocaleString()}P 충전 완료!`);
             const balanceRes = await api.get("/api/wallets/balance");
             setWalletBalance(balanceRes.data);
+            await loadPointHistory();
           } else {
             alert(`결제 실패: ${rsp.error_msg}`);
           }
         },
       );
     } catch (error) {
+      if (error.response?.status === 400) {
+        alert("결제 검증에 실패했습니다. 고객센터에 문의해주세요.")
+      } else {
+          alert("결제 중 오류가 발생했습니다.")
+      }
       console.error("결제 실패 : ", error);
     }
   };
@@ -150,6 +175,14 @@ export default function PointPage() {
                     {h.pointType === "CHARGE" ? "+" : "-"}
                     {h.amount.toLocaleString()} P
                 </div>
+                {h.pointType === "CHARGE" && h.payment?.status === "COMPLETE" && (
+                    <button
+                        className={styles.cancelBtn}
+                        onClick={() => handleCancel(h.payment.paymentId)}
+                    >
+                        취소
+                    </button>
+                )}
             </div>
         ))
     }
