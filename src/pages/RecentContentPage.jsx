@@ -138,8 +138,15 @@ export default function RecentContentPage() {
                 onClick={(e) => {
                   e.stopPropagation(); 
                   if (item.lastEpisodeId) {
-                    // 🌟 핵심 수정: 작품 타입에 따라 갈 길(webtoon vs novel)을 알아서 판단합니다!
-                    const viewerType = item.contentType === "WEB_NOVEL" ? "novel" : "webtoon";
+                    // 🌟 핵심 수정: 백엔드 글자가 조금 달라도 찰떡같이 소설로 보내주는 방어막!
+                    const type = item.contentType ? item.contentType.toUpperCase().trim() : "";
+                    
+                    // DB 값이 소설을 의미하는 단어 중 하나라도 일치하면 isNovel은 true 가 됩니다.
+                    const isNovel = type === "WEB_NOVEL" || type === "WEBNOVEL" || type === "NOVEL" || type === "웹소설";
+                    
+                    // true 면 "novel" 주소로, false 면 "webtoon" 주소로 배정!
+                    const viewerType = isNovel ? "novel" : "webtoon";
+                    
                     navigate(`/${viewerType}/viewer/${item.lastEpisodeId}?contentId=${item.id}&progress=${item.progress}`);
                   } else {
                     navigate(`/contents/${item.id}`); 

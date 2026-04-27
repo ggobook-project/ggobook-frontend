@@ -31,6 +31,9 @@ export default function MyPage() {
   // 화면이 처음 켜질 때 딱 한 번 백엔드에 데이터 요청
   useEffect(() => {
     const fetchData = async () => {
+      // 🌟 추가: 토큰이 없으면 데이터를 부르지 않고 바로 종료 (에러창 끄기 방어막)
+      if (!localStorage.getItem("accessToken")) return;
+
       try {
         const data = await getMyPageMainData()
         setUserInfo(data)
@@ -43,22 +46,17 @@ export default function MyPage() {
     fetchData()
   }, [])
 
-  // 🌟 추가: 완벽하고 안전한 대기업 로그아웃 로직
+  // 🌟 헤더와 완벽히 통일된 로그아웃 로직
   const handleLogout = async () => {
     if (!window.confirm("로그아웃 하시겠습니까?")) return;
 
     try {
-      // 1. 요원(api)을 시켜 백엔드에 "Redis 연장권 찢어주세요!" 라고 통보
       await api.post("/api/auth/logout");
-      
-      // 2. 백엔드 처리가 끝났다면 내 지갑(프론트)에서도 토큰 폐기
-      localStorage.removeItem("accessToken");
-      
-      // 3. 로그인 창으로 쫓아내기
-      window.location.href = "/login";
     } catch (error) {
       console.error("로그아웃 에러:", error);
-      alert("로그아웃 처리 중 문제가 발생했습니다.");
+    } finally {
+      localStorage.removeItem("accessToken");
+      navigate("/", { replace: true });
     }
   }
 

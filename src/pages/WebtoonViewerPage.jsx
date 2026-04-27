@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { useEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from "react"
 import api from "../api/axios" 
 import styles from "../styles/WebtoonViewerPage.module.css"
 
@@ -10,7 +10,7 @@ export default function WebtoonViewerPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const contentId = searchParams.get("contentId")
-
+  const focusCommentId = searchParams.get("focusComment");
   const savedProgress = parseInt(searchParams.get("progress") || "0", 10);
   const { episodeId } = useParams()
 
@@ -21,32 +21,24 @@ export default function WebtoonViewerPage() {
   // ==========================================
   // 2. 상태 관리 (State & Ref)
   // ==========================================
-  const progressRef = useRef(0) // 🌟 진행률 기록용 비밀 수첩
+  const progressRef = useRef(0) 
   const observerRef = useRef(null)
 
-  // 에피소드 및 뷰어 상태
   const [episode, setEpisode] = useState(null)
   const [comicToons, setComicToons] = useState([])
   const [loading, setLoading] = useState(true)
   const [epOffset, setEpOffset] = useState(0)
 
-  // 별점 및 좋아요 상태
   const [myRating, setMyRating] = useState(0)
   const [hoverStar, setHoverStar] = useState(0)
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [tempRating, setTempRating] = useState(1)
   const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(10303)
+  const [likeCount, setLikeCount] = useState(0) 
   const [avgRating, setAvgRating] = useState(0)
 
-  // 댓글 상태
   const [comment, setComment] = useState("")
-  const [comments, setComments] = useState([
-    { id: 1, user: "독자1", text: "재밌어요!", date: "04.13", isMine: false, replies: [], likes: 12, dislikes: 1, myLike: null },
-    { id: 2, user: "독자2", text: "다음화 빨리요~", date: "04.12", isMine: false, replies: [
-      { id: 21, user: "독자3", text: "저도요!", date: "04.12", isMine: false, likes: 3, dislikes: 0, myLike: null }
-    ], likes: 5, dislikes: 0, myLike: null },
-  ])
+  const [comments, setComments] = useState([]);
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState("")
   const [replyingId, setReplyingId] = useState(null)
@@ -58,6 +50,8 @@ export default function WebtoonViewerPage() {
   const [openMoreReplyId, setOpenMoreReplyId] = useState(null)
   const [commentPage, setCommentPage] = useState(1)
   const [hasMoreComments, setHasMoreComments] = useState(true)
+
+  const [isReady, setIsReady] = useState(false);
 
   // ==========================================
   // 3. 헬퍼 함수
@@ -92,21 +86,29 @@ export default function WebtoonViewerPage() {
         progress: finalProgress
       });
     } catch (error) {
-      console.error("최근 본 작품 저장 실패 : ", error);
+      console.error("최근 본 작품 저장 실패:", error);
     }
   };
 
   const loadEpisodeDetail = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await api.get(`/api/episodes/${episodeId}`);
-      setEpisode(response.data)
-      const sorted = (response.data.comicToons || []).sort((a, b) => a.imageOrder - b.imageOrder)
-      setComicToons(sorted)
+      setEpisode(response.data);
+      setLikeCount(response.data.likeCount || 0);
+
+      const userId = getUserId();
+      if (userId) {
+        const likeStatusRes = await api.get(`/api/episodes/${episodeId}/is-liked`);
+        setLiked(likeStatusRes.data); 
+      }
+
+      const sorted = (response.data.comicToons || []).sort((a, b) => a.imageOrder - b.imageOrder);
+      setComicToons(sorted);
     } catch (error) {
-      console.error("회차 상세 불러오기 실패 : ", error)
+      console.error("회차 상세 불러오기 실패:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -114,7 +116,7 @@ export default function WebtoonViewerPage() {
     try {
       const response = await api.get(`/api/ratings/${contentId}`);
       setAvgRating(response.data || 0)
-    } catch (error) { console.error("평균 평점 로드 실패 : ", error) }
+    } catch (error) { console.error("평균 평점 로드 실패:", error) }
   }
 
   const loadMyRating = async () => {
@@ -123,24 +125,59 @@ export default function WebtoonViewerPage() {
     try {
       const response = await api.get(`/api/ratings/${contentId}/users/${userId}`);
       if (response.data?.score) { setMyRating(response.data.score); setTempRating(response.data.score) }
-    } catch (error) { console.error("내 평점 로드 실패 : ", error) }
+    } catch (error) { console.error("내 평점 로드 실패:", error) }
   }
 
+  const loadComments = async () => {
+    try {
+      const response = await api.get(`/api/episodes/${episodeId}/comments`);
+      const serverComments = response.data.content || [];
+      const mappedComments = serverComments.map(cm => ({
+        id: cm.commentId,
+        user: `독자${cm.userId}`, 
+        text: cm.commentText,
+        date: cm.createdAt ? cm.createdAt.split('T')[0] : "방금", 
+        isMine: cm.userId === getUserId(), 
+        likes: cm.likeCount || 0,
+        dislikes: cm.dislikeCount || 0,
+        myLike: cm.myReaction ? cm.myReaction.toLowerCase() : null, // 🌟 백엔드 상태 연결
+        replies: (cm.replies || []).map(r => ({
+          id: r.replyId,
+          user: `독자${r.userId}`,
+          text: r.replyText,
+          date: r.createdAt ? r.createdAt.split('T')[0] : "방금",
+          isMine: r.userId === getUserId(),
+          likes: r.likeCount || 0,
+          dislikes: r.dislikeCount || 0,
+          myLike: r.myReaction ? r.myReaction.toLowerCase() : null // 🌟 백엔드 상태 연결
+        }))
+      }));
+      setComments(mappedComments);
+    } catch (error) {
+      console.error("댓글 로드 실패:", error);
+    }
+  };
+
   // ==========================================
-  // 5. 컴포넌트 생명주기 (useEffect)
+  // 5. 컴포넌트 생명주기
   // ==========================================
-  
-  // 🌟 5-1. 스크롤 감지 및 진행률 계산 (풍선 불기 버그 완벽 수정)
+  useEffect(() => { 
+    loadEpisodeDetail();
+    loadComments(); 
+    recordRecentView(0); 
+
+    return () => {
+      recordRecentView(progressRef.current); 
+    };
+  }, [episodeId, contentId]);
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
 
-      // 🌟 핵심 수정: 로딩 중이거나 이미지가 다 안 떠서 화면이 짧을 때는 계산 보류!
-      if (scrollHeight <= clientHeight) {
-        return; // 억지로 100%로 만들지 않고 그냥 기다립니다.
-      }
+      if (scrollHeight <= clientHeight) return; 
 
       const currentProgress = Math.floor((scrollTop / (scrollHeight - clientHeight)) * 100);
       progressRef.current = Math.min(100, Math.max(0, currentProgress));
@@ -150,52 +187,52 @@ export default function WebtoonViewerPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🌟 5-2. 화면 진입 시 데이터 로딩 & 퇴장 시 진행률 저장
-  useEffect(() => { 
-    loadEpisodeDetail();
-    recordRecentView(0); // 입장 시 0%로 기본 출석 체크
+  useLayoutEffect(() => {
+    if (!focusCommentId && savedProgress === 0) {
+      setIsReady(true);
+      return;
+    }
 
-    return () => {
-      // 뒤로가기 누르는 찰나의 순간, 최종 계산된 퍼센트 저장!
-      recordRecentView(progressRef.current); 
-    };
-  }, [episodeId, contentId]);
+    if (comicToons.length === 0 && comments.length === 0) return;
 
-  // 🌟 5-3. 자동 스크롤 로직 (스르륵 내려가는 것 방지, 순간 이동!)
-  useEffect(() => {
-    // 만화 컷이 화면에 그려졌고, 마이페이지에서 받아온 진행률이 있을 때
-    if (comicToons.length > 0 && savedProgress > 0) {
-      // 이미지 렌더링에 필요한 최소한의 딜레이만 줍니다.
+    if (focusCommentId && comments.length > 0) {
+      const timer = setTimeout(() => {
+        const targetElement = document.getElementById(`comment-${focusCommentId}`);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: "auto", block: "center" });
+          targetElement.style.transition = "background-color 0.5s";
+          targetElement.style.backgroundColor = "rgba(33, 150, 243, 0.1)"; 
+          setTimeout(() => {
+            if (targetElement) targetElement.style.backgroundColor = "transparent";
+          }, 2000);
+        }
+        setIsReady(true);
+      }, 150); 
+      return () => clearTimeout(timer);
+    } 
+    else if (savedProgress > 0 && comicToons.length > 0 && !focusCommentId) {
       const timer = setTimeout(() => {
         const scrollHeight = document.documentElement.scrollHeight;
         const clientHeight = document.documentElement.clientHeight;
-        
         const targetScrollTop = (scrollHeight - clientHeight) * (savedProgress / 100);
         
-        // 🌟 핵심 수정: smooth를 없애고 순간이동 옵션(auto) 적용!
-        window.scrollTo({
-          top: targetScrollTop,
-          behavior: "auto" // 스르륵 내려가는 애니메이션 제거
-        });
-      }, 100); // 딜레이도 0.1초로 팍 줄였습니다.
-
+        window.scrollTo({ top: targetScrollTop, behavior: "auto" });
+        setIsReady(true); 
+      }, 150); 
       return () => clearTimeout(timer);
     }
-  }, [comicToons, savedProgress]);
+  }, [comicToons, comments, focusCommentId, savedProgress]);
 
-  // 5-4. 회차 데이터 로드 후 평점 로드
   useEffect(() => { 
     if (contentId) { loadAverageRating(); loadMyRating() } 
   }, [episode])
 
-  // 5-5. 외부 클릭 시 더보기 메뉴 닫기
   useEffect(() => {
     const handleClick = () => { setOpenMoreId(null); setOpenMoreReplyId(null) }
     document.addEventListener("click", handleClick)
     return () => document.removeEventListener("click", handleClick)
   }, [])
 
-  // 5-6. 댓글 무한 스크롤 옵저버
   const handleObserver = useCallback((entries) => {
     const target = entries[0]
     if (target.isIntersecting && hasMoreComments) setCommentPage(prev => prev + 1)
@@ -212,17 +249,22 @@ export default function WebtoonViewerPage() {
   }, [commentPage, comments])
 
   // ==========================================
-  // 6. 이벤트 핸들러 (버튼 클릭 등)
+  // 6. 이벤트 핸들러 (수정 및 반응 API 완벽 매핑)
   // ==========================================
   const goContentDetail = () => {
     if (contentId) navigate(`/contents/${contentId}`)
     else navigate(-1)
   }
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
-    setLiked(!liked)
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1)
+    try {
+      await api.post(`/api/episodes/${episodeId}/likes`);
+      setLiked(!liked);
+      setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+    } catch (error) {
+      console.error("회차 좋아요 처리 실패:", error);
+    }
   }
 
   const handleRatingConfirm = async () => {
@@ -238,45 +280,69 @@ export default function WebtoonViewerPage() {
       } else {
         alert("별점 저장에 실패했습니다.")
       }
-    } catch (error) { console.error("별점 저장 실패 : ", error) }
+    } catch (error) { console.error("별점 저장 실패:", error) }
   }
 
-  // --- 댓글 관련 핸들러 ---
-  const handleCommentSubmit = () => {
+  const handleCommentSubmit = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
     if (!comment.trim()) return
-    setComments([
-      { id: Date.now(), user: currentUser, text: comment, date: "방금", isMine: true, replies: [], likes: 0, dislikes: 0, myLike: null },
-      ...comments
-    ])
-    setComment("")
-    setHasMoreComments(true)
+
+    try {
+      await api.post(`/api/episodes/${episodeId}/comments`, { commentText: comment, isSpoiler: false });
+      setComment("");
+      loadComments(); 
+    } catch (error) {
+      alert("댓글 등록 실패");
+    }
   }
 
-  const handleDelete = (id) => setComments(comments.filter(c => c.id !== id))
+  const handleDelete = async (id) => {
+    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+    try {
+      await api.delete(`/api/comments/${id}`);
+      loadComments();
+    } catch (error) {
+      alert("댓글 삭제 실패");
+    }
+  }
+
   const handleEditStart = (cm) => { setEditingId(cm.id); setEditText(cm.text) }
-  const handleEditSubmit = (id) => {
-    setComments(comments.map(c => c.id === id ? { ...c, text: editText } : c))
-    setEditingId(null); setEditText("")
+
+  const handleEditSubmit = async (id) => {
+    if (!editText.trim()) return;
+    try {
+      await api.put(`/api/comments/${id}`, { commentText: editText });
+      setEditingId(null); 
+      setEditText("");
+      loadComments();
+    } catch (error) {
+      alert("댓글 수정 실패");
+    }
   }
 
-  const handleReplySubmit = (commentId) => {
+  const handleReplySubmit = async (commentId) => {
     if (!isLoggedIn) { navigate("/login"); return }
     if (!replyText.trim()) return
-    setComments(comments.map(c =>
-      c.id === commentId
-        ? { ...c, replies: [...(c.replies || []), { id: Date.now(), user: currentUser, text: replyText, date: "방금", isMine: true, likes: 0, dislikes: 0, myLike: null }] }
-        : c
-    ))
-    setReplyText("")
-    setReplyingId(null)
-    setExpandedReplies(prev => ({ ...prev, [commentId]: true }))
+
+    try {
+      await api.post(`/api/comments/${commentId}/replies`, { replyText });
+      setReplyText("");
+      setReplyingId(null);
+      setExpandedReplies(prev => ({ ...prev, [commentId]: true }));
+      loadComments(); 
+    } catch (error) {
+      alert("답글 등록 실패");
+    }
   }
 
-  const handleReplyDelete = (commentId, replyId) => {
-    setComments(comments.map(c =>
-      c.id === commentId ? { ...c, replies: c.replies.filter(r => r.id !== replyId) } : c
-    ))
+  const handleReplyDelete = async (commentId, replyId) => {
+    if (!window.confirm("답글을 삭제하시겠습니까?")) return;
+    try {
+      await api.delete(`/api/replies/${replyId}`);
+      loadComments();
+    } catch (error) {
+      alert("답글 삭제 실패");
+    }
   }
 
   const handleReplyEditStart = (commentId, reply) => {
@@ -284,13 +350,17 @@ export default function WebtoonViewerPage() {
     setEditReplyText(reply.text)
   }
 
-  const handleReplyEditSubmit = (commentId, replyId) => {
-    setComments(comments.map(c =>
-      c.id === commentId
-        ? { ...c, replies: c.replies.map(r => r.id === replyId ? { ...r, text: editReplyText } : r) }
-        : c
-    ))
-    setEditingReply(null); setEditReplyText("")
+  // 🌟 [수정] 답글 수정: 백엔드 API 주소 일치
+  const handleReplyEditSubmit = async (commentId, replyId) => {
+    if (!editReplyText.trim()) return;
+    try {
+      await api.put(`/api/replies/${replyId}`, { replyText: editReplyText });
+      setEditingReply(null); 
+      setEditReplyText("");
+      loadComments();
+    } catch (error) {
+      alert("답글 수정 실패");
+    }
   }
 
   const toggleReplies = (commentId) => {
@@ -300,51 +370,80 @@ export default function WebtoonViewerPage() {
     else { setReplyingId(null); setReplyText("") }
   }
 
-  const handleCommentLike = (id, type) => {
-    setComments(comments.map(c => {
-      if (c.id !== id) return c
-      if (c.myLike === type) return {
-        ...c, myLike: null,
-        likes: type === "like" ? c.likes - 1 : c.likes,
-        dislikes: type === "dislike" ? c.dislikes - 1 : c.dislikes
-      }
-      return {
-        ...c, myLike: type,
-        likes: type === "like" ? c.likes + 1 : c.myLike === "like" ? c.likes - 1 : c.likes,
-        dislikes: type === "dislike" ? c.dislikes + 1 : c.myLike === "dislike" ? c.dislikes - 1 : c.dislikes
-      }
-    }))
+  const handleCommentLike = async (id, type) => {
+    if (!isLoggedIn) { navigate("/login"); return }
+    try {
+      await api.post(`/api/comments/${id}/reactions`, { reactionType: type.toUpperCase() });
+      
+      setComments(comments.map(c => {
+        if (c.id !== id) return c
+        if (c.myLike === type) {
+          return {
+            ...c, myLike: null,
+            likes: type === "like" ? c.likes - 1 : c.likes,
+            dislikes: type === "dislike" ? c.dislikes - 1 : c.dislikes
+          }
+        }
+        return {
+          ...c, myLike: type,
+          likes: type === "like" ? c.likes + 1 : (c.myLike === "like" ? c.likes - 1 : c.likes),
+          dislikes: type === "dislike" ? c.dislikes + 1 : (c.myLike === "dislike" ? c.dislikes - 1 : c.dislikes)
+        }
+      }));
+    } catch (error) {
+      console.error("댓글 반응 실패:", error);
+    }
   }
 
-  const handleReplyLike = (commentId, replyId, type) => {
-    setComments(comments.map(c => {
-      if (c.id !== commentId) return c
-      return {
-        ...c, replies: c.replies.map(r => {
-          if (r.id !== replyId) return r
-          if (r.myLike === type) return {
-            ...r, myLike: null,
-            likes: type === "like" ? r.likes - 1 : r.likes,
-            dislikes: type === "dislike" ? r.dislikes - 1 : r.dislikes
-          }
-          return {
-            ...r, myLike: type,
-            likes: type === "like" ? r.likes + 1 : r.myLike === "like" ? r.likes - 1 : r.likes,
-            dislikes: type === "dislike" ? r.dislikes + 1 : r.myLike === "dislike" ? r.dislikes - 1 : r.dislikes
-          }
-        })
-      }
-    }))
+  // 🌟 [수정] 답글 반응: 백엔드 API 주소 일치
+  const handleReplyLike = async (commentId, replyId, type) => {
+    if (!isLoggedIn) { navigate("/login"); return }
+    try {
+      await api.post(`/api/replies/${replyId}/reactions`, { reactionType: type.toUpperCase() });
+      
+      setComments(comments.map(c => {
+        if (c.id !== commentId) return c
+        return {
+          ...c, replies: c.replies.map(r => {
+            if (r.id !== replyId) return r
+            if (r.myLike === type) {
+              return {
+                ...r, myLike: null,
+                likes: type === "like" ? r.likes - 1 : r.likes,
+                dislikes: type === "dislike" ? r.dislikes - 1 : r.dislikes
+              }
+            }
+            return {
+              ...r, myLike: type,
+              likes: type === "like" ? r.likes + 1 : (r.myLike === "like" ? r.likes - 1 : r.likes),
+              dislikes: type === "dislike" ? r.dislikes + 1 : (r.myLike === "dislike" ? r.dislikes - 1 : r.dislikes)
+            }
+          })
+        }
+      }));
+    } catch (error) {
+      console.error("답글 반응 실패:", error);
+    }
   }
 
   // ==========================================
   // 7. UI 렌더링 (View)
   // ==========================================
-  if (loading) return <div className={styles.pageWrapper}><div className={styles.loading}>불러오는 중...</div></div>
-  if (!episode) return null
+  if (loading) {
+    return <div className={styles.pageWrapper}><div className={styles.loading}>불러오는 중...</div></div>;
+  }
+  
+  if (!episode) return null;
 
   return (
-    <div className={styles.pageWrapper}>
+    <div 
+      className={styles.pageWrapper} 
+      style={{ 
+        opacity: isReady ? 1 : 0, 
+        pointerEvents: isReady ? 'auto' : 'none',
+        transition: "opacity 0.2s" 
+      }}
+    >
       <div className={styles.topBar}>
         <button className={styles.topBtn} onClick={goContentDetail}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -364,7 +463,6 @@ export default function WebtoonViewerPage() {
           : <div className={styles.emptyMsg}>이미지가 없습니다.</div>
         }
 
-        {/* 에피소드 네비게이터 */}
         <div className={styles.episodeNav}>
           <button className={styles.epNavArrow} onClick={() => setEpOffset(Math.max(0, epOffset - 1))} disabled={epOffset === 0}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
@@ -384,7 +482,6 @@ export default function WebtoonViewerPage() {
           </button>
         </div>
 
-        {/* 액션 바 */}
         <div className={styles.actionBar}>
           <button className={styles.actionItem} onClick={() => setShowRatingModal(true)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill={myRating > 0 ? "#2196F3" : "none"} stroke={myRating > 0 ? "#2196F3" : "#90A4C8"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -410,7 +507,6 @@ export default function WebtoonViewerPage() {
           </button>
         </div>
 
-        {/* 별점 모달 */}
         {showRatingModal && (
           <div className={styles.modalOverlay} onClick={() => setShowRatingModal(false)}>
             <div className={styles.ratingModal} onClick={e => e.stopPropagation()}>
@@ -435,7 +531,6 @@ export default function WebtoonViewerPage() {
           </div>
         )}
 
-        {/* 댓글 섹션 */}
         <div className={styles.commentSection}>
           <div className={styles.sectionTitle}>댓글 {comments.length}</div>
 
@@ -455,9 +550,8 @@ export default function WebtoonViewerPage() {
 
           <div className={styles.commentList}>
             {visibleComments.map((cm) => (
-              <div key={cm.id} className={styles.commentItem}>
+              <div key={cm.id} id={`comment-${cm.id}`} className={styles.commentItem}>
 
-                {/* 댓글 헤더 */}
                 <div className={styles.commentHeader}>
                   <div className={styles.commentAvatar} />
                   <div className={styles.commentMeta}>
@@ -486,7 +580,6 @@ export default function WebtoonViewerPage() {
                   )}
                 </div>
 
-                {/* 댓글 내용 */}
                 {editingId === cm.id ? (
                   <div className={styles.editRow}>
                     <input value={editText} onChange={e => setEditText(e.target.value)} className={styles.editInput} onKeyDown={e => e.key === "Enter" && handleEditSubmit(cm.id)} />
@@ -527,7 +620,6 @@ export default function WebtoonViewerPage() {
                   </div>
                 )}
 
-                {/* 답글 목록 */}
                 {expandedReplies[cm.id] && cm.replies?.length > 0 && (
                   <div className={styles.replyList}>
                     {cm.replies.map(reply => (
@@ -601,7 +693,6 @@ export default function WebtoonViewerPage() {
                   </div>
                 )}
 
-                {/* 답글 입력 */}
                 {replyingId === cm.id && (
                   <div className={styles.replyInputRow}>
                     <div className={styles.replyArrow}>↳</div>

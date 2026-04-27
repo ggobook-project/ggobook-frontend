@@ -1,6 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { useEffect, useState, useRef, useCallback } from "react"
-import api from "../api/axios" // 🌟 만능 요원 임포트 완료!
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from "react"
+import api from "../api/axios" 
 import styles from "../styles/NovelViewerPage.module.css"
 
 export default function NovelViewerPage() {
@@ -12,8 +12,8 @@ export default function NovelViewerPage() {
   const contentId = searchParams.get("contentId")
   const { episodeId } = useParams()
   
-  // 🌟 마이페이지에서 넘겨준 책갈피(progress) 장착
   const savedProgress = parseInt(searchParams.get("progress") || "0", 10)
+  const focusCommentId = searchParams.get("focusComment") // 🌟 마이페이지에서 넘어온 타겟 댓글 ID
 
   const isLoggedIn = !!localStorage.getItem("accessToken")
   const currentUser = "나"
@@ -22,7 +22,7 @@ export default function NovelViewerPage() {
   // ==========================================
   // 2. 상태 관리 (State & Ref)
   // ==========================================
-  const progressRef = useRef(0) // 🌟 진행률 비밀 수첩
+  const progressRef = useRef(0) 
   const observerRef = useRef(null)
 
   const [playing, setPlaying] = useState(false)
@@ -34,17 +34,13 @@ export default function NovelViewerPage() {
   const [hoverStar, setHoverStar] = useState(0)
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [tempRating, setTempRating] = useState(1)
+  
   const [liked, setLiked] = useState(false)
-  const [likeCount, setLikeCount] = useState(10303)
-  const [avgRating, setAvgRating] = useState(4.2)
+  const [likeCount, setLikeCount] = useState(0)
+  const [avgRating, setAvgRating] = useState(0)
 
   const [comment, setComment] = useState("")
-  const [comments, setComments] = useState([
-    { id: 1, user: "독자1", text: "재밌어요!", date: "04.13", isMine: false, replies: [], likes: 12, dislikes: 1, myLike: null },
-    { id: 2, user: "독자2", text: "다음화 빨리요~", date: "04.12", isMine: false, replies: [
-      { id: 21, user: "독자3", text: "저도요!", date: "04.12", isMine: false, likes: 3, dislikes: 0, myLike: null }
-    ], likes: 5, dislikes: 0, myLike: null },
-  ])
+  const [comments, setComments] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [editText, setEditText] = useState("")
   const [replyingId, setReplyingId] = useState(null)
@@ -58,6 +54,8 @@ export default function NovelViewerPage() {
   const [commentPage, setCommentPage] = useState(1)
   const [hasMoreComments, setHasMoreComments] = useState(true)
 
+  const [isReady, setIsReady] = useState(false); // 🌟 순간이동 전 화면을 가려줄 투명 망토
+
   // ==========================================
   // 3. 헬퍼 함수
   // ==========================================
@@ -70,7 +68,6 @@ export default function NovelViewerPage() {
     } catch { return null }
   }
 
-  // 본문 텍스트 단락 분리 로직 (위로 끌어올려 렌더링과 의존성 배열 모두에서 사용)
   const paragraphs = novel?.contentText
     ? novel.contentText.split("\n").filter(p => p.trim() !== "")
     : []
@@ -78,7 +75,7 @@ export default function NovelViewerPage() {
   const visibleComments = comments.slice(0, commentPage * COMMENTS_PER_PAGE)
 
   // ==========================================
-  // 4. API 통신 함수 (fetch -> api 전면 교체)
+  // 4. API 통신 함수
   // ==========================================
   const recordRecentView = async (finalProgress) => {
     if (!isLoggedIn || !contentId || !episodeId) return;
@@ -99,6 +96,13 @@ export default function NovelViewerPage() {
       const response = await api.get(`/api/episodes/${episodeId}`)
       setEpisode(response.data)
       setNovel(response.data.novel || null)
+      setLikeCount(response.data.likeCount || 0);
+
+      const userId = getUserId();
+      if (userId) {
+        const likeStatusRes = await api.get(`/api/episodes/${episodeId}/is-liked`);
+        setLiked(likeStatusRes.data); 
+      }
     } catch (error) {
       console.error("회차 상세 불러오기 실패 : ", error)
     } finally {
@@ -119,8 +123,6 @@ export default function NovelViewerPage() {
     if (!userId || !contentId) return
     try {
       const response = await api.get(`/api/ratings/${contentId}/users/${userId}`)
-      
-      // Axios는 response.data 에 빈 값이 와도 에러가 터지지 않습니다.
       if (response.data && response.data.score) { 
         setMyRating(response.data.score); 
         setTempRating(response.data.score); 
@@ -130,57 +132,99 @@ export default function NovelViewerPage() {
     }
   }
 
+  const loadComments = async () => {
+    try {
+      const response = await api.get(`/api/episodes/${episodeId}/comments`);
+      const serverComments = response.data.content || [];
+      const mappedComments = serverComments.map(cm => ({
+        id: cm.commentId,
+        user: `독자${cm.userId}`, 
+        text: cm.commentText,
+        date: cm.createdAt ? cm.createdAt.split('T')[0] : "방금", 
+        isMine: cm.userId === getUserId(), 
+        likes: cm.likeCount || 0,
+        dislikes: cm.dislikeCount || 0,
+        myLike: cm.myReaction ? cm.myReaction.toLowerCase() : null,
+        replies: (cm.replies || []).map(r => ({
+          id: r.replyId,
+          user: `독자${r.userId}`,
+          text: r.replyText,
+          date: r.createdAt ? r.createdAt.split('T')[0] : "방금",
+          isMine: r.userId === getUserId(),
+          likes: r.likeCount || 0,
+          dislikes: r.dislikeCount || 0,
+          myLike: r.myReaction ? r.myReaction.toLowerCase() : null
+        }))
+      }));
+      setComments(mappedComments);
+    } catch (error) {
+      console.error("댓글 로드 실패:", error);
+    }
+  };
+
   // ==========================================
-  // 5. 컴포넌트 생명주기 (useEffect)
+  // 5. 컴포넌트 생명주기
   // ==========================================
-  
-  // 🌟 5-1. 스크롤 감지 및 진행률 계산
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
-
       if (scrollHeight <= clientHeight) return;
-
       const currentProgress = Math.floor((scrollTop / (scrollHeight - clientHeight)) * 100);
       progressRef.current = Math.min(100, Math.max(0, currentProgress));
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🌟 5-2. 화면 진입 시 데이터 로딩 & 퇴장 시 진행률 저장
   useEffect(() => { 
     loadEpisodeDetail();
-    recordRecentView(0); // 입장 출석체크
+    loadComments(); 
+    recordRecentView(0); 
 
     return () => {
-      recordRecentView(progressRef.current); // 퇴장 시 최종 진행률 저장
+      recordRecentView(progressRef.current); 
     };
   }, [episodeId, contentId]);
 
-  // 🌟 5-3. 자동 스크롤 로직 (책갈피 순간이동)
-  useEffect(() => {
-    // 텍스트 단락이 렌더링되었고 진행률이 0보다 클 때
-    if (paragraphs.length > 0 && savedProgress > 0) {
+  // 🌟 웹툰 뷰어와 100% 동일한 순간이동 로직
+  useLayoutEffect(() => {
+    if (!focusCommentId && savedProgress === 0) {
+      setIsReady(true);
+      return;
+    }
+
+    if (paragraphs.length === 0 && comments.length === 0) return;
+
+    if (focusCommentId && comments.length > 0) {
+      const timer = setTimeout(() => {
+        const targetElement = document.getElementById(`comment-${focusCommentId}`);
+        if (targetElement) {
+          targetElement.scrollIntoView({ behavior: "auto", block: "center" });
+          targetElement.style.transition = "background-color 0.5s";
+          targetElement.style.backgroundColor = "rgba(33, 150, 243, 0.1)"; 
+          setTimeout(() => {
+            if (targetElement) targetElement.style.backgroundColor = "transparent";
+          }, 2000);
+        }
+        setIsReady(true);
+      }, 150); 
+      return () => clearTimeout(timer);
+    } 
+    else if (savedProgress > 0 && paragraphs.length > 0 && !focusCommentId) {
       const timer = setTimeout(() => {
         const scrollHeight = document.documentElement.scrollHeight;
         const clientHeight = document.documentElement.clientHeight;
         const targetScrollTop = (scrollHeight - clientHeight) * (savedProgress / 100);
         
-        window.scrollTo({
-          top: targetScrollTop,
-          behavior: "auto" // 스르륵 현상 방지
-        });
-      }, 100);
-
+        window.scrollTo({ top: targetScrollTop, behavior: "auto" });
+        setIsReady(true); 
+      }, 150); 
       return () => clearTimeout(timer);
     }
-  }, [paragraphs.length, savedProgress]);
+  }, [paragraphs, comments, focusCommentId, savedProgress]);
 
-  // 5-4. 기타 useEffect 유지
   useEffect(() => { if (contentId) { loadAverageRating(); loadMyRating() } }, [episode])
 
   useEffect(() => {
@@ -213,10 +257,15 @@ export default function NovelViewerPage() {
     else navigate(-1)
   }
 
-  const handleLike = () => {
+  const handleLike = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
-    setLiked(!liked)
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1)
+    try {
+      await api.post(`/api/episodes/${episodeId}/likes`);
+      setLiked(!liked);
+      setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+    } catch (error) {
+      console.error("회차 좋아요 처리 실패:", error);
+    }
   }
 
   const handleRatingConfirm = async () => {
@@ -235,32 +284,66 @@ export default function NovelViewerPage() {
     } catch (error) { console.error("별점 저장 실패 : ", error) }
   }
 
-  const handleCommentSubmit = () => {
+  const handleCommentSubmit = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
     if (!comment.trim()) return
-    setComments([{ id: Date.now(), user: currentUser, text: comment, date: "방금", isMine: true, replies: [], likes: 0, dislikes: 0, myLike: null }, ...comments])
-    setComment("")
-    setHasMoreComments(true)
+
+    try {
+      await api.post(`/api/episodes/${episodeId}/comments`, { commentText: comment, isSpoiler: false });
+      setComment("");
+      loadComments(); 
+    } catch (error) {
+      alert("댓글 등록 실패");
+    }
   }
 
-  const handleDelete = (id) => setComments(comments.filter(c => c.id !== id))
+  const handleDelete = async (id) => {
+    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+    try {
+      await api.delete(`/api/comments/${id}`);
+      loadComments();
+    } catch (error) {
+      alert("댓글 삭제 실패");
+    }
+  }
+
   const handleEditStart = (cm) => { setEditingId(cm.id); setEditText(cm.text) }
-  const handleEditSubmit = (id) => {
-    setComments(comments.map(c => c.id === id ? { ...c, text: editText } : c))
-    setEditingId(null); setEditText("")
+  
+  const handleEditSubmit = async (id) => {
+    if (!editText.trim()) return;
+    try {
+      await api.put(`/api/comments/${id}`, { commentText: editText });
+      setEditingId(null); 
+      setEditText("");
+      loadComments();
+    } catch (error) {
+      alert("댓글 수정 실패");
+    }
   }
 
-  const handleReplySubmit = (commentId) => {
+  const handleReplySubmit = async (commentId) => {
     if (!isLoggedIn) { navigate("/login"); return }
     if (!replyText.trim()) return
-    setComments(comments.map(c => c.id === commentId ? { ...c, replies: [...(c.replies || []), { id: Date.now(), user: currentUser, text: replyText, date: "방금", isMine: true, likes: 0, dislikes: 0, myLike: null }] } : c))
-    setReplyText("")
-    setReplyingId(null)
-    setExpandedReplies(prev => ({ ...prev, [commentId]: true }))
+
+    try {
+      await api.post(`/api/comments/${commentId}/replies`, { replyText });
+      setReplyText("");
+      setReplyingId(null);
+      setExpandedReplies(prev => ({ ...prev, [commentId]: true }));
+      loadComments(); 
+    } catch (error) {
+      alert("답글 등록 실패");
+    }
   }
 
-  const handleReplyDelete = (commentId, replyId) => {
-    setComments(comments.map(c => c.id === commentId ? { ...c, replies: c.replies.filter(r => r.id !== replyId) } : c))
+  const handleReplyDelete = async (commentId, replyId) => {
+    if (!window.confirm("답글을 삭제하시겠습니까?")) return;
+    try {
+      await api.delete(`/api/replies/${replyId}`);
+      loadComments();
+    } catch (error) {
+      alert("답글 삭제 실패");
+    }
   }
 
   const handleReplyEditStart = (commentId, reply) => {
@@ -268,9 +351,16 @@ export default function NovelViewerPage() {
     setEditReplyText(reply.text)
   }
 
-  const handleReplyEditSubmit = (commentId, replyId) => {
-    setComments(comments.map(c => c.id === commentId ? { ...c, replies: c.replies.map(r => r.id === replyId ? { ...r, text: editReplyText } : r) } : c))
-    setEditingReply(null); setEditReplyText("")
+  const handleReplyEditSubmit = async (commentId, replyId) => {
+    if (!editReplyText.trim()) return;
+    try {
+      await api.put(`/api/replies/${replyId}`, { replyText: editReplyText });
+      setEditingReply(null); 
+      setEditReplyText("");
+      loadComments();
+    } catch (error) {
+      alert("답글 수정 실패");
+    }
   }
 
   const toggleReplies = (commentId) => {
@@ -280,33 +370,55 @@ export default function NovelViewerPage() {
     else { setReplyingId(null); setReplyText("") }
   }
 
-  const handleCommentLike = (id, type) => {
-    setComments(comments.map(c => {
-      if (c.id !== id) return c
-      if (c.myLike === type) return { ...c, myLike: null, likes: type === "like" ? c.likes - 1 : c.likes, dislikes: type === "dislike" ? c.dislikes - 1 : c.dislikes }
-      return { ...c, myLike: type, likes: type === "like" ? c.likes + 1 : c.myLike === "like" ? c.likes - 1 : c.likes, dislikes: type === "dislike" ? c.dislikes + 1 : c.myLike === "dislike" ? c.dislikes - 1 : c.dislikes }
-    }))
+  const handleCommentLike = async (id, type) => {
+    if (!isLoggedIn) { navigate("/login"); return }
+    try {
+      await api.post(`/api/comments/${id}/reactions`, { reactionType: type.toUpperCase() });
+      setComments(comments.map(c => {
+        if (c.id !== id) return c
+        if (c.myLike === type) return { ...c, myLike: null, likes: type === "like" ? c.likes - 1 : c.likes, dislikes: type === "dislike" ? c.dislikes - 1 : c.dislikes }
+        return { ...c, myLike: type, likes: type === "like" ? c.likes + 1 : (c.myLike === "like" ? c.likes - 1 : c.likes), dislikes: type === "dislike" ? c.dislikes + 1 : (c.myLike === "dislike" ? c.dislikes - 1 : c.dislikes) }
+      }));
+    } catch (error) {
+      console.error("댓글 반응 실패:", error);
+    }
   }
 
-  const handleReplyLike = (commentId, replyId, type) => {
-    setComments(comments.map(c => {
-      if (c.id !== commentId) return c
-      return { ...c, replies: c.replies.map(r => {
-        if (r.id !== replyId) return r
-        if (r.myLike === type) return { ...r, myLike: null, likes: type === "like" ? r.likes - 1 : r.likes, dislikes: type === "dislike" ? r.dislikes - 1 : r.dislikes }
-        return { ...r, myLike: type, likes: type === "like" ? r.likes + 1 : r.myLike === "like" ? r.likes - 1 : r.likes, dislikes: type === "dislike" ? r.dislikes + 1 : r.myLike === "dislike" ? r.dislikes - 1 : r.dislikes }
-      }) }
-    }))
+  const handleReplyLike = async (commentId, replyId, type) => {
+    if (!isLoggedIn) { navigate("/login"); return }
+    try {
+      await api.post(`/api/replies/${replyId}/reactions`, { reactionType: type.toUpperCase() });
+      setComments(comments.map(c => {
+        if (c.id !== commentId) return c
+        return {
+          ...c, replies: c.replies.map(r => {
+            if (r.id !== replyId) return r
+            if (r.myLike === type) return { ...r, myLike: null, likes: type === "like" ? r.likes - 1 : r.likes, dislikes: type === "dislike" ? r.dislikes - 1 : r.dislikes }
+            return { ...r, myLike: type, likes: type === "like" ? r.likes + 1 : (r.myLike === "like" ? r.likes - 1 : r.likes), dislikes: type === "dislike" ? r.dislikes + 1 : (r.myLike === "dislike" ? r.dislikes - 1 : r.dislikes) }
+          })
+        }
+      }));
+    } catch (error) {
+      console.error("답글 반응 실패:", error);
+    }
   }
 
   // ==========================================
-  // 7. UI 렌더링 (원본 100% 유지)
+  // 7. UI 렌더링
   // ==========================================
   if (loading) return <div className={styles.pageWrapper}><div className={styles.loading}>불러오는 중...</div></div>
   if (!episode) return null
 
   return (
-    <div className={styles.pageWrapper}>
+    <div 
+      className={styles.pageWrapper}
+      // 🌟 순간이동 시 화면 깜빡임 방지 (투명 망토)
+      style={{ 
+        opacity: isReady ? 1 : 0, 
+        pointerEvents: isReady ? 'auto' : 'none',
+        transition: "opacity 0.2s" 
+      }}
+    >
       <div className={styles.topBar}>
         <button className={styles.topBtn} onClick={goContentDetail}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -430,7 +542,8 @@ export default function NovelViewerPage() {
 
         <div className={styles.commentList}>
           {visibleComments.map((cm) => (
-            <div key={cm.id} className={styles.commentItem}>
+            // 🌟 아이디(id) 속성 꼭 추가!
+            <div key={cm.id} id={`comment-${cm.id}`} className={styles.commentItem}>
 
               {/* 댓글 헤더 */}
               <div className={styles.commentHeader}>
@@ -576,8 +689,8 @@ export default function NovelViewerPage() {
                 </div>
               )}
 
-              {/* 답글 입력 */}
-              {replyingId === cm.id && (
+              {/* 🌟 답글 입력 (삭제된 댓글은 차단!) */}
+              {replyingId === cm.id && cm.text !== "삭제된 댓글입니다." && (
                 <div className={styles.replyInputRow}>
                   <div className={styles.replyArrow}>↳</div>
                   <div className={styles.replyAvatar} />

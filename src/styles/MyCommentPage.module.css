@@ -15,15 +15,39 @@
   margin-bottom: 4px;
 }
 
-.headerSubtitle {
-  font-size: 14px;
-  color: #4A6FA5;
-}
-
 .content {
   max-width: 800px;
   margin: 0 auto;
   padding: 24px 40px;
+}
+
+/* 🌟 탭 메뉴 디자인 (최근 본 작품 페이지와 100% 동일) */
+.tabMenu {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 0 10px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #E2E8F0;
+}
+
+.tabBtn {
+  padding: 0 4px 10px 4px;
+  margin-bottom: -11px; /* border-bottom을 겹치게 하기 위함 */
+  border: none;
+  background: none;
+  font-size: 16px;
+  font-weight: normal;
+  color: #90A4C8;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tabBtnActive {
+  font-weight: bold;
+  color: #2196F3;
+  border-bottom: 2px solid #2196F3;
 }
 
 .card {
@@ -77,8 +101,29 @@
 .cardActions {
   display: flex;
   justify-content: flex-end;
+  gap: 8px; /* 버튼 사이 간격 */
 }
 
+/* 🌟 수정 버튼 (파란색 테마, 삭제 버튼과 형태 동일) */
+.editBtn {
+  padding: 5px 14px;
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 6px;
+  color: #1565C0;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.editBtn:hover {
+  background: #2196F3;
+  border-color: #2196F3;
+  color: #fff;
+}
+
+/* 삭제 버튼 (빨간색 테마) */
 .deleteBtn {
   padding: 5px 14px;
   background: #FFEBEE;
@@ -95,4 +140,46 @@
   background: #E53935;
   border-color: #E53935;
   color: #fff;
+}
+
+/* 🌟 댓글 수정 모드 디자인 */
+.editContainer {
+  margin-top: 10px;
+}
+
+.editInput {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #BBDEFB;
+  min-height: 60px;
+  margin-bottom: 10px;
+  resize: none;
+  font-family: inherit;
+}
+
+.editActionRow {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.editCancelBtn {
+  padding: 6px 14px;
+  background-color: #F0F4FA;
+  color: #555;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.editSaveBtn {
+  padding: 6px 14px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
 }

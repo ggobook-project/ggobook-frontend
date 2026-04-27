@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import theme from "../styles/theme";
 import NotificationBell from "./NotificationBell";
+import api from "../api/axios"; // 🌟 추가: 로그아웃 통신을 위한 api 임포트
 
 const { colors: c } = theme;
 
@@ -54,13 +55,17 @@ export default function Header() {
     }
   }, [currentPath]) // 유저가 다른 페이지로 이동할 때마다 감시!
 
-  // const unreadCount = NotificationBell.filter(n => !n.read).length
+  // 🌟 변경: 안전한 로그아웃 로직 적용
+  const handleLogout = async () => {
+    if (!window.confirm("로그아웃 하시겠습니까?")) return;
 
-  const handleLogout = () => {
-    if (window.confirm("로그아웃 하시겠습니까?")) {
+    try {
+      await api.post("/api/auth/logout");
+    } catch (error) {
+      console.error("로그아웃 에러:", error);
+    } finally {
       localStorage.removeItem("accessToken");
-      alert("성공적으로 로그아웃 되었습니다.");
-      window.location.reload();
+      navigate("/", { replace: true });
     }
   };
 
@@ -75,7 +80,7 @@ export default function Header() {
   const handleSearch = (e) => {
     if (e.key === "Enter" && query.trim()) {
       navigate(`/search?q=${encodeURIComponent(query)}`);
-      setSearchOpen(false);
+      searchOpen(false);
       setQuery("");
     }
   };
