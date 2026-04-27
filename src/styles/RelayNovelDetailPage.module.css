@@ -287,3 +287,61 @@
   border-radius: 2px;
   transition: width 0.2s, background 0.2s;
 }
+
+.writeOpenBtn {
+  width: 100%;
+  padding: 16px;
+  margin-top: 20px;
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+}
+
+.writeOpenBtn:hover {
+  background: #1565C0;
+  transform: translateY(-2px);
+}
+
+.writeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.closeWriteBtn {
+  background: none;
+  border: none;
+  color: #90A4C8;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.closeWriteBtn:hover {
+  color: #E53935;
+}
+
+/* 폼이 나타날 때 부드러운 애니메이션 추가 */
+.writeCard {
+  animation: slideUpFade 0.3s ease-out;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -35,7 +35,7 @@
 }
 
 .formGroup {
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .label {
@@ -77,29 +77,36 @@
 }
 
 .topicItem {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 14px;
-  border-radius: 10px;
+  /* 기존 스타일 유지 */
   cursor: pointer;
   background: #E8F4FD;
   border: 1px solid #BBDEFB;
-  font-size: 13px;
-  color: #0D1B2A;
+  border-radius: 10px;
   transition: background 0.2s, border-color 0.2s;
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start;
+  padding: 14px; 
+  gap: 8px;
 }
 
 .topicItem:hover {
-  background: #BBDEFB;
+  background: #D1E9FA;
   border-color: #90CAF9;
 }
 
 .topicItemActive {
-  background: #E3F2FD;
   border-color: #2196F3;
+  background-color: #BBDEFB;
   color: #2196F3;
   font-weight: 500;
+}
+
+.topicItem strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0D1B2A;
+  margin: 0;
 }
 
 .input {
@@ -131,8 +138,9 @@
   color: #0D1B2A;
   font-size: 13px;
   outline: none;
-  box-sizing: border-box;
-  resize: vertical;
+  box-sizing: border-box; 
+  resize: none;
+  min-height: 100px;
   line-height: 1.7;
   font-family: inherit;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -190,4 +198,59 @@
   background: #BBDEFB;
   color: #90A4C8;
   cursor: default;
+}
+
+.adminTopicContainer {
+  margin-top: 15px;
+  margin-bottom: 30px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.smallLabel {
+  font-size: 12px;
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+
+.topicList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 10px; 
+  padding-left: 2px;
+}
+
+.topicList::-webkit-scrollbar {
+  width: 6px;
+}
+.topicList::-webkit-scrollbar-thumb {
+  background-color: #cbd5e0;
+  border-radius: 3px;
+}
+
+.topicItem {
+  padding: 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.topicItem:hover { background-color: #e2e6ea; }
+
+.topicItemActive {
+  border-color: #2196F3;
+  background-color: #e3f2fd;
+}
+
+.topicDesc {
+  font-size: 12px;
+  color: #34495E;
+  margin: 0;
+  line-height: 1.5;
 }
