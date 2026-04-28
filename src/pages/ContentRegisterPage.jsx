@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom"
 import { useState } from "react"
+import api from "../api/axios" // 🌟 1. 우리 전담 요원 임포트!
 import styles from "../styles/ContentRegisterPage.module.css"
 
 const mockContents = Array.from({ length: 4 }, (_, i) => ({
@@ -28,6 +29,7 @@ export default function ContentRegisterPage() {
 
   const genres = ["로맨스", "판타지", "무협", "현대", "스릴러", "BL", "액션"]
 
+  //  (기능 절대 보존 )
   const saveToInspection = () => {
     const newContent = {
       id: Date.now(),
@@ -43,6 +45,7 @@ export default function ContentRegisterPage() {
     localStorage.setItem("userRole", "AUTHOR")
   }
 
+  // 🌟 2. 통신 부분만 Clean Code 원칙에 맞춰 리팩토링!
   const handleSubmit = async () => {
     if (!title || !genre || (!isEdit && !file)) {
       alert(isEdit ? "작품명과 장르는 필수입니다." : "작품명, 장르, 대표 이미지는 필수입니다.")
@@ -52,17 +55,20 @@ export default function ContentRegisterPage() {
     const formData = new FormData()
     formData.append("content", new Blob([JSON.stringify(userContent)], { type: "application/json" }))
     if (file) formData.append("file", file)
+    
     try {
-      const token = localStorage.getItem("accessToken")
-      const url = isEdit
-        ? `http://localhost:8080/api/contents/${contentId}`
-        : "http://localhost:8080/api/contents/"
-      const response = await fetch(url, {
+      // 💡 Clean Code: api 인스턴스를 쓰면 토큰 양쪽 주머니 검사나 헤더 세팅을 직접 할 필요가 없습니다!
+      const url = isEdit ? `/api/contents/${contentId}` : "/api/contents"
+      
+      const response = await api({
         method: isEdit ? "PUT" : "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData
+        url: url,
+        data: formData
+        // FormData를 보낼 때 axios가 알아서 multipart/form-data 처리를 해줍니다.
       })
-      if (response.ok) {
+
+      // axios는 통신 성공 시 무조건 2xx 상태 코드를 뱉습니다 (fetch의 response.ok 대체)
+      if (response.status === 200 || response.status === 201) {
         if (!isEdit) {
           saveToInspection()
           alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.")
@@ -70,10 +76,10 @@ export default function ContentRegisterPage() {
           alert("작품 수정 성공")
         }
         navigate("/author/contents")
-      } else {
-        alert("백엔드 통신 실패")
       }
-    } catch {
+    } catch (error) {
+      console.error("통신 에러:", error);
+      // 기존 팀원분의 설계: 백엔드 에러가 나도 프론트 단독 테스트를 위해 진행되도록 둔 부분 유지
       if (!isEdit) {
         saveToInspection()
         alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.")

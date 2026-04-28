@@ -26,33 +26,41 @@
   padding: 24px 40px;
 }
 
-/* 🌟 사진 목록 바로 위쪽 가로 탭 레이아웃 */
+/* =========================================
+   🌟 통일된 탭 디자인 (클래스명은 기존 유지)
+   ========================================= */
 .tabs {
   display: flex;
-  gap: 12px;
-  margin-bottom: 24px; /* 탭과 첫 번째 사진(그리드) 사이의 간격을 예쁘게 띄워줍니다 */
+  justify-content: center;
+  gap: 20px;
+  padding: 0 0 10px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .tab {
-  background: transparent;
+  padding: 0 4px 10px 4px;
+  margin-bottom: -11px; /* border-bottom을 겹치게 하기 위함 */
   border: none;
-  font-size: 15px;
-  font-weight: 600;
+  background: none;
+  font-size: 16px;
+  font-weight: normal;
   color: #90A4C8;
+  border-bottom: 2px solid transparent;
   cursor: pointer;
-  padding: 6px 16px;
-  border-radius: 20px; /* 둥근 알약 모양으로 세련되게 */
-  transition: all 0.2s ease;
+  transition: color 0.2s, border-color 0.2s;
 }
 
 .tab:hover {
-  background: rgba(0, 0, 0, 0.04);
+  color: #1565C0;
 }
 
 .activeTab {
-  color: #1565C0;
-  background: rgba(33, 150, 243, 0.1);
+  font-weight: bold;
+  color: #2196F3;
+  border-bottom: 2px solid #2196F3;
 }
+/* ========================================= */
 
 .emptyMsg {
   text-align: center;

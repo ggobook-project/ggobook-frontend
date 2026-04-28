@@ -79,13 +79,15 @@ export default function ContentDetailPage() {
 
   // 🌟 변경 4: 찜 토글 로직 다이어트
   const handleLike = async () => {
-    // 팁: 찜하기는 무조건 로그인이 필요하므로, 프론트 단에서 빠르게 한 번 컷 해주는 센스는 남겨둡니다!
-    const token = localStorage.getItem("accessToken");
-    if (!token) { alert("로그인이 필요합니다."); return; }
+    // 🌟 수정: 왼쪽 주머니(localStorage)에 없으면 오른쪽 주머니(sessionStorage)도 마저 뒤져봅니다!
+    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    if (!token) { 
+      alert("로그인이 필요합니다."); 
+      return; 
+    }
     try {
       // 요원이 알아서 토큰을 붙여서 보내주므로 headers 셋팅 삭제!
       const response = await api.post(`/api/likes/${contentId}`);
-
       if (response.status === 200 || response.status === 201) {
         setLiked(!liked);
       }

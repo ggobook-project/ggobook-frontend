@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import theme from "../styles/theme";
 import NotificationBell from "./NotificationBell";
-import api from "../api/axios"; // 🌟 추가: 로그아웃 통신을 위한 api 임포트
+import api from "../api/axios"; 
 
 const { colors: c } = theme;
 
@@ -15,37 +15,36 @@ export default function Header() {
   const [query, setQuery] = useState("");
 
   const getRole = () => {
-    const token = localStorage.getItem("accessToken")
-    if (!token) return null
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]))
-      const r = payload.role || payload.roles?.[0] || payload.authority
-      return typeof r === "string" ? r.replace("ROLE_", "") : null
-    } catch { return null }
-  }
+  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+  
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const r = payload.role || payload.roles?.[0] || payload.authority;
+    return typeof r === "string" ? r.replace("ROLE_", "") : null;
+  } catch { return null; }
+}
   const role = getRole() || localStorage.getItem("userRole") || "USER"
   const isAdmin = role === "ADMIN"
-  // 🌟 변경 1: 단순 변수였던 isLoggedIn을 상태(State)로 변경
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  // 🌟 변경 2: 화면을 켜거나 이동(currentPath 변경)할 때마다 토큰 유효기간을 검사
   useEffect(() => {
-    const token = localStorage.getItem("accessToken")
+  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
 
-    // 토큰 해독기 함수 (JWT의 중간 몸통을 까서 시간을 확인)
-    const isTokenExpired = (t) => {
-      try {
-        const payload = JSON.parse(atob(t.split('.')[1]))
-        return payload.exp < Math.floor(Date.now() / 1000)
-      } catch {
-        return true // 해석 실패 시 썩은 토큰으로 간주
-      }
+  const isTokenExpired = (t) => {
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      return payload.exp < Math.floor(Date.now() / 1000);
+    } catch {
+      return true; 
     }
+  }
 
     if (token) {
       if (isTokenExpired(token)) {
-        // 토큰이 만료되었다면? 조용히 지갑 비우고 로그아웃 상태로 전환 (알림 X)
+        // 🌟 핵심 수정 1: 토큰 썩었을 때 양쪽 주머니 모두 파기!
         localStorage.removeItem("accessToken")
+        sessionStorage.removeItem("accessToken")
         setIsLoggedIn(false)
       } else {
         setIsLoggedIn(true)
@@ -53,9 +52,8 @@ export default function Header() {
     } else {
       setIsLoggedIn(false)
     }
-  }, [currentPath]) // 유저가 다른 페이지로 이동할 때마다 감시!
+  }, [currentPath]) 
 
-  // 🌟 변경: 안전한 로그아웃 로직 적용
   const handleLogout = async () => {
     if (!window.confirm("로그아웃 하시겠습니까?")) return;
 
@@ -64,7 +62,9 @@ export default function Header() {
     } catch (error) {
       console.error("로그아웃 에러:", error);
     } finally {
+      // 🌟 핵심 수정 2: 로그아웃 할 때 양쪽 주머니 모두 파기!
       localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("accessToken");
       navigate("/", { replace: true });
     }
   };
@@ -96,8 +96,6 @@ export default function Header() {
     borderRadius: 8, background: "none", border: "none", position: "relative"
   });
 
-  const notifIconBg = () => "#E3F2FD"
-
   const NotifIcon = ({ type }) => {
     if (type === "like") return (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="#2196F3" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -126,13 +124,11 @@ export default function Header() {
       display: "flex", alignItems: "center", justifyContent: "space-between",
       height: 60,
     }}>
-      {/* 로고 */}
       <span onClick={() => navigate("/")} style={{
         fontSize: 22, fontWeight: 700, cursor: "pointer",
         color: c.primary, letterSpacing: "-0.5px", flexShrink: 0
       }}>GGoBook</span>
 
-      {/* 가운데 메뉴 or 검색창 */}
       <div style={{ display: "flex", gap: 32, alignItems: "center" }}>
         {searchOpen ? (
           <div style={{
@@ -191,7 +187,6 @@ export default function Header() {
         )}
       </div>
 
-      {/* 오른쪽 버튼들 */}
       <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
         
         <button
@@ -206,7 +201,6 @@ export default function Header() {
           </svg>
         </button>
 
-        {/* 🌟 로그인 한 유저에게만 알림 벨 표시 */}
         {isLoggedIn && <NotificationBell />}
 
         <span style={{ fontSize: 13, color: c.border }}>|</span>

@@ -5,7 +5,7 @@
 
 .header {
   background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
-  padding: 28px 40px 32px;
+  padding: 28px 40px 0px; 
 }
 
 .headerTitle {
@@ -20,10 +20,54 @@
   color: #4A6FA5;
 }
 
+/* =========================================
+   🌟 통일된 탭 디자인 (클래스명은 기존 유지)
+   ========================================= */
+.tabContainer {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 0 10px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #E2E8F0;
+  margin-top: 24px;
+}
+
+.tabButton {
+  padding: 0 4px 10px 4px;
+  margin-bottom: -11px; 
+  border: none;
+  background: none;
+  font-size: 16px;
+  font-weight: normal;
+  color: #90A4C8;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.tabButton:hover {
+  color: #1565C0;
+}
+
+.activeTab {
+  font-weight: bold;
+  color: #2196F3;
+  border-bottom: 2px solid #2196F3;
+}
+/* ========================================= */
+
 .content {
   max-width: 800px;
   margin: 0 auto;
   padding: 24px 40px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 0;
+  color: #90A4C8;
+  font-size: 15px;
 }
 
 .card {
@@ -55,24 +99,6 @@
   font-size: 14px;
   font-weight: 600;
   color: #0D1B2A;
-}
-
-.roleBadge {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 6px;
-}
-
-.roleStarter {
-  background: #E3F2FD;
-  color: #1565C0;
-  border: 1px solid #BBDEFB;
-}
-
-.roleParticipant {
-  background: #E8F4FD;
-  color: #4A6FA5;
-  border: 1px solid #BBDEFB;
 }
 
 .cardMeta {
