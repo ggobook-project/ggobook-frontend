@@ -4,7 +4,6 @@ import wave from "../assets/wave.png";
 import api from "../api/axios";
 import "../styles/Auth.css";
 
-// 🌟 1. 더러운 SVG 코드들을 '부품 창고(외부)'로 아예 빼버립니다.
 const KakaoIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="#3C1E1E">
     <path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.667 1.667 5 4.167 6.333L5 21l4.833-2.833C10.533 18.389 11.267 18.5 12 18.5c5.523 0 10-3.477 10-7.5S17.523 3 12 3z" />
@@ -20,25 +19,36 @@ const GoogleIcon = () => (
   </svg>
 );
 
-// 🌟 2. 배열에서는 부품 창고에 있는 아이콘을 이름만 불러와서 조립합니다.
 const SOCIAL_PROVIDERS = [
   { id: "kakao", colorClass: "btn-kakao", icon: <KakaoIcon /> },
   { id: "naver", colorClass: "btn-naver", icon: <span className="naver-icon">N</span> },
   { id: "google", colorClass: "btn-google", icon: <GoogleIcon /> },
 ];
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
+  
+  // 🌟 1. 체크박스 상태를 기억할 변수 추가! (기본값은 체크 안됨: false)
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!userId || !password) return alert("아이디와 비밀번호를 모두 입력해주세요.");
 
     try {
-      const response = await api.post("/api/auth/login", { userId, password });
+      // 🌟 2. 백엔드로 데이터 보낼 때 keepLoggedIn 상태도 택배 상자에 같이 포장합니다!
+      const response = await api.post("/api/auth/login", { userId, password, keepLoggedIn });
       const accessToken = response.data;
-      if (accessToken) localStorage.setItem("accessToken", accessToken.replace("Bearer ", ""));
+      if (accessToken) {
+        const cleanToken = accessToken.replace("Bearer ", "");
+        if (keepLoggedIn) {
+          localStorage.setItem("accessToken", cleanToken); // 체크 O: 영구 보관
+        } else {
+          sessionStorage.setItem("accessToken", cleanToken); // 체크 X: 끄면 즉시 폭파
+        }
+      }
       
       alert("로그인 성공! 환영합니다.");
       navigate("/");
@@ -47,14 +57,12 @@ export default function LoginPage() {
     }
   };
 
-const handleSocialLogin = (provider) => {
-    // 🌟 '=' 기호로 수정하지 않고, assign() 함수에 목적지를 던져주는 방식입니다.
+  const handleSocialLogin = (provider) => {
     window.location.assign(`http://localhost:8080/oauth2/authorization/${provider}`);
   };
 
   return (
     <div className="auth-container">
-      {/* 백그라운드 이미지만 예외적으로 inline 처리 (경로 매핑 문제 방지) */}
       <div className="auth-wave-bg" style={{ backgroundImage: `url(${wave})` }} />
 
       <div className="auth-card-wrap">
@@ -75,7 +83,7 @@ const handleSocialLogin = (provider) => {
               />
             </div>
 
-            <div className="auth-form-group">
+            <div className="auth-form-group" style={{ marginBottom: "10px" }}>
               <div className="auth-label">비밀번호</div>
               <input 
                 type="password" 
@@ -84,6 +92,18 @@ const handleSocialLogin = (provider) => {
                 placeholder="비밀번호 입력" 
                 className="auth-input" 
               />
+            </div>
+
+            {/* 🌟 3. 로그인 상태 유지 체크박스 UI 추가 (버튼 바로 위) */}
+            <div style={{ display: "flex", alignItems: "center", marginBottom: "20px", fontSize: "13px", color: "#4A6FA5" }}>
+              <input 
+                type="checkbox" 
+                id="keepLoggedIn" 
+                checked={keepLoggedIn}
+                onChange={(e) => setKeepLoggedIn(e.target.checked)}
+                style={{ marginRight: "6px", cursor: "pointer" }}
+              />
+              <label htmlFor="keepLoggedIn" style={{ cursor: "pointer" }}>로그인 상태 유지</label>
             </div>
 
             <button type="submit" className="auth-btn-submit">로그인</button>
@@ -101,11 +121,9 @@ const handleSocialLogin = (provider) => {
             ))}
           </div>
 
-          {/* 소셜 로그인 */}
           <div className="auth-social-divider">
             <div className="auth-social-label">소셜 로그인</div>
             <div className="auth-social-wrap">
-              {/* ✅ 클린 코드 포인트 3: HTML 하드코딩 반복을 배열 map()으로 압축 */}
               {SOCIAL_PROVIDERS.map((provider) => (
                 <button
                   key={provider.id}
@@ -122,4 +140,4 @@ const handleSocialLogin = (provider) => {
       </div>
     </div>
   );
-  }
+}

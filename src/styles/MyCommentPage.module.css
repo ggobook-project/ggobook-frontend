@@ -21,7 +21,9 @@
   padding: 24px 40px;
 }
 
-/* 🌟 탭 메뉴 디자인 (최근 본 작품 페이지와 100% 동일) */
+/* =========================================
+   🌟 통일된 탭 디자인 (기준점 유지)
+   ========================================= */
 .tabMenu {
   display: flex;
   justify-content: center;
@@ -33,7 +35,7 @@
 
 .tabBtn {
   padding: 0 4px 10px 4px;
-  margin-bottom: -11px; /* border-bottom을 겹치게 하기 위함 */
+  margin-bottom: -11px;
   border: none;
   background: none;
   font-size: 16px;
@@ -44,11 +46,16 @@
   transition: color 0.2s, border-color 0.2s;
 }
 
+.tabBtn:hover {
+  color: #1565C0;
+}
+
 .tabBtnActive {
   font-weight: bold;
   color: #2196F3;
   border-bottom: 2px solid #2196F3;
 }
+/* ========================================= */
 
 .card {
   padding: 16px 20px;
@@ -101,10 +108,9 @@
 .cardActions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px; /* 버튼 사이 간격 */
+  gap: 8px; 
 }
 
-/* 🌟 수정 버튼 (파란색 테마, 삭제 버튼과 형태 동일) */
 .editBtn {
   padding: 5px 14px;
   background: #E8F4FD;
@@ -123,7 +129,6 @@
   color: #fff;
 }
 
-/* 삭제 버튼 (빨간색 테마) */
 .deleteBtn {
   padding: 5px 14px;
   background: #FFEBEE;
@@ -142,7 +147,6 @@
   color: #fff;
 }
 
-/* 🌟 댓글 수정 모드 디자인 */
 .editContainer {
   margin-top: 10px;
 }

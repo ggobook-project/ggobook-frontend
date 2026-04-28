@@ -605,7 +605,7 @@ export default function NovelViewerPage() {
     try {
       await api.post(`/api/comments/${commentId}/replies`, { replyText });
       setReplyText("");
-      setReplyingId(null);
+      // 🌟 [수정 포인트] 답글 창 유지를 위해 setReplyingId(null) 삭제!
       setExpandedReplies(prev => ({ ...prev, [commentId]: true }));
       loadComments(); 
     } catch (error) {
@@ -1119,7 +1119,7 @@ export default function NovelViewerPage() {
                 </div>
               )}
 
-              {/* 🌟 답글 입력 (삭제된 댓글은 차단!) */}
+              {/* 🌟 [수정 포인트] 삭제된 댓글은 차단하고, 정상 답글은 등록 후에도 창을 닫지 않게! */}
               {replyingId === cm.id && cm.text !== "삭제된 댓글입니다." && (
                 <div className={styles.replyInputRow}>
                   <div className={styles.replyArrow}>↳</div>

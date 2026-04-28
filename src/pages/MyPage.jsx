@@ -2,19 +2,17 @@ import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { getMyPageMainData } from "../api/mypageApi" 
 
-// 🌟 추가: 로그아웃 통보를 위해 만능 요원을 호출합니다! (경로 확인 필수)
 import api from "../api/axios" 
-
 import styles from "../styles/MyPage.module.css"
 
 const getRoleFromToken = () => {
-  const token = localStorage.getItem("accessToken")
-  if (!token) return null
+  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+  if (!token) return null;
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]))
-    const r = payload.role || payload.roles?.[0] || payload.authority
-    return typeof r === "string" ? r.replace("ROLE_", "") : null
-  } catch { return null }
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const r = payload.role || payload.roles?.[0] || payload.authority;
+    return typeof r === "string" ? r.replace("ROLE_", "") : null;
+  } catch { return null; }
 }
 
 export default function MyPage() {
@@ -28,11 +26,13 @@ export default function MyPage() {
     if (role === "ADMIN") navigate("/admin")
   }, [role, navigate])
 
-  // 화면이 처음 켜질 때 딱 한 번 백엔드에 데이터 요청
   useEffect(() => {
     const fetchData = async () => {
-      // 🌟 추가: 토큰이 없으면 데이터를 부르지 않고 바로 종료 (에러창 끄기 방어막)
-      if (!localStorage.getItem("accessToken")) return;
+      // 🌟 핵심 수정 1: 왼쪽 주머니, 오른쪽 주머니 둘 다 없어야만 파업(return)하도록 수정!
+      if (!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"))) {
+        setIsLoading(false); // 무한 로딩 방지
+        return;
+      }
 
       try {
         const data = await getMyPageMainData()
@@ -46,7 +46,6 @@ export default function MyPage() {
     fetchData()
   }, [])
 
-  // 🌟 헤더와 완벽히 통일된 로그아웃 로직
   const handleLogout = async () => {
     if (!window.confirm("로그아웃 하시겠습니까?")) return;
 
@@ -55,7 +54,9 @@ export default function MyPage() {
     } catch (error) {
       console.error("로그아웃 에러:", error);
     } finally {
+      // 🌟 핵심 수정 2: 로그아웃 할 때는 양쪽 주머니를 자비 없이 싹 다 털어버려야 합니다!
       localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("accessToken"); 
       navigate("/", { replace: true });
     }
   }
@@ -112,7 +113,6 @@ export default function MyPage() {
         </div>
 
         <div className={styles.logoutWrap}>
-          {/* 🌟 보안이 강화된 handleLogout 함수 연결! */}
           <button className={styles.logoutBtn} onClick={handleLogout}>
             로그아웃
           </button>

@@ -9,7 +9,8 @@ const api = axios.create({
 // 2. 요청(Request) 인터셉터
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('accessToken');
+    // 🌟 핵심 1: 영구 보관함(localStorage)이든 일회용 보관함(sessionStorage)이든 토큰이 있는 곳에서 꺼내옵니다!
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -40,18 +41,26 @@ api.interceptors.response.use(
 
           if (refreshResponse.status === 200) {
             const newAccessToken = refreshResponse.data;
-            localStorage.setItem('accessToken', newAccessToken);
+            
+            // 🌟 핵심 2: 방금 받아온 새 토큰을 "원래 쓰던 보관함"에 맞춰서 다시 예쁘게 넣어줍니다!
+            if (localStorage.getItem('accessToken')) {
+              localStorage.setItem('accessToken', newAccessToken);
+            } else {
+              sessionStorage.setItem('accessToken', newAccessToken);
+            }
+
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
             return api(originalRequest);
           }
         } catch (refreshError) {
-          // 🌟 변경: 알림창(alert) 제거! 유저 모르게 부드럽게 쫓아냅니다.
+          // 🌟 핵심 3: 토큰이 완전 만료되어 쫓아낼 때는, 두 보관함을 모두 확실하게 탈탈 털어버립니다!
           console.error("토큰 완전 만료. 조용히 로그아웃 처리");
           localStorage.removeItem('accessToken');
+          sessionStorage.removeItem('accessToken');
+          
           window.location.href = '/login'; 
           
-          // 🌟 마법의 코드: 에러를 페이지(MyPage 등)로 던지지 않고 빈 깡통을 던져서 에러 파기!
-          // 덕분에 다른 모든 페이지에서 try-catch를 수정할 필요가 완전히 사라집니다.
+          // 에러 파기용 빈 깡통 반환 (다른 페이지 에러 방지)
           return new Promise(() => {}); 
         }
       }

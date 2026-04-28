@@ -7,7 +7,7 @@ export const getMyPageMainData = async () => {
   // Promise.all을 써서 두 개의 API(프로필, 포인트)를 동시에 병렬로 가져오는 엄청난 최적화 코드입니다! 유지합니다.
   const [profileRes, pointRes] = await Promise.all([
     api.get('/api/mypage'),
-    api.get('/api/mypage/points')
+    api.get('/api/points')
   ]);
   return { profile: profileRes.data, points: pointRes.data.currentBalance };
 };

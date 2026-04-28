@@ -140,7 +140,7 @@ export default function WebtoonViewerPage() {
         isMine: cm.userId === getUserId(), 
         likes: cm.likeCount || 0,
         dislikes: cm.dislikeCount || 0,
-        myLike: cm.myReaction ? cm.myReaction.toLowerCase() : null, // 🌟 백엔드 상태 연결
+        myLike: cm.myReaction ? cm.myReaction.toLowerCase() : null,
         replies: (cm.replies || []).map(r => ({
           id: r.replyId,
           user: `독자${r.userId}`,
@@ -149,7 +149,7 @@ export default function WebtoonViewerPage() {
           isMine: r.userId === getUserId(),
           likes: r.likeCount || 0,
           dislikes: r.dislikeCount || 0,
-          myLike: r.myReaction ? r.myReaction.toLowerCase() : null // 🌟 백엔드 상태 연결
+          myLike: r.myReaction ? r.myReaction.toLowerCase() : null
         }))
       }));
       setComments(mappedComments);
@@ -249,7 +249,7 @@ export default function WebtoonViewerPage() {
   }, [commentPage, comments])
 
   // ==========================================
-  // 6. 이벤트 핸들러 (수정 및 반응 API 완벽 매핑)
+  // 6. 이벤트 핸들러 
   // ==========================================
   const goContentDetail = () => {
     if (contentId) navigate(`/contents/${contentId}`)
@@ -327,7 +327,7 @@ export default function WebtoonViewerPage() {
     try {
       await api.post(`/api/comments/${commentId}/replies`, { replyText });
       setReplyText("");
-      setReplyingId(null);
+      // 🌟 [수정 포인트 1] 답글 창 닫기 방지 (setReplyingId(null) 삭제!)
       setExpandedReplies(prev => ({ ...prev, [commentId]: true }));
       loadComments(); 
     } catch (error) {
@@ -350,7 +350,6 @@ export default function WebtoonViewerPage() {
     setEditReplyText(reply.text)
   }
 
-  // 🌟 [수정] 답글 수정: 백엔드 API 주소 일치
   const handleReplyEditSubmit = async (commentId, replyId) => {
     if (!editReplyText.trim()) return;
     try {
@@ -395,7 +394,6 @@ export default function WebtoonViewerPage() {
     }
   }
 
-  // 🌟 [수정] 답글 반응: 백엔드 API 주소 일치
   const handleReplyLike = async (commentId, replyId, type) => {
     if (!isLoggedIn) { navigate("/login"); return }
     try {
@@ -693,7 +691,8 @@ export default function WebtoonViewerPage() {
                   </div>
                 )}
 
-                {replyingId === cm.id && (
+                {/* 🌟 [수정 포인트 2] 삭제된 댓글일 때 답글 입력창 렌더링 원천 차단! */}
+                {replyingId === cm.id && cm.text !== "삭제된 댓글입니다." && (
                   <div className={styles.replyInputRow}>
                     <div className={styles.replyArrow}>↳</div>
                     <div className={styles.replyAvatar} />

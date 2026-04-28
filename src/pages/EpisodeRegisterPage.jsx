@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from "date-fns/locale";
+import api from "../api/axios"; // 🌟 1. 전담 요원(axios) 임포트!
 import styles from "../styles/EpisodeRegisterPage.module.css";
 
 const mockEpisodes = Array.from({ length: 20 }, (_, i) => ({
@@ -71,45 +72,39 @@ export default function EpisodeRegisterPage() {
     }
 
     try {
-      const token = localStorage.getItem("accessToken");
+      // 🌟 2. 요원(api) 투입! 긴 URL과 토큰 수동 세팅 제거
       const url = isEdit
-        ? `http://localhost:8080/api/contents/${contentId}/episodes/${episodeId}`
-        : `http://localhost:8080/api/contents/${contentId}/episodes`;
-      const response = await fetch(url, {
+        ? `/api/contents/${contentId}/episodes/${episodeId}`
+        : `/api/contents/${contentId}/episodes`;
+        
+      const response = await api({
         method: isEdit ? "PUT" : "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
+        url: url,
+        data: formData, // axios에서는 body 대신 data를 사용합니다.
       });
-      if (response.ok) {
+
+      // axios는 성공 시 2xx 코드를 반환하므로 response.ok 대신 status 확인
+      if (response.status === 200 || response.status === 201) {
         alert(isEdit ? "회차 수정 성공" : "회차 등록 성공");
         navigate(`/author/contents/${contentId}`);
-      } else {
-        alert("백엔드 통신 실패");
       }
     } catch (error) {
-      alert("에러 발생 : ", error);
+      console.error("에러 발생 : ", error);
+      alert(isEdit ? "회차 수정 실패" : "회차 등록 실패");
     }
   };
 
   useEffect(() => {
     const checkNovelForTTS = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        const response = await fetch(
-          `http://localhost:8080/api/contents/${contentId}`,
-          {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
-        if (!response.ok) {
-          alert("백엔드 통신 실패(작품 상세)");
-          return;
-        }
-        const data = await response.json();
-        setIsNovel(data.type === "웹소설");
+        // 🌟 3. 작품 상세 조회도 요원(api)으로 교체!
+        const response = await api.get(`/api/contents/${contentId}`);
+        
+        // axios는 response.data에 실제 JSON 결과물이 들어있습니다!
+        setIsNovel(response.data.type === "웹소설");
       } catch (error) {
         console.error("작품 상세 불러오기 실패 : ", error);
+        alert("백엔드 통신 실패(작품 상세)");
       }
     };
     checkNovelForTTS();
