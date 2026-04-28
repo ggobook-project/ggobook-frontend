@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom"
-import { useState, useEffect, useCallback } from "react"
-import api from "../api/axios" 
+import { useState, useEffect, useCallback, useRef } from "react"
+import api from "../api/axios"
 import styles from "../styles/RelayNovelDetailPage.module.css"
 
 const MAX_CHARS = 500
@@ -19,6 +19,41 @@ export default function RelayNovelDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   
   const isLoggedIn = !!localStorage.getItem("accessToken")
+
+  // ==========================================
+  // TTS 상태
+  // ==========================================
+  const [playing, setPlaying] = useState(false)
+  const playingRef = useRef(false)
+  const audioRef = useRef(null)
+  const [audioTime, setAudioTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [voices, setVoices] = useState([])
+  const [showSettings, setShowSettings] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [playbackRate, setPlaybackRate] = useState(1.0)
+  const [currentVoiceId, setCurrentVoiceId] = useState(null)
+  const [pendingVoiceId, setPendingVoiceId] = useState(null)
+  const [totalChunks, setTotalChunks] = useState(0)
+  const [currentChunkIndex, setCurrentChunkIndex] = useState(0)
+  const [chunkUrls, setChunkUrls] = useState({})
+  const [chunkDurations, setChunkDurations] = useState({})
+  const [waitingForChunk, setWaitingForChunk] = useState(false)
+  const preloadingRef = useRef(false)
+  const ttsConfigRef = useRef(null)
+  const [multiVoiceMode, setMultiVoiceMode] = useState(false)
+  const [pendingMultiVoice, setPendingMultiVoice] = useState({ voice1Id: null, voice2Id: null, narratorVoiceId: null })
+  const speedBarRef = useRef(null)
+  const progressBarRef = useRef(null)
+  const settingsPanelRef = useRef(null)
+  const settingsBtnRef = useRef(null)
+
+  const formatTime = (secs) => {
+    if (!secs || isNaN(secs)) return "00:00"
+    const m = Math.floor(secs / 60)
+    const s = Math.floor(secs % 60)
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+  }
 
   const loadDetail = useCallback(async () => {
     try {
@@ -57,6 +92,232 @@ export default function RelayNovelDetailPage() {
     loadDetail()
     loadGuidelines()
   }, [relayNovelId, loadDetail])
+
+  // 청크 URL이 생기면 오디오 초기화 및 재생
+  useEffect(() => {
+    const url = chunkUrls[currentChunkIndex]
+    if (!url) return
+
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+
+    const audio = new Audio(url)
+    audioRef.current = audio
+    audio.playbackRate = playbackRate
+
+    const onTimeUpdate = () => {
+      setAudioTime(audio.currentTime)
+      if (audio.duration && audio.currentTime / audio.duration > 0.7) {
+        const next = currentChunkIndex + 1
+        const cfg = ttsConfigRef.current
+        if (next < totalChunks && !chunkUrls[next] && !preloadingRef.current && cfg) {
+          preloadingRef.current = true
+          const nextUrl = cfg.mode === 'single'
+            ? `/api/relay-novels/${relayNovelId}/tts/chunk/${next}?voiceId=${cfg.voiceId}`
+            : `/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk/${next}?voice1Id=${cfg.voice1Id}&voice2Id=${cfg.voice2Id}&narratorVoiceId=${cfg.narratorVoiceId}`
+          api.post(nextUrl)
+            .then(res => { setChunkUrls(prev => ({ ...prev, [next]: res.data.url })); preloadingRef.current = false })
+            .catch(() => { preloadingRef.current = false })
+        }
+      }
+    }
+    const onLoadedMetadata = () => {
+      setAudioDuration(audio.duration)
+      setChunkDurations(prev => ({ ...prev, [currentChunkIndex]: audio.duration }))
+    }
+    const onEnded = () => {
+      const next = currentChunkIndex + 1
+      if (next < totalChunks) {
+        setCurrentChunkIndex(next)
+        setAudioTime(0)
+        if (!chunkUrls[next]) setWaitingForChunk(true)
+      } else {
+        playingRef.current = false
+        setPlaying(false)
+        setAudioTime(0)
+      }
+    }
+
+    audio.addEventListener("timeupdate", onTimeUpdate)
+    audio.addEventListener("loadedmetadata", onLoadedMetadata)
+    audio.addEventListener("ended", onEnded)
+
+    if (playingRef.current || waitingForChunk) {
+      setWaitingForChunk(false)
+      audio.play().catch(console.error)
+      setPlaying(true)
+      playingRef.current = true
+    }
+
+    return () => {
+      audio.pause()
+      audio.removeEventListener("timeupdate", onTimeUpdate)
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata)
+      audio.removeEventListener("ended", onEnded)
+    }
+  }, [chunkUrls[currentChunkIndex], currentChunkIndex])
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = playbackRate
+  }, [playbackRate])
+
+  useEffect(() => {
+    if (!showSettings) return
+    const handleOutside = (e) => {
+      const inPanel = settingsPanelRef.current && settingsPanelRef.current.contains(e.target)
+      const inBtn = settingsBtnRef.current && settingsBtnRef.current.contains(e.target)
+      if (!inPanel && !inBtn) setShowSettings(false)
+    }
+    document.addEventListener("mousedown", handleOutside)
+    return () => document.removeEventListener("mousedown", handleOutside)
+  }, [showSettings])
+
+  // ==========================================
+  // TTS 이벤트 핸들러
+  // ==========================================
+  const seekTo = (clientX) => {
+    if (!audioRef.current || !audioDuration || !progressBarRef.current) return
+    const rect = progressBarRef.current.getBoundingClientRect()
+    const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1)
+    audioRef.current.currentTime = ratio * audioDuration
+    setAudioTime(ratio * audioDuration)
+  }
+
+  const handleProgressMouseDown = (e) => {
+    if (!audioRef.current || !audioDuration) return
+    seekTo(e.clientX)
+    const onMove = (e) => seekTo(e.clientX)
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+  }
+
+  const handlePlayToggle = () => {
+    if (!audioRef.current) { handleSettingsClick(); return }
+    if (playing) {
+      audioRef.current.pause()
+      playingRef.current = false
+      setPlaying(false)
+    } else {
+      audioRef.current.play().catch(console.error)
+      playingRef.current = true
+      setPlaying(true)
+    }
+  }
+
+  const handleSettingsClick = async () => {
+    if (!isLoggedIn) { navigate("/login"); return }
+    if (showSettings) { setShowSettings(false); return }
+    try {
+      const res = await api.get("/api/tts/voices")
+      setVoices(res.data || [])
+    } catch { setVoices([]) }
+    setShowSettings(true)
+  }
+
+  const handleGenerateTts = async (voiceId) => {
+    try {
+      setIsGenerating(true)
+      const infoRes = await api.get(`/api/relay-novels/${relayNovelId}/tts/chunk-info?voiceId=${voiceId}`)
+      const { totalChunks: total, chunkUrls: existing } = infoRes.data
+      setTotalChunks(total)
+      setCurrentChunkIndex(0)
+      setChunkDurations({})
+      preloadingRef.current = false
+
+      let chunk0Url = existing["0"]
+      if (!chunk0Url) {
+        const res = await api.post(`/api/relay-novels/${relayNovelId}/tts/chunk/0?voiceId=${voiceId}`)
+        chunk0Url = res.data.url
+      }
+      setChunkUrls({ ...existing, "0": chunk0Url })
+      setCurrentVoiceId(voiceId)
+      ttsConfigRef.current = { mode: 'single', voiceId }
+      setShowSettings(false)
+      playingRef.current = true
+    } catch (e) {
+      if (e?.response?.status === 404) {
+        alert("릴레이소설 TTS 기능은 현재 준비 중입니다.")
+      } else {
+        alert("TTS 생성에 실패했습니다.")
+      }
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleGenerateMultiVoiceTts = async () => {
+    const { voice1Id, voice2Id, narratorVoiceId } = pendingMultiVoice
+    if (!voice1Id || !voice2Id || !narratorVoiceId) {
+      alert("참여자1, 참여자2, 나머지 목소리를 모두 선택해주세요.")
+      return
+    }
+    try {
+      setIsGenerating(true)
+      const infoRes = await api.get(
+        `/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk-info?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`
+      )
+      const { totalChunks: total, chunkUrls: existing } = infoRes.data
+      setTotalChunks(total)
+      setCurrentChunkIndex(0)
+      setChunkDurations({})
+      preloadingRef.current = false
+
+      let chunk0Url = existing["0"]
+      if (!chunk0Url) {
+        const res = await api.post(
+          `/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk/0?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`
+        )
+        chunk0Url = res.data.url
+      }
+      setChunkUrls({ ...existing, "0": chunk0Url })
+      setCurrentVoiceId(null)
+      ttsConfigRef.current = { mode: 'multi', voice1Id, voice2Id, narratorVoiceId }
+      setShowSettings(false)
+      playingRef.current = true
+    } catch (e) {
+      if (e?.response?.status === 404) {
+        alert("릴레이소설 TTS 기능은 현재 준비 중입니다.")
+      } else {
+        alert("멀티보이스 TTS 생성에 실패했습니다.")
+      }
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const SPEED_PRESETS = [0.75, 1.0, 1.25, 1.5, 2.0]
+
+  const applySpeed = (speed) => {
+    setPlaybackRate(speed)
+    if (audioRef.current) audioRef.current.playbackRate = speed
+  }
+
+  const handleSpeedDrag = (clientX) => {
+    if (!speedBarRef.current) return
+    const rect = speedBarRef.current.getBoundingClientRect()
+    const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1)
+    const raw = 0.75 + ratio * (2.0 - 0.75)
+    const nearest = SPEED_PRESETS.reduce((a, b) => Math.abs(b - raw) < Math.abs(a - raw) ? b : a)
+    applySpeed(nearest)
+  }
+
+  const handleSpeedMouseDown = (e) => {
+    e.stopPropagation()
+    handleSpeedDrag(e.clientX)
+    const onMove = (e) => handleSpeedDrag(e.clientX)
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+  }
 
   const handleSubmit = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
@@ -162,7 +423,134 @@ export default function RelayNovelDetailPage() {
           </div>
         ))}
 
-        {/* 🌟 수정된 부분: 이어쓰기 폼 토글 로직 적용 */}
+        {/* TTS 바 — 이어쓰기 참여하기 위에 나란히 */}
+        <div className={styles.ttsBar}>
+          <div className={styles.ttsRow}>
+            <button className={styles.playBtn} onClick={handlePlayToggle}>
+              {playing ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="5" y="4" width="5" height="16" rx="1.5"/>
+                  <rect x="14" y="4" width="5" height="16" rx="1.5"/>
+                </svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}>
+                  <polygon points="5,3 20,12 5,21"/>
+                </svg>
+              )}
+            </button>
+            <div className={styles.ttsProgressBarWrapper} ref={progressBarRef} onMouseDown={handleProgressMouseDown}>
+              <div className={styles.ttsProgressBar}>
+                <div className={styles.ttsProgressFill} style={{ width: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%` }} />
+                <div className={styles.ttsProgressThumb} style={{ left: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%` }} />
+              </div>
+            </div>
+            <span className={styles.timeLabel}>
+              {formatTime(audioTime)} / {formatTime(audioDuration)}
+              {totalChunks > 1 && <span style={{ marginLeft: 6, fontSize: "0.75em", opacity: 0.6 }}>{currentChunkIndex + 1}/{totalChunks}</span>}
+            </span>
+            <span className={styles.speedBadge}>{playbackRate}×</span>
+            <div ref={settingsBtnRef} style={{ flexShrink: 0 }}>
+              <button className={styles.settingsBtn} onClick={handleSettingsClick}>설정</button>
+            </div>
+          </div>
+
+          {showSettings && (
+            <div ref={settingsPanelRef} className={styles.settingsPanel}>
+              <div className={styles.settingsSection}>
+                <div className={styles.modeToggle}>
+                  <button className={`${styles.modeToggleBtn} ${!multiVoiceMode ? styles.modeToggleBtnActive : ""}`} onClick={() => setMultiVoiceMode(false)}>단일 보이스</button>
+                  <button className={`${styles.modeToggleBtn} ${multiVoiceMode ? styles.modeToggleBtnActive : ""}`} onClick={() => setMultiVoiceMode(true)}>멀티 보이스</button>
+                </div>
+              </div>
+              {!multiVoiceMode ? (
+                <div className={styles.settingsSection}>
+                  <div className={styles.settingsSectionTitle}>목소리</div>
+                  <select
+                    className={styles.voiceSelect}
+                    value={pendingVoiceId ?? currentVoiceId ?? ""}
+                    onChange={e => setPendingVoiceId(Number(e.target.value))}
+                    disabled={isGenerating}
+                  >
+                    <option value="">선택하세요</option>
+                    {voices.map(v => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
+                      </option>
+                    ))}
+                  </select>
+                  {(pendingVoiceId && pendingVoiceId !== currentVoiceId) && (
+                    <button className={styles.applyBtn} onClick={() => handleGenerateTts(pendingVoiceId)} disabled={isGenerating}>{isGenerating ? "생성 중..." : "적용"}</button>
+                  )}
+                </div>
+              ) : (
+                <div className={styles.settingsSection}>
+                  <div className={styles.settingsSectionTitle}>멀티 보이스 설정</div>
+                  <div className={styles.voiceSubLabel}>참여자1 목소리</div>
+                  <select
+                    className={styles.voiceSelect}
+                    value={pendingMultiVoice.voice1Id ?? ""}
+                    onChange={e => setPendingMultiVoice(p => ({ ...p, voice1Id: Number(e.target.value) }))}
+                    disabled={isGenerating}
+                  >
+                    <option value="">선택하세요</option>
+                    {voices.map(v => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
+                      </option>
+                    ))}
+                  </select>
+                  <div className={styles.voiceSubLabel}>참여자2 목소리</div>
+                  <select
+                    className={styles.voiceSelect}
+                    value={pendingMultiVoice.voice2Id ?? ""}
+                    onChange={e => setPendingMultiVoice(p => ({ ...p, voice2Id: Number(e.target.value) }))}
+                    disabled={isGenerating}
+                  >
+                    <option value="">선택하세요</option>
+                    {voices.map(v => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
+                      </option>
+                    ))}
+                  </select>
+                  <div className={styles.voiceSubLabel}>나머지 참여자 목소리</div>
+                  <select
+                    className={styles.voiceSelect}
+                    value={pendingMultiVoice.narratorVoiceId ?? ""}
+                    onChange={e => setPendingMultiVoice(p => ({ ...p, narratorVoiceId: Number(e.target.value) }))}
+                    disabled={isGenerating}
+                  >
+                    <option value="">선택하세요</option>
+                    {voices.map(v => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
+                      </option>
+                    ))}
+                  </select>
+                  <button className={styles.applyBtn} onClick={handleGenerateMultiVoiceTts} disabled={isGenerating || !pendingMultiVoice.voice1Id || !pendingMultiVoice.voice2Id || !pendingMultiVoice.narratorVoiceId}>
+                    {isGenerating ? "생성 중..." : "적용"}
+                  </button>
+                </div>
+              )}
+              <div className={styles.settingsSection}>
+                <div className={styles.settingsSectionTitle}>배속 <span className={styles.speedValue}>{playbackRate}×</span></div>
+                <div className={styles.speedBarWrapper} ref={speedBarRef} onMouseDown={handleSpeedMouseDown}>
+                  <div className={styles.speedBar}>
+                    <div className={styles.speedFill} style={{ width: `${((playbackRate - 0.75) / 1.25) * 100}%` }} />
+                    <div className={styles.speedThumb} style={{ left: `${((playbackRate - 0.75) / 1.25) * 100}%` }} />
+                  </div>
+                </div>
+                <div className={styles.speedPresets}>
+                  {SPEED_PRESETS.map(s => (
+                    <button key={s} className={`${styles.speedPreset} ${playbackRate === s ? styles.speedPresetActive : ""}`} onClick={(e) => { e.stopPropagation(); applySpeed(s) }}>{s}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* 이어쓰기 */}
         {!isWriting ? (
           <button 
             className={styles.writeOpenBtn}
