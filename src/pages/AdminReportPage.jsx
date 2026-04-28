@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-// 🌟 1. 공통 api 인스턴스 임포트
 import api from "../api/axios";
 import styles from "../styles/AdminReportPage.module.css";
 
@@ -8,10 +7,10 @@ const REASON_MAP = {
   SPAM: "스팸 및 도배",
   ABUSIVE_LANGUAGE: "욕설 및 비하 발언",
   INAPPROPRIATE_CONTENT: "음란물 및 선정적 콘텐츠",
-  COPYRIGHT_INFRINGEMENT: "저작권 침해 및 무단 도용",
-  ILLEGAL_PROMOTION: "불법 홍보 및 광고",
-  POLITICAL_DISPUTE: "정치적 분쟁 유도",
-  FAKE_INFORMATION: "허위 사실 유포",
+  COPYRIGHT_INFRINGEMENT: "저작권 침해",
+  ILLEGAL_PROMOTION: "불법 홍보",
+  POLITICAL_DISPUTE: "정치적 분쟁",
+  FAKE_INFORMATION: "허위 사실",
   OTHER: "기타 사유",
 };
 
@@ -21,8 +20,9 @@ export default function AdminReportPage() {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 모달 제어 상태
   const [selectedReport, setSelectedReport] = useState(null);
-  const [modalType, setModalType] = useState("");
+  const [modalType, setModalType] = useState(""); // APPROVE, RESOLVE, REJECT
   const [processData, setProcessData] = useState({
     duration: "DAYS_3",
     processReason: "",
@@ -31,7 +31,6 @@ export default function AdminReportPage() {
   const loadReports = async () => {
     setLoading(true);
     try {
-      // 🌟 2. axios 대신 api 사용
       const res = await api.get("/api/admin/reports/pending");
       setReports(res.data);
     } catch (err) {
@@ -41,175 +40,136 @@ export default function AdminReportPage() {
     }
   };
 
-  useEffect(() => {
-    loadReports();
-  }, []);
+  useEffect(() => { loadReports(); }, []);
 
-  const filteredReports = reports.filter((r) =>
-    filter === "전체" ? true : r.targetType === filter,
-  );
+  // 🌟 [동적 내비게이션] 팀장님의 주소 체계 반영
+  const handleMoveToTarget = (report) => {
+    const { targetType, targetId, targetParentId } = report;
+    // targetParentId(소설ID)가 있으면 해당 소설 상세로, 없으면 targetId로 이동
+    const moveId = targetParentId || targetId;
+
+    if (!moveId) return alert("이동할 주소 정보가 없습니다.");
+
+    switch (targetType) {
+      case "RELAY_NOVEL":
+      case "RELAY_ENTRY":
+      case "COMMENT":
+      case "REPLY":
+        // http://localhost:5173/relay/4 형태로 이동
+        navigate(`/relay/${moveId}`);
+        break;
+      default:
+        console.warn("알 수 없는 타입:", targetType);
+    }
+  };
 
   const handleConfirm = async () => {
-    if (!processData.processReason.trim()) {
-      alert("관리자 처리 사유를 입력해 주세요.");
-      return;
-    }
-
+    if (!processData.processReason.trim()) return alert("처리 사유를 입력하세요.");
     try {
-      // 🌟 3. 모든 요청을 api로 변경
-      if (modalType === "APPROVE") {
-        await api.post(
-          `/api/admin/reports/${selectedReport.reportId}/approve`,
-          {
-            duration: processData.duration,
-            processReason: processData.processReason,
-          },
-        );
-        alert("유저 정지 및 신고 처리가 완료되었습니다.");
-      } else if (modalType === "RESOLVE") {
-        await api.post(
-          `/api/admin/reports/${selectedReport.reportId}/resolve`,
-          {
-            processReason: processData.processReason,
-          },
-        );
-        alert("단순 완료 처리되었습니다. (유저 상태 유지)");
-      } else {
-        await api.post(`/api/admin/reports/${selectedReport.reportId}/reject`, {
-          processReason: processData.processReason,
-        });
-        alert("허위 신고로 기각 처리되었습니다.");
-      }
-
+      const endpoint = modalType.toLowerCase(); 
+      await api.post(`/api/admin/reports/${selectedReport.reportId}/${endpoint}`, {
+        duration: modalType === "APPROVE" ? processData.duration : null,
+        processReason: processData.processReason,
+      });
+      alert("처리가 완료되었습니다.");
       setSelectedReport(null);
       loadReports();
     } catch (err) {
-      alert("처리 중 오류가 발생했습니다.");
+      alert("처리 중 오류 발생");
     }
   };
+
+  const filteredReports = reports.filter(r => 
+    filter === "전체" ? true : r.targetType === filter
+  );
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <div className={styles.headerTitle}>신고 관리</div>
-        <div className={styles.headerSubtitle}>
-          사용자들이 접수한 신고 내역을 검토하고 조치하세요
-        </div>
+        <div className={styles.headerTitle}>신고 관리 센터</div>
+        <div className={styles.headerSubtitle}>중복 건은 '완료' 처리를 통해 목록을 관리하세요.</div>
       </div>
 
       <div className={styles.content}>
-        {/* 상단 탭 필터 */}
+        {/* 🌟 팀장님 요청 4단계 탭 필터 */}
         <div className={styles.filterGroup}>
-          {["전체", "CONTENT", "COMMENT", "RELAY"].map((f) => (
+          {[
+            { label: "전체", value: "전체" },
+            { label: "릴레이 소설", value: "RELAY_NOVEL" },
+            { label: "이어쓰기", value: "RELAY_ENTRY" },
+            { label: "댓글", value: "COMMENT" },
+            { label: "답글", value: "REPLY" },
+          ].map(tab => (
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`${styles.filterBtn} ${filter === f ? styles.filterBtnActive : ""}`}
+              key={tab.value}
+              onClick={() => setFilter(tab.value)}
+              className={`${styles.filterBtn} ${filter === tab.value ? styles.filterBtnActive : ""}`}
             >
-              {f === "전체" ? "전체 보기" : f}
+              {tab.label}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div style={{ textAlign: "center", padding: "50px" }}>로딩 중...</div>
+          <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>로딩 중...</div>
         ) : filteredReports.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "50px", color: "#666" }}>
-            대기 중인 신고가 없습니다. 🎉
-          </div>
+          <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>대기 중인 신고가 없습니다. 🎉</div>
         ) : (
-          filteredReports.map((r) => (
-            <div key={r.reportId} className={styles.reportCard}>
+          filteredReports.map(r => (
+            <div 
+              key={r.reportId} 
+              className={styles.reportCard} 
+              onClick={() => handleMoveToTarget(r)}
+              style={{ cursor: "pointer" }}
+            >
               <div className={styles.reportTop}>
                 <div className={styles.reportLeft}>
                   <span className={styles.typeBadge}>{r.targetType}</span>
-                  {/* 🌟 한글 변환 적용: REASON_MAP에서 찾고, 없으면 원래 영어를 출력 */}
-                  <span className={styles.reportReasonBadge}>
+                  <span className={styles.reportReason}>
                     {REASON_MAP[r.reportReason] || r.reportReason}
                   </span>
                 </div>
-                <span className={styles.reportDate}>
-                  {r.createdAt?.split("T")[0]}
-                </span>
+                <span className={styles.reportDate}>{r.createdAt?.split("T")[0]}</span>
               </div>
-              <div className={styles.reportInfo}>
-                <div>
-                  <strong>대상 유저:</strong> {r.reportedUser?.nickname} (
-                  {r.reportedUser?.userId})
-                </div>
-                <div>
-                  <strong>신고자:</strong> {r.reporter?.nickname}
-                </div>
-                <div className={styles.targetLink}>
-                  타겟 ID: {r.targetId} (클릭 시 해당 콘텐츠로 이동하도록 구현
-                  가능)
-                </div>
+              
+              <div className={styles.reportReporter}>
+                <strong>피신고자:</strong> {r.reportedUser?.nickname} (ID: {r.reportedUser?.userId}) <br/>
+                <strong>신고자:</strong> {r.reporter?.nickname}
               </div>
 
-              {/* 🌟 3가지 버튼 세팅 */}
-              <div
-                className={styles.reportActions}
-                style={{
-                  display: "flex",
-                  gap: "8px",
-                  justifyContent: "flex-end",
-                  marginTop: "12px",
-                }}
-              >
-                <button
-                  className={styles.rejectBtn}
-                  style={{
-                    padding: "6px 12px",
-                    border: "1px solid #ccc",
-                    background: "#fff",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => {
-                    setSelectedReport(r);
-                    setModalType("REJECT");
+              <div className={styles.reportActions}>
+                <button 
+                  className={styles.doneBtn} 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setSelectedReport(r); 
+                    setModalType("REJECT"); 
                     setProcessData({ processReason: "" });
                   }}
                 >
                   허위 기각
                 </button>
-                <button
-                  className={styles.resolveBtn}
-                  style={{
-                    padding: "6px 12px",
-                    border: "1px solid #10B981",
-                    color: "#10B981",
-                    background: "#fff",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => {
-                    setSelectedReport(r);
-                    setModalType("RESOLVE");
-                    setProcessData({
-                      processReason: "이미 처리된 이슈입니다.",
-                    });
+                <button 
+                  className={styles.doneBtn} 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setSelectedReport(r); 
+                    setModalType("RESOLVE"); 
+                    setProcessData({ processReason: "이미 조치된 건입니다." });
                   }}
                 >
                   완료 처리
                 </button>
-                <button
-                  className={styles.approveBtn}
-                  style={{
-                    padding: "6px 12px",
-                    background: "#EF4444",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                  }}
-                  onClick={() => {
-                    setSelectedReport(r);
-                    setModalType("APPROVE");
+                <button 
+                  className={styles.deleteBtn} 
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setSelectedReport(r); 
+                    setModalType("APPROVE"); 
                     setProcessData({ duration: "DAYS_3", processReason: "" });
                   }}
                 >
-                  정지 처리
+                  정지 처분
                 </button>
               </div>
             </div>
@@ -217,31 +177,24 @@ export default function AdminReportPage() {
         )}
       </div>
 
-      {/* 모달창 */}
+      {/* 모달 Overlay 및 팝업 */}
       {selectedReport && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
+        <div className={styles.modalOverlay} onClick={() => setSelectedReport(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              {modalType === "APPROVE" &&
-                `🚨 ${selectedReport.reportedUser?.nickname}님 정지 처리`}
-              {modalType === "RESOLVE" && `✅ 단순 완료 처리`}
-              {modalType === "REJECT" && `🛡️ 허위 신고 기각`}
+              {modalType === "APPROVE" ? "🚨 정지 처분" : modalType === "RESOLVE" ? "✅ 완료 처리" : "🛡️ 신고 기각"}
             </div>
-
-            {/* 정지 처리에만 '정지 기간' 드롭다운 노출 */}
+            
             {modalType === "APPROVE" && (
               <>
                 <label className={styles.modalLabel}>정지 기간</label>
-                <select
-                  className={styles.selectField}
-                  value={processData.duration}
-                  onChange={(e) =>
-                    setProcessData({ ...processData, duration: e.target.value })
-                  }
+                <select 
+                  className={styles.selectField} 
+                  value={processData.duration} 
+                  onChange={e => setProcessData({...processData, duration: e.target.value})}
                 >
                   <option value="DAYS_3">3일 정지</option>
                   <option value="DAYS_7">7일 정지</option>
-                  <option value="DAYS_14">14일 정지</option>
                   <option value="DAYS_30">30일 정지</option>
                   <option value="PERMANENT">영구 정지</option>
                 </select>
@@ -249,38 +202,18 @@ export default function AdminReportPage() {
             )}
 
             <label className={styles.modalLabel}>처리 사유 기록</label>
-            <textarea
-              className={styles.textareaField}
-              style={{
-                width: "100%",
-                padding: "8px",
-                boxSizing: "border-box",
-                marginTop: "4px",
-                minHeight: "80px",
-              }}
-              placeholder="관리자 메모용 사유를 입력하세요..."
-              value={processData.processReason}
-              onChange={(e) =>
-                setProcessData({
-                  ...processData,
-                  processReason: e.target.value,
-                })
-              }
+            <textarea 
+              className={styles.textareaField} 
+              rows={4}
+              value={processData.processReason} 
+              onChange={e => setProcessData({...processData, processReason: e.target.value})} 
+              placeholder="사유를 입력하세요..." 
             />
 
             <div className={styles.btnGroup}>
-              <button
-                className={styles.cancelBtn}
-                onClick={() => setSelectedReport(null)}
-              >
-                취소
-              </button>
-              <button
-                className={
-                  modalType === "APPROVE"
-                    ? styles.confirmBtn
-                    : styles.rejectConfirmBtn
-                }
+              <button className={styles.cancelBtn} onClick={() => setSelectedReport(null)}>취소</button>
+              <button 
+                className={modalType === "APPROVE" ? styles.confirmBtn : styles.rejectConfirmBtn} 
                 onClick={handleConfirm}
               >
                 처분 확정

@@ -4,11 +4,13 @@ import api from "../api/axios"
 import styles from "../styles/AdminContentPage.module.css"
 
 const contentTypes = ["웹툰", "웹소설"]
+const days = ["전체", "월", "화", "수", "목", "금", "토", "일"];
 
 export default function AdminContentPage() {
   const navigate = useNavigate()
   const [activeType, setActiveType] = useState("웹툰")
   const [query, setQuery] = useState("")
+  const [activeDay, setActiveDay] = useState("전체");
   const [contents, setContents] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -19,7 +21,8 @@ export default function AdminContentPage() {
       const response = await api.get("/api/admin/contents", {
         params: { 
           type: activeType,
-          keyword: query 
+          keyword: query,
+          day: activeDay
         }
       });
       setContents(response.data || []);
@@ -28,7 +31,7 @@ export default function AdminContentPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeType, query]);
+  }, [activeType, query, activeDay]);
 
   // 탭이 바뀌거나 검색어가 입력될 때 자동 실행
   useEffect(() => {
@@ -86,6 +89,17 @@ export default function AdminContentPage() {
             >{type}</button>
           ))}
         </div>
+        <div className={styles.dayTabGroup} style={{ marginBottom: "20px" }}>
+        {days.map((day) => (
+          <button
+            key={day}
+            onClick={() => setActiveDay(day)}
+            className={`${styles.dayTabBtn} ${activeDay === day ? styles.dayTabBtnActive : ""}`}
+          >
+            {day}
+          </button>
+        ))}
+      </div>
 
         <div className={styles.sectionTitle}>{activeType} 목록</div>
         

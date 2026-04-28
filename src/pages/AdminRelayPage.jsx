@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import api from "../api/axios"; // 🌟 공통 인스턴스
+import api from "../api/axios";
 import styles from "../styles/AdminRelayPage.module.css";
 
 export default function AdminRelayPage() {
@@ -23,6 +23,7 @@ export default function AdminRelayPage() {
 
   const formatDate = (dateString) => dateString ? dateString.split('T')[0] : "날짜 없음";
 
+  // 데이터 로딩 함수들
   const loadRelayNovels = async () => {
     try {
       const response = await api.get("/api/admin/relay-novels");
@@ -56,6 +57,7 @@ export default function AdminRelayPage() {
     else if (tab === "단일 가이드라인") loadGuideline();
   }, [tab]);
 
+  // 관리자 기능: 주제 등록
   const handleAddTopic = async () => {
     if (!newTopicTitle.trim()) { alert("주제 제목을 입력해주세요."); return; }
     try {
@@ -72,6 +74,7 @@ export default function AdminRelayPage() {
     }
   };
 
+  // 관리자 기능: 주제 삭제
   const handleDeleteTopic = async (topicId) => {
     if (!window.confirm("정말 이 주제를 삭제하시겠습니까?")) return;
     try {
@@ -82,6 +85,7 @@ export default function AdminRelayPage() {
     }
   };
 
+  // 관리자 기능: 가이드라인 저장
   const handleSaveGuide = async () => {
     try {
       await api.put("/api/admin/relay-guideline", { content: editGuideText.trim() });
@@ -90,6 +94,20 @@ export default function AdminRelayPage() {
       alert("저장되었습니다.");
     } catch (error) {
       alert("저장 실패");
+    }
+  };
+
+  // 관리자 기능: 소설 상태 변경 (비공개/공개 토글)
+  const handleStatusToggle = async (novelId, currentStatus) => {
+    const newStatus = currentStatus === 'PRIVATE' ? 'PUBLISHED' : 'PRIVATE';
+    if (!window.confirm(`이 소설을 ${newStatus === 'PRIVATE' ? '비공개' : '공개'} 상태로 변경하시겠습니까?`)) return;
+
+    try {
+      await api.post(`/api/admin/relay-novels/${novelId}/status`, { status: newStatus });
+      alert("상태가 변경되었습니다.");
+      loadRelayNovels();
+    } catch (error) {
+      alert("상태 변경에 실패했습니다.");
     }
   };
 
@@ -110,28 +128,41 @@ export default function AdminRelayPage() {
         </div>
 
         {tab === "릴레이 목록" && relays.map(r => (
-  <div
-    key={r.relayNovelId || r.novelId || r.id}
-    className={`${styles.relayCard} ${styles.clickable}`}
-    onClick={() => navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`)}
-  >
-    <div className={styles.relayCardInfo}>
+  <div key={r.relayNovelId || r.novelId || r.id} className={styles.relayCard}>
+    
+    {/* 1. 정보 영역: 클릭 시 상세 페이지 이동 */}
+    <div className={styles.relayCardInfo} onClick={() => navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`)}>
       <div className={styles.relayCardTitle}>{r.title || "제목 없음"}</div>
       <div className={styles.relayCardDesc}>{r.description || "등록된 설명이 없습니다."}</div>
-      <div className={styles.relayCardMeta}>작성자: {r.starterNickname || "미상"} · {formatDate(r.createdAt)}</div>
+      <div className={styles.relayCardMeta}>
+         상태: {r.status || "PUBLIC"} · 작성자: {r.starterNickname || "미상"} · {formatDate(r.createdAt)}
+      </div>
     </div>
-    <button 
-      className={styles.relayCardBtn} 
-      onClick={(e) => {
-        e.stopPropagation(); // 🌟 버튼 클릭 시 카드 클릭 이벤트가 실행되지 않도록 막아줍니다
-        navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`);
-      }}
-    >
-      상세 보기 ➔
-    </button>
+    
+    {/* 2. 관리자 작업 영역: 공개/비공개 및 상세 보기 버튼 */}
+    <div className={styles.adminActions}>
+      <button 
+        className={styles.statusToggleBtn} 
+        onClick={(e) => {
+            e.stopPropagation(); // 카드 클릭 이벤트 차단
+            handleStatusToggle(r.relayNovelId || r.novelId || r.id, r.status);
+        }}
+      >
+        {r.status === 'PRIVATE' ? '공개로 전환' : '비공개 전환'}
+      </button>
+
+      <button 
+        className={styles.relayCardBtn} 
+        onClick={(e) => {
+          e.stopPropagation();
+          navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`);
+        }}
+      >
+        상세 보기 ➔
+      </button>
+    </div>
   </div>
 ))}
-
         {tab === "주제 관리" && (
           <>
             <div className={styles.topicForm}>

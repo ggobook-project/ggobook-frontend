@@ -201,7 +201,8 @@ const handleSearch = (e) => {
           </svg>
         </button>
 
-        {isLoggedIn && <NotificationBell />}
+        {/* 🌟 로그인 한 유저에게만 알림 벨 표시 */}
+        {isLoggedIn && role === 'USER' && <NotificationBell />}
 
         <span style={{ fontSize: 13, color: c.border }}>|</span>
 

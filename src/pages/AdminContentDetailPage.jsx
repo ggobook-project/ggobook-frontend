@@ -70,31 +70,47 @@ export default function AdminContentDetailPage() {
       </div>
 
       <div className={styles.content}>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>데이터 로딩 중...</div>
-        ) : episodes.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>등록된 회차가 없습니다.</div>
-        ) : (
-          episodes.map((ep) => (
-            <div key={ep.episodeId} className={styles.card}>
-              <div className={styles.info}>
-                <div className={styles.cardTitle}>
-                  {ep.episodeNumber}화 - {ep.title}
-                </div>
-                <div className={styles.cardMeta}>
-                  {ep.createdAt ? new Date(ep.createdAt).toLocaleDateString() : "날짜 없음"}
-                </div>
-              </div>
-              <button
-                className={`${styles.statusBtn} ${ep.status === "PUBLISHED" ? styles.statusPublic : styles.statusPrivate}`}
-                onClick={() => handleToggle(ep.episodeId)}
-              >
-                {ep.status === "PUBLISHED" ? "공개 중" : "비공개 (블라인드)"}
-              </button>
-            </div>
-          ))
-        )}
+  {loading ? (
+    <div style={{ textAlign: "center", padding: "40px" }}>데이터 로딩 중...</div>
+  ) : episodes.length === 0 ? (
+    <div style={{ textAlign: "center", padding: "40px" }}>등록된 회차가 없습니다.</div>
+  ) : (
+    episodes.map((ep) => (
+  <div 
+    key={ep.episodeId} 
+    className={styles.card}
+    // 🌟 수정 포인트: 카드 전체 영역을 클릭 가능하게 변경
+    onClick={() => navigate(`/admin/content/${contentId}/episode/${ep.episodeId}`)}
+    style={{ 
+        cursor: 'pointer', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center' 
+    }}
+  >
+    <div className={styles.info}>
+      <div className={styles.cardTitle}>
+        {ep.episodeNumber}화 - {ep.title}
       </div>
+      <div className={styles.cardMeta}>
+        {ep.createdAt ? new Date(ep.createdAt).toLocaleDateString() : "날짜 없음"}
+      </div>
+    </div>
+    
+    {/* 🌟 버튼은 그대로 유지 (e.stopPropagation()이 핵심!) */}
+    <button
+      className={`${styles.statusBtn} ${ep.status === "PUBLISHED" ? styles.statusPublic : styles.statusPrivate}`}
+      onClick={(e) => {
+        e.stopPropagation(); // 🌟 중요: 버튼 클릭 시 부모(카드) 클릭 이벤트 발동을 막음
+        handleToggle(ep.episodeId);
+      }}
+    >
+      {ep.status === "PUBLISHED" ? "공개 중" : "비공개 (블라인드)"}
+    </button>
+  </div>
+))
+  )}
+</div>
     </div>
   );
 }
