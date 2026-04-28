@@ -202,7 +202,7 @@ export default function Header() {
         </button>
 
         {/* 🌟 로그인 한 유저에게만 알림 벨 표시 */}
-        {isLoggedIn && <NotificationBell />}
+        {isLoggedIn && role === 'USER' && <NotificationBell />}
 
         <span style={{ fontSize: 13, color: c.border }}>|</span>
 

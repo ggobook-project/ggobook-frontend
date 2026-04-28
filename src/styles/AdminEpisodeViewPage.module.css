@@ -1,0 +1,15 @@
+.viewerWrapper { padding: 40px; max-width: 900px; margin: 0 auto; }
+.toonImg { display: block; width: 100%; margin-bottom: 4px; }
+.novelText { 
+    white-space: pre-wrap; 
+    line-height: 1.8; 
+    font-size: 16px; 
+    padding: 20px;
+    background: #f9f9f9; 
+}
+.backBtn { margin-bottom: 20px; cursor: pointer; }
+
+.card:hover {
+    background-color: #f8f9fa; /* 마우스 올렸을 때 살짝 밝아지게 */
+    border-color: #dee2e6;
+}

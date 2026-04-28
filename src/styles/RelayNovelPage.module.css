@@ -136,3 +136,35 @@
   font-size: 13px;
   color: #90A4C8;
 }
+
+.reportBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  color: #90A4C8; /* 평상시 차분한 색 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+
+/* 클릭 시 피드백 */
+.reportBtn:active {
+  transform: scale(0.9);
+}
+
+/* RelayNovelPage.module.css */
+
+.reportBtn:hover {
+  color: #FF1744;
+  animation: blink 0.8s infinite; /* 사이렌처럼 깜빡이는 애니메이션 */
+}
+
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}

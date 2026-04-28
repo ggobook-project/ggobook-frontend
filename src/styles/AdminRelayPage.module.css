@@ -465,3 +465,34 @@
 .relayCardBtn:hover {
   background-color: #2563eb;
 }
+
+/* ========================================== */
+/* 관리자 상세 작업 버튼 영역 (릴레이 카드용) */
+/* ========================================== */
+
+.adminActions {
+  display: flex;
+  flex-direction: column; /* 버튼들을 세로로 쌓음 */
+  gap: 8px;               /* 버튼 간의 간격 */
+  margin-left: 20px;      /* 정보 영역과 버튼 영역의 여백 */
+  min-width: 120px;       /* 버튼 너비 확보 */
+  flex-shrink: 0;         /* 버튼 영역이 찌그러지지 않게 방지 */
+}
+
+.statusToggleBtn {
+  padding: 10px 16px;
+  background-color: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.statusToggleBtn:hover {
+  background-color: #e2e8f0;
+  border-color: #94a3b8;
+}

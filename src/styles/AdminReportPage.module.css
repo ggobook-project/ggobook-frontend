@@ -64,6 +64,7 @@
 }
 
 .reportCard {
+  cursor: pointer;
   padding: 16px 20px;
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
@@ -78,6 +79,10 @@
   box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.92);
+}
+
+.reportCard:active {
+  transform: scale(0.98); /* 클릭 시 살짝 눌리는 효과 */
 }
 
 .reportTop {
@@ -114,14 +119,16 @@
 }
 
 .reportReporter {
-  font-size: 12px;
-  color: #90A4C8;
-  margin-bottom: 12px;
+  font-size: 13px; /* 12px에서 살짝 키움 */
+  line-height: 1.6; /* 줄간격 추가로 가독성 확보 */
+  color: #4A6FA5;
+  margin-bottom: 16px; /* 버튼과의 간격 확보 */
 }
 
 .reportActions {
   display: flex;
-  gap: 8px;
+  gap: 10px; /* 버튼 사이 간격을 8px에서 10px로 넓힘 */
+  justify-content: flex-end; /* 버튼을 우측으로 정렬하여 깔끔하게 배치 */
 }
 
 .deleteBtn {
