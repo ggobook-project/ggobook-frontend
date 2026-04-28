@@ -17,6 +17,7 @@ import MyPage from "./pages/MyPage"
 import MyInfoEditPage from "./pages/MyInfoEditPage"
 import LikedContentPage from "./pages/LikedContentPage"
 import OwnedContentPage from "./pages/OwnedContentPage"
+import OwnedEpisodePage from "./pages/OwnedEpisodePage"
 import RecentContentPage from "./pages/RecentContentPage"
 import MyCommentPage from "./pages/MyCommentPage"
 import MyRelayNovelPage from "./pages/MyRelayNovelPage"
@@ -106,6 +107,7 @@ function Layout() {
           <Route path="/mypage/edit" element={<MyInfoEditPage />} />
           <Route path="/mypage/likes" element={<LikedContentPage />} />
           <Route path="/mypage/library" element={<OwnedContentPage />} />
+          <Route path="/mypage/library/:contentId" element={<OwnedEpisodePage />} />
           <Route path="/mypage/recent" element={<RecentContentPage />} />
           <Route path="/mypage/comments" element={<MyCommentPage />} />
           <Route path="/mypage/relay" element={<MyRelayNovelPage />} />
