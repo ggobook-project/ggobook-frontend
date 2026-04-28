@@ -24,8 +24,20 @@ export default function NovelViewerPage() {
   // ==========================================
   const progressRef = useRef(0) // 🌟 진행률 비밀 수첩
   const observerRef = useRef(null)
+  const progressBarRef = useRef(null)
+  const settingsPanelRef = useRef(null)
 
   const [playing, setPlaying] = useState(false)
+  const audioRef = useRef(null)
+  const [audioTime, setAudioTime] = useState(0)
+  const [audioDuration, setAudioDuration] = useState(0)
+  const [voices, setVoices] = useState([])
+  const [showSettings, setShowSettings] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [playbackRate, setPlaybackRate] = useState(1.0)
+  const [currentVoiceId, setCurrentVoiceId] = useState(null)
+  const [pendingVoiceId, setPendingVoiceId] = useState(null)
+  const speedBarRef = useRef(null)
   const [episode, setEpisode] = useState(null)
   const [novel, setNovel] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -70,6 +82,13 @@ export default function NovelViewerPage() {
     } catch { return null }
   }
 
+  const formatTime = (secs) => {
+    if (!secs || isNaN(secs)) return "00:00"
+    const m = Math.floor(secs / 60)
+    const s = Math.floor(secs % 60)
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+  }
+
   // 본문 텍스트 단락 분리 로직 (위로 끌어올려 렌더링과 의존성 배열 모두에서 사용)
   const paragraphs = novel?.contentText
     ? novel.contentText.split("\n").filter(p => p.trim() !== "")
@@ -97,6 +116,9 @@ export default function NovelViewerPage() {
     try {
       setLoading(true)
       const response = await api.get(`/api/episodes/${episodeId}`)
+      console.log("🎵 에피소드 데이터:", response.data)
+      console.log("🎵 novel:", response.data.novel)
+      console.log("🎵 ttsFileUrl:", response.data.novel?.ttsFileUrl)
       setEpisode(response.data)
       setNovel(response.data.novel || null)
     } catch (error) {
@@ -180,7 +202,53 @@ export default function NovelViewerPage() {
     }
   }, [paragraphs.length, savedProgress]);
 
-  // 5-4. 기타 useEffect 유지
+  // 5-4. TTS 오디오 초기화 (novel.ttsFileUrl 변경 시)
+  useEffect(() => {
+    const url = episode?.novel?.ttsFileUrl
+    if (!url) return
+
+    const audio = new Audio(url)
+    audioRef.current = audio
+
+    const onTimeUpdate = () => setAudioTime(audio.currentTime)
+    const onLoadedMetadata = () => setAudioDuration(audio.duration)
+    const onEnded = () => { setPlaying(false); setAudioTime(0) }
+
+    audio.addEventListener("timeupdate", onTimeUpdate)
+    audio.addEventListener("loadedmetadata", onLoadedMetadata)
+    audio.addEventListener("ended", onEnded)
+
+    return () => {
+      audio.pause()
+      audio.removeEventListener("timeupdate", onTimeUpdate)
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata)
+      audio.removeEventListener("ended", onEnded)
+      audioRef.current = null
+      setPlaying(false)
+      setAudioTime(0)
+      setAudioDuration(0)
+    }
+  }, [episode?.novel?.ttsFileUrl])
+
+
+  // 5-6. 배속 변경 시 오디오에 즉시 반영
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.playbackRate = playbackRate
+  }, [playbackRate])
+
+  // 5-7. 설정 패널 외부 클릭 감지 (overlay 방식 대신 document 이벤트 사용)
+  useEffect(() => {
+    if (!showSettings) return
+    const handleOutside = (e) => {
+      if (settingsPanelRef.current && !settingsPanelRef.current.contains(e.target)) {
+        setShowSettings(false)
+      }
+    }
+    document.addEventListener("mousedown", handleOutside)
+    return () => document.removeEventListener("mousedown", handleOutside)
+  }, [showSettings])
+
+  // 5-7. 기타 useEffect 유지
   useEffect(() => { if (contentId) { loadAverageRating(); loadMyRating() } }, [episode])
 
   useEffect(() => {
@@ -207,6 +275,100 @@ export default function NovelViewerPage() {
   // ==========================================
   // 6. 이벤트 핸들러
   // ==========================================
+  const seekTo = (clientX) => {
+    if (!audioRef.current || !audioDuration || !progressBarRef.current) return
+    const rect = progressBarRef.current.getBoundingClientRect()
+    const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1)
+    audioRef.current.currentTime = ratio * audioDuration
+    setAudioTime(ratio * audioDuration)
+  }
+
+  const handleProgressMouseDown = (e) => {
+    if (!audioRef.current || !audioDuration) return
+    seekTo(e.clientX)
+    const onMove = (e) => seekTo(e.clientX)
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+  }
+
+  const handlePlayToggle = () => {
+    // TTS가 없으면 목소리 선택 모달 자동 오픈
+    if (!audioRef.current) {
+      handleSettingsClick()
+      return
+    }
+    if (playing) {
+      audioRef.current.pause()
+      setPlaying(false)
+    } else {
+      audioRef.current.play().catch(console.error)
+      setPlaying(true)
+    }
+  }
+
+  const handleSettingsClick = async () => {
+    if (!isLoggedIn) { navigate("/login"); return }
+    if (showSettings) { setShowSettings(false); return }
+    try {
+      const res = await api.get("/api/tts/voices")
+      setVoices(res.data || [])
+    } catch { setVoices([]) }
+    setShowSettings(true)
+  }
+
+  const handleGenerateTts = async (voiceId) => {
+    try {
+      setIsGenerating(true)
+      await api.post(`/api/episodes/${episodeId}/tts?voiceId=${voiceId}`)
+      await loadEpisodeDetail()
+      setCurrentVoiceId(voiceId)
+      setShowSettings(false)
+      setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.playbackRate = playbackRate
+          audioRef.current.play().catch(console.error)
+          setPlaying(true)
+        }
+      }, 300)
+    } catch {
+      alert("TTS 생성에 실패했습니다.")
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const SPEED_PRESETS = [0.5, 1.0, 1.25, 1.5, 2.0]
+
+  const applySpeed = (speed) => {
+    setPlaybackRate(speed)
+    if (audioRef.current) audioRef.current.playbackRate = speed
+  }
+
+  const handleSpeedDrag = (clientX) => {
+    if (!speedBarRef.current) return
+    const rect = speedBarRef.current.getBoundingClientRect()
+    const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1)
+    const raw = 0.5 + ratio * (2.0 - 0.5)
+    const nearest = SPEED_PRESETS.reduce((a, b) => Math.abs(b - raw) < Math.abs(a - raw) ? b : a)
+    applySpeed(nearest)
+  }
+
+  const handleSpeedMouseDown = (e) => {
+    e.stopPropagation()
+    handleSpeedDrag(e.clientX)
+    const onMove = (e) => handleSpeedDrag(e.clientX)
+    const onUp = () => {
+      document.removeEventListener("mousemove", onMove)
+      document.removeEventListener("mouseup", onUp)
+    }
+    document.addEventListener("mousemove", onMove)
+    document.addEventListener("mouseup", onUp)
+  }
+
   const goContentDetail = () => {
     if (contentId) navigate(`/contents/${contentId}`)
     else if (episode?.content?.contentId) navigate(`/contents/${episode.content.contentId}`)
@@ -315,7 +477,7 @@ export default function NovelViewerPage() {
           목록
         </button>
         <span className={styles.topTitle}>{episode.episodeTitle || `${episode.episodeNumber}화`}</span>
-        <button className={styles.topBtn}>설정</button>
+        <div style={{ width: 52 }} />
       </div>
 
       <div className={styles.content}>
@@ -336,14 +498,108 @@ export default function NovelViewerPage() {
       <div className={styles.bottomBar}>
         <div className={styles.bottomInner}>
           <div className={styles.ttsRow}>
-            <button className={styles.playBtn} onClick={() => setPlaying(!playing)}>
-              {playing ? "⏸" : "▶"}
+            <button className={styles.playBtn} onClick={handlePlayToggle}>
+              {playing ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="5" y="4" width="5" height="16" rx="1.5"/>
+                  <rect x="14" y="4" width="5" height="16" rx="1.5"/>
+                </svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}>
+                  <polygon points="5,3 20,12 5,21"/>
+                </svg>
+              )}
             </button>
-            <div className={styles.progressBar}>
-              <div className={styles.progressFill} />
+            <div
+              className={styles.progressBarWrapper}
+              ref={progressBarRef}
+              onMouseDown={handleProgressMouseDown}
+            >
+              <div className={styles.progressBar}>
+                <div
+                  className={styles.progressFill}
+                  style={{ width: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%` }}
+                />
+                <div
+                  className={styles.progressThumb}
+                  style={{ left: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%` }}
+                />
+              </div>
             </div>
-            <span className={styles.timeLabel}>02:14 / 08:30</span>
-            <span className={styles.voiceBtn}>목소리</span>
+            <span className={styles.timeLabel}>{formatTime(audioTime)} / {formatTime(audioDuration)}</span>
+            <span className={styles.speedBadge}>{playbackRate}×</span>
+
+            {/* 설정 버튼 + 패널 — ref로 버튼+패널 모두 감싸서 외부클릭 정확히 감지 */}
+            <div ref={settingsPanelRef} style={{ position: "relative", flexShrink: 0 }}>
+              <button className={styles.settingsBtn} onClick={handleSettingsClick}>
+                설정
+              </button>
+
+              {showSettings && (
+                <div className={styles.settingsPanel}>
+                  {/* 목소리 섹션 */}
+                  <div className={styles.settingsSection}>
+                    <div className={styles.settingsSectionTitle}>목소리</div>
+                    <div className={styles.voiceGrid}>
+                      {voices.map(v => (
+                        <button
+                          key={v.voiceId}
+                          className={`${styles.voiceChip} ${(pendingVoiceId ?? currentVoiceId) === v.voiceId ? styles.voiceChipActive : ""}`}
+                          onClick={() => setPendingVoiceId(v.voiceId)}
+                          disabled={isGenerating}
+                        >
+                          <span className={styles.voiceChipLabel}>{v.voiceStyle}</span>
+                          <span className={styles.voiceChipType}>
+                            {v.voiceType === "MALE" ? "남성" : v.voiceStyle === "귀여운" ? "아이" : "여성"}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    {(pendingVoiceId && pendingVoiceId !== currentVoiceId) && (
+                      <button
+                        className={styles.applyBtn}
+                        onClick={() => handleGenerateTts(pendingVoiceId)}
+                        disabled={isGenerating}
+                      >
+                        {isGenerating ? "생성 중..." : "적용"}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 배속 섹션 */}
+                  <div className={styles.settingsSection}>
+                    <div className={styles.settingsSectionTitle}>배속 <span className={styles.speedValue}>{playbackRate}×</span></div>
+                    <div
+                      className={styles.speedBarWrapper}
+                      ref={speedBarRef}
+                      onMouseDown={handleSpeedMouseDown}
+                    >
+                      <div className={styles.speedBar}>
+                        <div
+                          className={styles.speedFill}
+                          style={{ width: `${((playbackRate - 0.5) / 1.5) * 100}%` }}
+                        />
+                        <div
+                          className={styles.speedThumb}
+                          style={{ left: `${((playbackRate - 0.5) / 1.5) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className={styles.speedPresets}>
+                      {SPEED_PRESETS.map(s => (
+                        <button
+                          key={s}
+                          className={`${styles.speedPreset} ${playbackRate === s ? styles.speedPresetActive : ""}`}
+                          onClick={(e) => { e.stopPropagation(); applySpeed(s) }}
+                        >
+                          {s}×
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className={styles.navRow}>
             <button className={styles.prevBtn} onClick={() => navigate(`/novel/viewer/${parseInt(episodeId) - 1}`)}>
