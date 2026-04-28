@@ -10,6 +10,7 @@ export default function SearchResultPage() {
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
+  const [tags, setTags] = useState([])
 
   const typeParam = (filter) => {
     if (filter === "웹툰") return "COMIC"
@@ -30,8 +31,24 @@ export default function SearchResultPage() {
       if (!response.ok) { alert("검색 결과를 불러오는데 실패했습니다."); return }
       const data = await response.json()
       const list = Array.isArray(data) ? data : (data.content ?? [])
-      setResults(list)
-      setTotalCount(data.totalElements ?? list.length)
+
+       const listWithTags = await Promise.all(
+        list.map(async (item) => {
+            try {
+                const tagRes = await fetch(
+                    `http://localhost:8080/api/contents/${item.contentId}/tags`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                )
+                const tags = tagRes.ok ? await tagRes.json() : []
+                return { ...item, tags }
+            } catch {
+                return { ...item, tags: [] }
+            }
+        })
+    )
+
+      setResults(listWithTags)
+    setTotalCount(data.totalElements ?? listWithTags.length)
     } catch (error) {
       console.error("검색 실패 : ", error)
     } finally {
@@ -112,6 +129,18 @@ export default function SearchResultPage() {
                 <span className={styles.badge}>{typeLabel(r.type)}</span>
                 {r.rating != null && <span className={styles.badge}>★ {r.rating.toFixed(1)}</span>}
               </div>
+              {r.tags && r.tags.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 4 }}>
+                    {r.tags.map(tag => (
+                        <span key={tag.tagId} style={{
+                            background: "#E3F2FD", borderRadius: 20,
+                            padding: "2px 8px", fontSize: 11, color: "#1565C0"
+                        }}>
+                            #{tag.tagName}
+                        </span>
+                    ))}
+                </div>
+            )}
             </div>
           </div>
         ))}

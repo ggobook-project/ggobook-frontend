@@ -16,6 +16,8 @@ export default function ContentDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [episodesLoading, setEpisodesLoading] = useState(true);
   const [showFullSummary, setShowFullSummary] = useState(false);
+  const [tags, setTags] = useState([])
+  
 
   // 유료 결제 / 읽음 상태
   const [purchasedEps, setPurchasedEps] = useState(() =>
@@ -54,6 +56,16 @@ export default function ContentDetailPage() {
     } finally {
       setIsLoading(false);
     }
+
+    const loadTags = async () => {
+      try {
+          const response = await api.get(`/api/contents/${contentId}/tags`)
+          setTags(response.data || [])
+      } catch (error) {
+          console.error("태그 불러오기 실패 : ", error)
+      }
+    }
+    loadTags()
   };
 
   const loadEpisodeList = async () => {
@@ -224,6 +236,22 @@ export default function ContentDetailPage() {
               )}
             </div>
 
+            {tags.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, marginBottom: 8 }}>
+                {tags.map(tag => (
+                    <span key={tag.tagId} style={{
+                        background: "#E3F2FD",
+                        borderRadius: 20,
+                        padding: "3px 10px",
+                        fontSize: 12,
+                        color: "#1565C0"
+                    }}>
+                        #{tag.tagName}
+                    </span>
+                ))}
+            </div>
+        )}
+
             <div className={styles.actionRow}>
               <button
                 onClick={handleLike}
@@ -284,7 +312,12 @@ export default function ContentDetailPage() {
                   className={`${styles.episodeRow} ${isRead ? styles.episodeRowRead : ""}`}
                   onClick={() => handleEpisodeClick(ep)}
                 >
-                  <div className={styles.epThumb} />
+                  <div className={styles.epThumb}>
+                  {ep.thumbnailUrl
+                      ? <img src={ep.thumbnailUrl} alt="썸네일" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : <div style={{ width: "100%", height: "100%", background: "#E3F2FD" }} />
+                  }
+                  </div>
                   <div className={styles.epInfo}>
                     <div className={styles.epTitle}>{ep.episodeTitle}</div>
                     <div className={styles.epMeta}>

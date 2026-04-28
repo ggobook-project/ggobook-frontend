@@ -77,13 +77,13 @@ export default function Header() {
     { path: "/notices", label: "공지" },
   ];
 
-  const handleSearch = (e) => {
+const handleSearch = (e) => {
     if (e.key === "Enter" && query.trim()) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-      searchOpen(false);
-      setQuery("");
+        navigate(`/search?keyword=${encodeURIComponent(query)}`); // ✅ q → keyword
+        setSearchOpen(false); // ✅ searchOpen(false) → setSearchOpen(false)
+        setQuery("");
     }
-  };
+};
 
   const btnStyle = {
     fontSize: 13, color: c.textSub, cursor: "pointer",

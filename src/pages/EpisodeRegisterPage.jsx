@@ -58,7 +58,7 @@ export default function EpisodeRegisterPage() {
       "episode",
       new Blob([JSON.stringify(userEpisode)], { type: "application/json" }),
     );
-    if (thumbFile) formData.append("thumbnail", thumbFile);
+    if (thumbFile) formData.append("thumbFile", thumbFile);
 
     if (isNovel) {
       const UserNovel = { contentText: novelText, ttsFileUrl };
@@ -113,6 +113,23 @@ export default function EpisodeRegisterPage() {
       }
     };
     checkNovelForTTS();
+
+    const loadNextEpisodeNumber = async () => {
+        if (isEdit) return; 
+        try {
+            const token = localStorage.getItem("accessToken");
+            const response = await fetch(
+                `http://localhost:8080/api/contents/${contentId}/episodes/next-number`,
+                { method: "GET", headers: { Authorization: `Bearer ${token}` } }
+            );
+            if (!response.ok) return;
+            const nextNumber = await response.json();
+            setEpisodeNumber(nextNumber);
+        } catch (error) {
+            console.error("회차 번호 불러오기 실패 : ", error);
+        }
+    };
+    loadNextEpisodeNumber();
   }, [contentId]);
 
   return (
