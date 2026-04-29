@@ -147,6 +147,38 @@
   transform: translateY(-1px);
 }
 
+.voiceCardPlaying {
+  border-color: #2196F3 !important;
+  background: #EBF5FF !important;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.15);
+}
+
+.playingBadge {
+  font-size: 11px;
+  background: #2196F3;
+  color: #fff;
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-weight: 600;
+}
+
+.editBtn {
+  padding: 6px 14px;
+  background: none;
+  border: 1px solid #BBDEFB;
+  border-radius: 8px;
+  color: #4A6FA5;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+}
+
+.editBtn:hover {
+  background: #E8F4FD;
+  color: #1565C0;
+  transform: translateY(-1px);
+}
+
 .deleteBtn {
   padding: 6px 14px;
   background: none;
