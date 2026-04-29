@@ -89,7 +89,7 @@
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 10px;
   cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
+  transition: all 0.2s;
 }
 
 .relayCard:hover {
@@ -97,6 +97,14 @@
   box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.92);
+}
+
+/* 🌟 [추가] 어드민 이동 시 카드 강조 스타일 */
+.adminHighlight {
+  border: 2px solid #EF4444 !important;
+  background: #FFF5F5 !important;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.2) !important;
+  transform: scale(1.02);
 }
 
 .relayTitle {
@@ -142,7 +150,7 @@
   border: none;
   cursor: pointer;
   padding: 6px;
-  color: #90A4C8; /* 평상시 차분한 색 */
+  color: #90A4C8;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,17 +158,13 @@
   flex-shrink: 0;
 }
 
-
-/* 클릭 시 피드백 */
 .reportBtn:active {
   transform: scale(0.9);
 }
 
-/* RelayNovelPage.module.css */
-
 .reportBtn:hover {
   color: #FF1744;
-  animation: blink 0.8s infinite; /* 사이렌처럼 깜빡이는 애니메이션 */
+  animation: blink 0.8s infinite;
 }
 
 @keyframes blink {
