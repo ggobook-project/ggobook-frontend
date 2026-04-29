@@ -322,7 +322,7 @@ export default function RelayNovelDetailPage() {
     document.addEventListener("mouseup", onUp)
   }
 
-  const handleSubmit = async () => {
+  const handleStartWriting = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
     try {
       await api.post(`/api/relay-novels/${relayNovelId}/start`)
@@ -332,6 +332,7 @@ export default function RelayNovelDetailPage() {
       else alert("서버 통신 중 오류가 발생했습니다.")
     }
   }
+
 
   const handleCancelWriting = async () => {
     setIsWriting(false); setMyText("")
@@ -357,6 +358,7 @@ export default function RelayNovelDetailPage() {
       setMyText(""); setIsWriting(false); loadDetail()
     } catch { alert("등록에 실패했습니다.") } finally { setIsSubmitting(false) }
   }
+  
 
   // openEntryReport 함수 수정
 const openEntryReport = (entry) => {
