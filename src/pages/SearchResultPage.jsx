@@ -1,6 +1,7 @@
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useEffect, useState } from "react"
 import styles from "../styles/SearchResultPage.module.css"
+import api from "../api/axios"
 
 export default function SearchResultPage() {
   const navigate = useNavigate()
@@ -25,22 +26,15 @@ export default function SearchResultPage() {
       const params = new URLSearchParams({ page: 0, size: 20 })
       if (keyword) params.append("keyword", keyword)
       if (filterType) params.append("type", filterType)
-      const response = await fetch(`http://localhost:8080/api/contents/?${params.toString()}`, {
-        method: "GET", headers: { 'Authorization': `Bearer ${token}` }
-      })
-      if (!response.ok) { alert("검색 결과를 불러오는데 실패했습니다."); return }
-      const data = await response.json()
+      const response = await api.get(`/api/contents/?${params.toString()}`)
+      const data = response.data 
       const list = Array.isArray(data) ? data : (data.content ?? [])
 
        const listWithTags = await Promise.all(
         list.map(async (item) => {
             try {
-                const tagRes = await fetch(
-                    `http://localhost:8080/api/contents/${item.contentId}/tags`,
-                    { headers: { Authorization: `Bearer ${token}` } }
-                )
-                const tags = tagRes.ok ? await tagRes.json() : []
-                return { ...item, tags }
+                const tagRes = await api.get(`/api/contents/${item.contentId}/tags`)
+                return { ...item, tags: tagRes.data || [] } 
             } catch {
                 return { ...item, tags: [] }
             }
