@@ -323,6 +323,18 @@ export default function RelayNovelDetailPage() {
   }
 
   const handleSubmit = async () => {
+      if (!isLoggedIn) { navigate("/login"); return }
+      if (myText.length < MIN_CHARS || myText.length > MAX_CHARS) return
+      try {
+        setIsSubmitting(true)
+        await api.post(`/api/relay-novels/${relayNovelId}/submit`, { entryText: myText })
+        alert("이어쓰기가 등록되었습니다!")
+        setMyText(""); setIsWriting(false); loadDetail()
+      } catch { alert("등록에 실패했습니다.") } finally { setIsSubmitting(false) }
+    }
+
+
+  const handleStartWriting = async () => {
     if (!isLoggedIn) { navigate("/login"); return }
     try {
       await api.post(`/api/relay-novels/${relayNovelId}/start`)
@@ -346,17 +358,6 @@ export default function RelayNovelDetailPage() {
       if (isWriting) api.post(`/api/relay-novels/${relayNovelId}/cancel`)
     }
   }, [isWriting, relayNovelId])
-
-  const handleSubmit = async () => {
-    if (!isLoggedIn) { navigate("/login"); return }
-    if (myText.length < MIN_CHARS || myText.length > MAX_CHARS) return
-    try {
-      setIsSubmitting(true)
-      await api.post(`/api/relay-novels/${relayNovelId}/submit`, { entryText: myText })
-      alert("이어쓰기가 등록되었습니다!")
-      setMyText(""); setIsWriting(false); loadDetail()
-    } catch { alert("등록에 실패했습니다.") } finally { setIsSubmitting(false) }
-  }
 
   // openEntryReport 함수 수정
 const openEntryReport = (entry) => {
