@@ -1,8 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-
 import api from "../api/axios"; 
-
 import styles from "../styles/ContentDetailPage.module.css";
 
 export default function ContentDetailPage() {
@@ -132,12 +130,21 @@ export default function ContentDetailPage() {
   };
 
   const handleEpisodeClick = (ep) => {
-    if (!ep.isFree && !purchasedEps.includes(ep.episodeNumber)) {
-      setPayTarget(ep)
-      return
+    if (ep.status === "BLINDED") return
+
+    if (ep.status === "APPROVED" && !purchasedEps.includes(ep.episodeNumber)) {
+        setPayTarget(ep)
+        return
     }
+
+    // 유료 회차 결제 확인
+    if (!ep.isFree && !purchasedEps.includes(ep.episodeNumber)) {
+        setPayTarget(ep)
+        return
+    }
+
     navigateToViewer(ep.episodeId)
-  };
+}
 
   const handlePay = async () => {
     try {
@@ -305,6 +312,8 @@ export default function ContentDetailPage() {
             <div className={styles.emptyMsg}>등록된 회차가 없습니다.</div>
           ) : (
             episodes.map((ep) => {
+              const isBlinded = ep.status === "BLINDED"
+              const isApproved = ep.status === "APPROVED"
               const isPaidEp = !ep.isFree
               const isPurchased = purchasedEps.includes(ep.episodeNumber)
               const isRead = readEps.includes(Number(ep.episodeId))
@@ -313,30 +322,43 @@ export default function ContentDetailPage() {
                   key={ep.episodeId}
                   className={`${styles.episodeRow} ${isRead ? styles.episodeRowRead : ""}`}
                   onClick={() => handleEpisodeClick(ep)}
+                  style={{ cursor: isBlinded ? "default" : "pointer" }}
                 >
                   <div className={styles.epThumb}>
                   {ep.thumbnailUrl
-                      ? <img src={ep.thumbnailUrl} alt="썸네일" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      : <div style={{ width: "100%", height: "100%", background: "#E3F2FD" }} />
-                  }
-                  </div>
-                  <div className={styles.epInfo}>
-                    <div className={styles.epTitle}>{ep.episodeTitle}</div>
-                    <div className={styles.epMeta}>
-                      {isPaidEp ? (
-                        isPurchased
-                          ? <span className={styles.badgePurchased}>구매완료</span>
-                          : <span className={styles.badgePaid}>🔒 유료 200P</span>
-                      ) : (
-                        <span className={styles.badgeFree}>무료</span>
-                      )}
-                      {isRead && <span className={styles.badgeRead}>읽음</span>}
-                      <span className={styles.epDate}>{formatDate(ep.createdAt)}</span>
+                    ? <img src={ep.thumbnailUrl} alt="썸네일" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : <div style={{ width: "100%", height: "100%", background: "#E3F2FD" }} />
+                }
+            </div>
+            <div className={styles.epInfo}>
+                {isBlinded ? (
+                    <div style={{ fontSize: 12, color: "#90A4C8", lineHeight: 1.5 }}>
+                        운영 정책에 따른 콘텐츠 검토 및 수정 작업으로 인해 잠시 이용이 제한된 회차입니다. 최대한 빠르게 조치를 완료하여 다시 제공해 드릴 수 있도록 하겠습니다.
                     </div>
-                  </div>
-                  <div className={styles.epNum}>{ep.episodeNumber}화</div>
-                </div>
-              )
+                ) : (
+                    <>
+                        <div className={styles.epTitle}>{ep.episodeTitle}</div>
+                        <div className={styles.epMeta}>
+                            {isApproved ? (
+                                isPurchased
+                                    ? <span className={styles.badgePurchased}>구매완료</span>
+                                    : <span className={styles.badgePaid}>🔒 미리보기</span>
+                            ) : isPaidEp ? (
+                                isPurchased
+                                    ? <span className={styles.badgePurchased}>구매완료</span>
+                                    : <span className={styles.badgePaid}>🔒 유료 200P</span>
+                            ) : (
+                                <span className={styles.badgeFree}>무료</span>
+                            )}
+                            {isRead && <span className={styles.badgeRead}>읽음</span>}
+                            <span className={styles.epDate}>{formatDate(ep.createdAt)}</span>
+                        </div>
+                    </>
+                )}
+            </div>
+            <div className={styles.epNum}>{ep.episodeNumber}화</div>
+        </div>
+              );
             })
           )}
         </div>
