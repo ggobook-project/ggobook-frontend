@@ -14,6 +14,16 @@ const REASON_MAP = {
   OTHER: "기타 사유",
 };
 
+// 🌟 관리자 보기 편하도록 영어 타입을 한글로 예쁘게 렌더링하기 위한 매퍼
+const TYPE_MAP = {
+  RELAY_NOVEL: "릴레이 소설",
+  RELAY_ENTRY: "이어쓰기",
+  WEBTOON_COMMENT: "웹툰 댓글",
+  NOVEL_COMMENT: "소설 댓글",
+  WEBTOON_REPLY: "웹툰 답글",
+  NOVEL_REPLY: "소설 답글",
+};
+
 export default function AdminReportPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("전체");
@@ -42,30 +52,40 @@ export default function AdminReportPage() {
 
   useEffect(() => { loadReports(); }, []);
 
-  // 🌟 [동적 내비게이션] 팀장님의 주소 체계 반영
+  // 🌟 [동적 내비게이션] 도메인별 이동 경로 완벽 분기
   const handleMoveToTarget = (report) => {
-  const { targetType, targetId, targetParentId } = report;
+    const { targetType, targetId, targetParentId } = report;
 
-  // 1. 소설 주제(RELAY_NOVEL) 자체를 신고한 경우
-  if (targetType === "RELAY_NOVEL") {
-    // 리스트 페이지(/relay)로 가서 해당 소설 카드를 찾습니다.
-    // targetId가 곧 novelId입니다.
-    navigate(`/relay?novelId=${targetId}`);
-    return;
-  }
+    // 1. 소설 주제(RELAY_NOVEL) 자체를 신고한 경우
+    if (targetType === "RELAY_NOVEL") {
+      navigate(`/relay?novelId=${targetId}`);
+      return;
+    }
 
-  // 2. 소설 속 회차(RELAY_ENTRY)나 댓글을 신고한 경우
-  // 상세 페이지(/relay/4)로 가서 해당 위치로 스크롤합니다.
-  const novelId = targetParentId; // 부모인 소설 ID를 주소로 사용
+    // 2. 소설 속 회차(RELAY_ENTRY)를 신고한 경우
+    if (targetType === "RELAY_ENTRY") {
+      if (!targetParentId) return alert("부모 소설 정보가 없습니다.");
+      navigate(`/relay/${targetParentId}?targetId=${targetId}&type=${targetType}`);
+      return;
+    }
 
-  if (!novelId) {
-    return alert("부모 소설 정보(targetParentId)가 없어 상세 페이지로 이동할 수 없습니다.");
-  }
+    // 3. 웹툰 댓글/답글 신고인 경우
+    if (targetType === "WEBTOON_COMMENT" || targetType === "WEBTOON_REPLY") {
+      if (!targetParentId) return alert("웹툰 회차 정보가 없습니다.");
+      // targetType을 쿼리로 같이 보내서 뷰어 쪽에서 댓글/답글 중 무엇을 찾을지 알게 합니다.
+      navigate(`/webtoon/viewer/${targetParentId}?focusComment=${targetId}&targetType=${targetType}`);
+      return;
+    }
 
-  // 기존 방식대로 상세 페이지 + 쿼리 스트링
-  const queryPath = `?targetId=${targetId}&type=${targetType}`;
-  navigate(`/relay/${novelId}${queryPath}`);
-};
+    // 4. 웹소설 댓글/답글 신고인 경우
+    if (targetType === "NOVEL_COMMENT" || targetType === "NOVEL_REPLY") {
+      if (!targetParentId) return alert("웹소설 회차 정보가 없습니다.");
+      navigate(`/novel/viewer/${targetParentId}?focusComment=${targetId}&targetType=${targetType}`);
+      return;
+    }
+
+    alert("이동 경로가 설정되지 않은 타입입니다.");
+  };
 
   const handleConfirm = async () => {
     if (!processData.processReason.trim()) return alert("처리 사유를 입력하세요.");
@@ -83,9 +103,15 @@ export default function AdminReportPage() {
     }
   };
 
-  const filteredReports = reports.filter(r => 
-    filter === "전체" ? true : r.targetType === filter
-  );
+  // 🌟 [필터링 로직 수정] 댓글과 답글이 여러 타입으로 나뉘었으므로 Includes 로직 사용
+  const filteredReports = reports.filter(r => {
+    if (filter === "전체") return true;
+    if (filter === "릴레이 소설") return r.targetType === "RELAY_NOVEL";
+    if (filter === "이어쓰기") return r.targetType === "RELAY_ENTRY";
+    if (filter === "댓글") return r.targetType === "WEBTOON_COMMENT" || r.targetType === "NOVEL_COMMENT";
+    if (filter === "답글") return r.targetType === "WEBTOON_REPLY" || r.targetType === "NOVEL_REPLY";
+    return true;
+  });
 
   return (
     <div className={styles.pageWrapper}>
@@ -95,14 +121,14 @@ export default function AdminReportPage() {
       </div>
 
       <div className={styles.content}>
-        {/* 🌟 팀장님 요청 4단계 탭 필터 */}
+        {/* 🌟 팀장님 요청 탭 필터 적용 */}
         <div className={styles.filterGroup}>
           {[
             { label: "전체", value: "전체" },
-            { label: "릴레이 소설", value: "RELAY_NOVEL" },
-            { label: "이어쓰기", value: "RELAY_ENTRY" },
-            { label: "댓글", value: "COMMENT" },
-            { label: "답글", value: "REPLY" },
+            { label: "릴레이 소설", value: "릴레이 소설" },
+            { label: "이어쓰기", value: "이어쓰기" },
+            { label: "댓글", value: "댓글" },
+            { label: "답글", value: "답글" },
           ].map(tab => (
             <button
               key={tab.value}
@@ -128,7 +154,8 @@ export default function AdminReportPage() {
             >
               <div className={styles.reportTop}>
                 <div className={styles.reportLeft}>
-                  <span className={styles.typeBadge}>{r.targetType}</span>
+                  {/* 영어 타입명 대신 한글로 예쁘게 렌더링 */}
+                  <span className={styles.typeBadge}>{TYPE_MAP[r.targetType] || r.targetType}</span>
                   <span className={styles.reportReason}>
                     {REASON_MAP[r.reportReason] || r.reportReason}
                   </span>

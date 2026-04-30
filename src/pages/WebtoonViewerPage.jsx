@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
-import { useEffect, useLayoutEffect, useState, useRef, useCallback } from "react"
+import { useEffect, useState, useRef, useCallback, useLayoutEffect } from "react"
+import ReportModal from "../components/ReportModal";
 import api from "../api/axios" 
 import styles from "../styles/WebtoonViewerPage.module.css"
 
@@ -11,6 +12,7 @@ export default function WebtoonViewerPage() {
   const [searchParams] = useSearchParams()
   const contentId = searchParams.get("contentId")
   const focusCommentId = searchParams.get("focusComment");
+  const targetType = searchParams.get("targetType") || ""; 
   const savedProgress = parseInt(searchParams.get("progress") || "0", 10);
   const { episodeId } = useParams()
 
@@ -52,6 +54,7 @@ export default function WebtoonViewerPage() {
   const [hasMoreComments, setHasMoreComments] = useState(true)
 
   const [isReady, setIsReady] = useState(false);
+  const [reportInfo, setReportInfo] = useState(null);
 
   // ==========================================
   // 3. 헬퍼 함수
@@ -155,6 +158,28 @@ export default function WebtoonViewerPage() {
         }))
       }));
       setComments(mappedComments);
+
+      if (focusCommentId) {
+        const targetIndex = mappedComments.findIndex(c => 
+          c.id.toString() === focusCommentId || 
+          c.replies.some(r => r.id.toString() === focusCommentId)
+        );
+
+        if (targetIndex !== -1) {
+          const requiredPage = Math.ceil((targetIndex + 1) / COMMENTS_PER_PAGE);
+          if (requiredPage > commentPage) {
+            setCommentPage(requiredPage);
+          }
+
+          // 어드민이든 마이페이지든 일단 답글 ID면 부모를 무조건 펼쳐줌
+          const parentComment = mappedComments[targetIndex];
+          const isReplyTarget = parentComment.id.toString() !== focusCommentId;
+          
+          if (isReplyTarget || targetType.includes("REPLY")) {
+            setExpandedReplies(prev => ({ ...prev, [parentComment.id]: true }));
+          }
+        }
+      }
     } catch (error) {
       console.error("댓글 로드 실패:", error);
     }
@@ -189,6 +214,7 @@ export default function WebtoonViewerPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // 🌟 [핵심 변경] 어드민(신고) vs 마이페이지(일반) 색상 분기 처리 및 스마트 추적
   useLayoutEffect(() => {
     if (!focusCommentId && savedProgress === 0) {
       setIsReady(true);
@@ -198,32 +224,64 @@ export default function WebtoonViewerPage() {
     if (comicToons.length === 0 && comments.length === 0) return;
 
     if (focusCommentId && comments.length > 0) {
-      const timer = setTimeout(() => {
-        const targetElement = document.getElementById(`comment-${focusCommentId}`);
+      let checkCount = 0;
+      
+      const interval = setInterval(() => {
+        const type = searchParams.get("targetType") || "";
+        const isReport = !!type; // 파라미터가 존재하면 어드민에서 온 것
+
+        // 🌟 답글 아이디를 먼저 찾고, 없으면 댓글 아이디를 찾음 (자동 탐색)
+        const targetElement = document.getElementById(`reply-${focusCommentId}`) || document.getElementById(`comment-${focusCommentId}`);
+        
         if (targetElement) {
+          clearInterval(interval);
+          
           targetElement.scrollIntoView({ behavior: "auto", block: "center" });
-          targetElement.style.transition = "background-color 0.5s";
-          targetElement.style.backgroundColor = "rgba(33, 150, 243, 0.1)"; 
+          targetElement.style.transition = "none";
+          
+          // 🔥 어드민(신고)에서 왔으면 빨간색, 마이페이지(일반)에서 왔으면 파란색 적용
+          if (isReport) {
+            targetElement.style.backgroundColor = "#FFF5F5"; 
+            targetElement.style.border = "2px solid #EF4444"; 
+          } else {
+            targetElement.style.backgroundColor = "rgba(33, 150, 243, 0.1)"; 
+            targetElement.style.border = "none"; 
+          }
+          targetElement.style.borderRadius = "8px"; 
+          
           setTimeout(() => {
-            if (targetElement) targetElement.style.backgroundColor = "transparent";
-          }, 2000);
+            setIsReady(true); 
+          }, 10);
+          
+          setTimeout(() => {
+            if (targetElement) {
+              targetElement.style.transition = "all 0.5s ease-in-out";
+              targetElement.style.backgroundColor = "transparent";
+              targetElement.style.border = "none";
+            }
+          }, 3000);
+
+        } else {
+          checkCount++;
+          if (checkCount > 30) { 
+            clearInterval(interval);
+            setIsReady(true); 
+          }
         }
-        setIsReady(true);
-      }, 150); 
-      return () => clearTimeout(timer);
+      }, 50);
+
+      return () => clearInterval(interval);
     } 
     else if (savedProgress > 0 && comicToons.length > 0 && !focusCommentId) {
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         const scrollHeight = document.documentElement.scrollHeight;
         const clientHeight = document.documentElement.clientHeight;
         const targetScrollTop = (scrollHeight - clientHeight) * (savedProgress / 100);
-        
         window.scrollTo({ top: targetScrollTop, behavior: "auto" });
         setIsReady(true); 
-      }, 150); 
-      return () => clearTimeout(timer);
+      }, 100); 
     }
-  }, [comicToons, comments, focusCommentId, savedProgress]);
+  }, [comicToons, comments, focusCommentId, savedProgress, searchParams]);
 
   // 🌟 [수정] episodeId가 바뀔 때마다 별점을 새로 불러오도록 변경!
   useEffect(() => { 
@@ -430,6 +488,18 @@ export default function WebtoonViewerPage() {
     }
   }
 
+  const handleReportClick = (target, type) => {
+    if (!isLoggedIn) { navigate("/login"); return; }
+    
+    setReportInfo({
+      targetType: type, 
+      targetId: target.id,
+      targetParentId: episodeId,
+      reportedUserId: target.userId || target.user?.split('독자')[1],
+      targetTitle: `${target.user} 님의 ${type.includes('REPLY') ? '답글' : '댓글'}`
+    });
+  };
+
   // ==========================================
   // 7. UI 렌더링 (View)
   // ==========================================
@@ -444,8 +514,7 @@ export default function WebtoonViewerPage() {
       className={styles.pageWrapper} 
       style={{ 
         opacity: isReady ? 1 : 0, 
-        pointerEvents: isReady ? 'auto' : 'none',
-        transition: "opacity 0.2s" 
+        pointerEvents: isReady ? 'auto' : 'none'
       }}
     >
       <div className={styles.topBar}>
@@ -556,34 +625,48 @@ export default function WebtoonViewerPage() {
             {visibleComments.map((cm) => (
               <div key={cm.id} id={`comment-${cm.id}`} className={styles.commentItem}>
 
+                {/* 댓글 헤더 */}
                 <div className={styles.commentHeader}>
                   <div className={styles.commentAvatar} />
                   <div className={styles.commentMeta}>
                     <span className={styles.commentUser}>{cm.user}</span>
                     <span className={styles.commentDate}>{cm.date}</span>
                   </div>
-                  {cm.isMine && editingId !== cm.id && (
-                    <div style={{ marginLeft: "auto", position: "relative" }}>
-                      <button
-                        className={styles.moreBtn}
-                        onClick={e => { e.stopPropagation(); setOpenMoreId(openMoreId === cm.id ? null : cm.id) }}
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                          <circle cx="12" cy="5" r="1.5" />
-                          <circle cx="12" cy="12" r="1.5" />
-                          <circle cx="12" cy="19" r="1.5" />
-                        </svg>
-                      </button>
-                      {openMoreId === cm.id && (
-                        <div className={styles.moreMenu}>
-                          <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleEditStart(cm); setOpenMoreId(null) }}>수정</button>
-                          <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleDelete(cm.id); setOpenMoreId(null) }}>삭제</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+
+                  <div className={styles.moreMenuWrapper}>
+                    <button
+                      className={styles.moreBtn}
+                      onClick={e => { e.stopPropagation(); setOpenMoreId(openMoreId === cm.id ? null : cm.id) }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                      </svg>
+                    </button>
+
+                    {openMoreId === cm.id && (
+                      <div className={styles.moreMenu}>
+                        {cm.isMine ? (
+                          <>
+                            <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleEditStart(cm); setOpenMoreId(null) }}>수정</button>
+                            <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleDelete(cm.id); setOpenMoreId(null) }}>삭제</button>
+                          </>
+                        ) : (
+                          <button 
+                            className={`${styles.moreMenuItem} ${styles.moreMenuItemReport}`} 
+                            onClick={() => { handleReportClick(cm, 'WEBTOON_COMMENT'); setOpenMoreId(null) }}
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 18h14" /><path d="M17 18v-5a5 5 0 0 0-10 0v5" /><path d="M2 13h2" /><path d="M20 13h2" /><path d="M12 2v2" />
+                            </svg>
+                            신고하기
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
+                {/* 댓글 내용 */}
                 {editingId === cm.id ? (
                   <div className={styles.editRow}>
                     <input value={editText} onChange={e => setEditText(e.target.value)} className={styles.editInput} onKeyDown={e => e.key === "Enter" && handleEditSubmit(cm.id)} />
@@ -596,8 +679,8 @@ export default function WebtoonViewerPage() {
                     <div className={styles.commentBottomRow}>
                       <button className={styles.replyToggleBtn} onClick={() => toggleReplies(cm.id)}>
                         {expandedReplies[cm.id]
-                          ? cm.replies?.length > 0 ? `답글 ${cm.replies.length}개` : `답글 `
-                          : cm.replies?.length > 0 ? `답글 ${cm.replies.length}개` : `답글 `
+                          ? cm.replies?.length > 0 ? `답글 ${cm.replies.length}개` : `답글`
+                          : cm.replies?.length > 0 ? `답글 ${cm.replies.length}개` : `답글`
                         }
                       </button>
                       <div className={styles.commentReactions}>
@@ -615,7 +698,7 @@ export default function WebtoonViewerPage() {
                           onClick={() => handleCommentLike(cm.id, "dislike")}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill={cm.myLike === "dislike" ? "#E53935" : "none"} stroke={cm.myLike === "dislike" ? "#E53935" : "#90A4C8"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+                            <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2-2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
                           </svg>
                           <span>{cm.dislikes}</span>
                         </button>
@@ -624,10 +707,11 @@ export default function WebtoonViewerPage() {
                   </div>
                 )}
 
+                {/* 답글 목록 */}
                 {expandedReplies[cm.id] && cm.replies?.length > 0 && (
                   <div className={styles.replyList}>
                     {cm.replies.map(reply => (
-                      <div key={reply.id} className={styles.replyItem}>
+                      <div key={reply.id} id={`reply-${reply.id}`} className={styles.replyItem}>
                         <div className={styles.replyArrow}>↳</div>
                         <div className={styles.replyContent}>
                           <div className={styles.commentHeader}>
@@ -636,26 +720,38 @@ export default function WebtoonViewerPage() {
                               <span className={styles.commentUser}>{reply.user}</span>
                               <span className={styles.commentDate}>{reply.date}</span>
                             </div>
-                            {reply.isMine && !(editingReply?.replyId === reply.id) && (
-                              <div style={{ marginLeft: "auto", position: "relative" }}>
-                                <button
-                                  className={styles.moreBtn}
-                                  onClick={e => { e.stopPropagation(); setOpenMoreReplyId(openMoreReplyId === reply.id ? null : reply.id) }}
-                                >
-                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="5" r="1.5" />
-                                    <circle cx="12" cy="12" r="1.5" />
-                                    <circle cx="12" cy="19" r="1.5" />
-                                  </svg>
-                                </button>
-                                {openMoreReplyId === reply.id && (
-                                  <div className={styles.moreMenu}>
-                                    <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleReplyEditStart(cm.id, reply); setOpenMoreReplyId(null) }}>수정</button>
-                                    <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleReplyDelete(cm.id, reply.id); setOpenMoreReplyId(null) }}>삭제</button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
+
+                            <div className={styles.moreMenuWrapper}>
+                              <button
+                                className={styles.moreBtn}
+                                onClick={e => { e.stopPropagation(); setOpenMoreReplyId(openMoreReplyId === reply.id ? null : reply.id) }}
+                              >
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                  <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                                </svg>
+                              </button>
+
+                              {openMoreReplyId === reply.id && (
+                                <div className={styles.moreMenu}>
+                                  {reply.isMine ? (
+                                    <>
+                                      <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleReplyEditStart(cm.id, reply); setOpenMoreReplyId(null) }}>수정</button>
+                                      <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleReplyDelete(cm.id, reply.id); setOpenMoreReplyId(null) }}>삭제</button>
+                                    </>
+                                  ) : (
+                                    <button 
+                                      className={`${styles.moreMenuItem} ${styles.moreMenuItemReport}`} 
+                                      onClick={() => { handleReportClick(reply, 'WEBTOON_REPLY'); setOpenMoreReplyId(null) }}
+                                    >
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M5 18h14" /><path d="M17 18v-5a5 5 0 0 0-10 0v5" /><path d="M2 13h2" /><path d="M20 13h2" /><path d="M12 2v2" />
+                                      </svg>
+                                      신고하기
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           </div>
                           {editingReply?.replyId === reply.id ? (
                             <div className={styles.editRow}>
@@ -683,7 +779,7 @@ export default function WebtoonViewerPage() {
                                     onClick={() => handleReplyLike(cm.id, reply.id, "dislike")}
                                   >
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill={reply.myLike === "dislike" ? "#E53935" : "none"} stroke={reply.myLike === "dislike" ? "#E53935" : "#90A4C8"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                      <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+                                      <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2-2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
                                     </svg>
                                     <span>{reply.dislikes}</span>
                                   </button>
@@ -722,6 +818,13 @@ export default function WebtoonViewerPage() {
           </div>
         </div>
       </div>
+      
+      {/* 🌟 최하단 모달 렌더링 유지 */}
+      <ReportModal 
+        isOpen={!!reportInfo} 
+        onClose={() => setReportInfo(null)} 
+        targetInfo={reportInfo} 
+      />
     </div>
   )
 }

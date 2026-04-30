@@ -1,5 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { useEffect, useLayoutEffect, useState, useRef, useCallback } from "react"
+import ReportModal from "../components/ReportModal";
 import api from "../api/axios" 
 import styles from "../styles/NovelViewerPage.module.css"
 
@@ -13,7 +14,8 @@ export default function NovelViewerPage() {
   const { episodeId } = useParams()
   
   const savedProgress = parseInt(searchParams.get("progress") || "0", 10)
-  const focusCommentId = searchParams.get("focusComment") // 🌟 마이페이지에서 넘어온 타겟 댓글 ID
+  const focusCommentId = searchParams.get("focusComment") 
+  const targetType = searchParams.get("targetType") || ""; 
 
   const isLoggedIn = !!localStorage.getItem("accessToken") || !!sessionStorage.getItem("accessToken");
   const currentUser = "나"
@@ -47,7 +49,8 @@ export default function NovelViewerPage() {
   const [chunkDurations, setChunkDurations] = useState({})
   const [waitingForChunk, setWaitingForChunk] = useState(false)
   const preloadingRef = useRef(false)
-  const ttsConfigRef = useRef(null) // { mode: 'single', voiceId } | { mode: 'multi', voice1Id, voice2Id, narratorVoiceId }
+  const ttsConfigRef = useRef(null) 
+  const [reportInfo, setReportInfo] = useState(null);
 
   // 멀티보이스 관련 상태
   const [multiVoiceMode, setMultiVoiceMode] = useState(false)
@@ -81,7 +84,7 @@ export default function NovelViewerPage() {
   const [commentPage, setCommentPage] = useState(1)
   const [hasMoreComments, setHasMoreComments] = useState(true)
 
-  const [isReady, setIsReady] = useState(false); // 🌟 순간이동 전 화면을 가려줄 투명 망토
+  const [isReady, setIsReady] = useState(false); 
 
   // ==========================================
   // 3. 헬퍼 함수
@@ -102,7 +105,6 @@ export default function NovelViewerPage() {
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
   }
 
-  // 본문 텍스트 단락 분리 로직 (위로 끌어올려 렌더링과 의존성 배열 모두에서 사용)
   const paragraphs = novel?.contentText
     ? novel.contentText.split("\n").filter(p => p.trim() !== "")
     : []
@@ -129,9 +131,6 @@ export default function NovelViewerPage() {
     try {
       setLoading(true)
       const response = await api.get(`/api/episodes/${episodeId}`)
-      console.log("🎵 에피소드 데이터:", response.data)
-      console.log("🎵 novel:", response.data.novel)
-      console.log("🎵 ttsFileUrl:", response.data.novel?.ttsFileUrl)
       setEpisode(response.data)
       setNovel(response.data.novel || null)
       setLikeCount(response.data.likeCount || 0);
@@ -197,6 +196,27 @@ export default function NovelViewerPage() {
         }))
       }));
       setComments(mappedComments);
+
+      if (focusCommentId) {
+        const targetIndex = mappedComments.findIndex(c => 
+          c.id.toString() === focusCommentId || 
+          c.replies.some(r => r.id.toString() === focusCommentId)
+        );
+
+        if (targetIndex !== -1) {
+          const requiredPage = Math.ceil((targetIndex + 1) / COMMENTS_PER_PAGE);
+          if (requiredPage > commentPage) {
+            setCommentPage(requiredPage);
+          }
+
+          const parentComment = mappedComments[targetIndex];
+          const isReplyTarget = parentComment.id.toString() !== focusCommentId;
+
+          if (isReplyTarget || targetType.includes("REPLY")) {
+            setExpandedReplies(prev => ({ ...prev, [parentComment.id]: true }));
+          }
+        }
+      }
     } catch (error) {
       console.error("댓글 로드 실패:", error);
     }
@@ -228,7 +248,7 @@ export default function NovelViewerPage() {
     };
   }, [episodeId, contentId]);
 
-  // 🌟 웹툰 뷰어와 100% 동일한 순간이동 로직
+  // 🌟 [핵심 변경] 깜빡임 원천 차단 및 스마트 추적(Polling) 이동 로직
   useLayoutEffect(() => {
     if (!focusCommentId && savedProgress === 0) {
       setIsReady(true);
@@ -238,34 +258,68 @@ export default function NovelViewerPage() {
     if (paragraphs.length === 0 && comments.length === 0) return;
 
     if (focusCommentId && comments.length > 0) {
-      const timer = setTimeout(() => {
-        const targetElement = document.getElementById(`comment-${focusCommentId}`);
+      let checkCount = 0;
+      
+      const interval = setInterval(() => {
+        const type = searchParams.get("targetType") || "";
+        const isReport = !!type; 
+
+        // 답글 아이디 우선, 없으면 댓글 아이디 찾기
+        const targetElement = document.getElementById(`reply-${focusCommentId}`) || document.getElementById(`comment-${focusCommentId}`);
+        
         if (targetElement) {
+          clearInterval(interval);
+          
+          // 🔥 1. 발견 즉시 화면 중심에 번개처럼 스크롤 꽂음 (애니메이션 없음)
           targetElement.scrollIntoView({ behavior: "auto", block: "center" });
-          targetElement.style.transition = "background-color 0.5s";
-          targetElement.style.backgroundColor = "rgba(33, 150, 243, 0.1)"; 
+          targetElement.style.transition = "none";
+          
+          // 2. 어드민/마이페이지 색상 분기 적용
+          if (isReport) {
+            targetElement.style.backgroundColor = "#FFF5F5"; 
+            targetElement.style.border = "2px solid #EF4444"; 
+          } else {
+            targetElement.style.backgroundColor = "rgba(33, 150, 243, 0.1)"; 
+            targetElement.style.border = "none"; 
+          }
+          targetElement.style.borderRadius = "8px"; 
+          
+          // 3. 10ms 뒤 화면 딱! 켜기
           setTimeout(() => {
-            if (targetElement) targetElement.style.backgroundColor = "transparent";
-          }, 2000);
+            setIsReady(true); 
+          }, 10);
+          
+          // 4. 3초 뒤 색상 원복
+          setTimeout(() => {
+            if (targetElement) {
+              targetElement.style.transition = "all 0.5s ease-in-out";
+              targetElement.style.backgroundColor = "transparent";
+              targetElement.style.border = "none";
+            }
+          }, 3000);
+
+        } else {
+          checkCount++;
+          if (checkCount > 30) { 
+            clearInterval(interval);
+            setIsReady(true); 
+          }
         }
-        setIsReady(true);
-      }, 150); 
-      return () => clearTimeout(timer);
+      }, 50);
+
+      return () => clearInterval(interval);
     } 
     else if (savedProgress > 0 && paragraphs.length > 0 && !focusCommentId) {
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         const scrollHeight = document.documentElement.scrollHeight;
         const clientHeight = document.documentElement.clientHeight;
         const targetScrollTop = (scrollHeight - clientHeight) * (savedProgress / 100);
-        
         window.scrollTo({ top: targetScrollTop, behavior: "auto" });
         setIsReady(true); 
-      }, 150); 
-      return () => clearTimeout(timer);
+      }, 100); 
     }
-  }, [paragraphs, comments, focusCommentId, savedProgress]);
+  }, [paragraphs, comments, focusCommentId, savedProgress, searchParams]);
 
-  // 5-4. 청크 URL이 생기면 오디오 초기화 및 재생
   useEffect(() => {
     const url = chunkUrls[currentChunkIndex]
     if (!url) return
@@ -281,7 +335,6 @@ export default function NovelViewerPage() {
 
     const onTimeUpdate = () => {
       setAudioTime(audio.currentTime)
-      // 70% 지점에서 다음 청크 미리 생성
       if (audio.duration && audio.currentTime / audio.duration > 0.7) {
         const next = currentChunkIndex + 1
         const cfg = ttsConfigRef.current
@@ -309,7 +362,7 @@ export default function NovelViewerPage() {
         setCurrentChunkIndex(next)
         setAudioTime(0)
         if (!chunkUrls[next]) {
-          setWaitingForChunk(true) // 청크 미준비 → 도착 시 audio useEffect가 자동 재생
+          setWaitingForChunk(true)
         }
       } else {
         playingRef.current = false
@@ -337,12 +390,10 @@ export default function NovelViewerPage() {
     }
   }, [chunkUrls[currentChunkIndex], currentChunkIndex])
 
-  // 5-6. 배속 변경 시 오디오에 즉시 반영
   useEffect(() => {
     if (audioRef.current) audioRef.current.playbackRate = playbackRate
   }, [playbackRate])
 
-  // 5-7. 설정 패널 외부 클릭 감지
   useEffect(() => {
     if (!showSettings) return
     const handleOutside = (e) => {
@@ -354,7 +405,6 @@ export default function NovelViewerPage() {
     return () => document.removeEventListener("mousedown", handleOutside)
   }, [showSettings])
 
-  // 🌟 [수정] episodeId가 바뀔 때마다 별점을 새로 불러오도록 변경!
   useEffect(() => { 
     if (episodeId) { 
       loadAverageRating(); 
@@ -435,24 +485,17 @@ export default function NovelViewerPage() {
   const handleGenerateTts = async (voiceId) => {
     try {
       setIsGenerating(true)
-
-      // 기존 청크 캐시 확인
       const infoRes = await api.get(`/api/episodes/${episodeId}/tts/chunk-info?voiceId=${voiceId}`)
       const { totalChunks: total, chunkUrls: existing } = infoRes.data
-
       setTotalChunks(total)
       setCurrentChunkIndex(0)
       setChunkDurations({})
       preloadingRef.current = false
-
-      // 0번 청크 URL 확인 (캐시 or 생성)
       let chunk0Url = existing["0"]
       if (!chunk0Url) {
         const res = await api.post(`/api/episodes/${episodeId}/tts/chunk/0?voiceId=${voiceId}`)
         chunk0Url = res.data.url
       }
-
-      // 기존 캐시된 청크들도 로드
       const urls = { ...existing, "0": chunk0Url }
       setChunkUrls(urls)
       setCurrentVoiceId(voiceId)
@@ -478,12 +521,10 @@ export default function NovelViewerPage() {
         `/api/episodes/${episodeId}/tts/multi-voice/chunk-info?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`
       )
       const { totalChunks: total, chunkUrls: existing } = infoRes.data
-
       setTotalChunks(total)
       setCurrentChunkIndex(0)
       setChunkDurations({})
       preloadingRef.current = false
-
       let chunk0Url = existing["0"]
       if (!chunk0Url) {
         const res = await api.post(
@@ -491,7 +532,6 @@ export default function NovelViewerPage() {
         )
         chunk0Url = res.data.url
       }
-
       const urls = { ...existing, "0": chunk0Url }
       setChunkUrls(urls)
       setCurrentVoiceId(null)
@@ -611,7 +651,6 @@ export default function NovelViewerPage() {
     try {
       await api.post(`/api/comments/${commentId}/replies`, { replyText });
       setReplyText("");
-      // 🌟 [수정 포인트] 답글 창 유지를 위해 setReplyingId(null) 삭제!
       setExpandedReplies(prev => ({ ...prev, [commentId]: true }));
       loadComments(); 
     } catch (error) {
@@ -686,6 +725,18 @@ export default function NovelViewerPage() {
     }
   }
 
+  const handleReportClick = (target, type) => {
+    if (!isLoggedIn) { navigate("/login"); return; }
+    
+    setReportInfo({
+      targetType: type, // 'NOVEL_COMMENT', 'NOVEL_REPLY' 등
+      targetId: target.id,
+      targetParentId: episodeId,
+      reportedUserId: target.userId || target.user?.split('독자')[1],
+      targetTitle: `${target.user} 님의 ${type.includes('REPLY') ? '답글' : '댓글'}`
+    });
+  };
+
   // ==========================================
   // 7. UI 렌더링
   // ==========================================
@@ -695,11 +746,10 @@ export default function NovelViewerPage() {
   return (
     <div 
       className={styles.pageWrapper}
-      // 🌟 순간이동 시 화면 깜빡임 방지 (투명 망토)
+      // 🔥 transition을 완전히 제거하여 눈속임 없이 순수하게 즉시 띄웁니다.
       style={{ 
         opacity: isReady ? 1 : 0, 
-        pointerEvents: isReady ? 'auto' : 'none',
-        transition: "opacity 0.2s" 
+        pointerEvents: isReady ? 'auto' : 'none'
       }}
     >
       <div className={styles.topBar}>
@@ -978,7 +1028,6 @@ export default function NovelViewerPage() {
 
         <div className={styles.commentList}>
           {visibleComments.map((cm) => (
-            // 🌟 아이디(id) 속성 꼭 추가!
             <div key={cm.id} id={`comment-${cm.id}`} className={styles.commentItem}>
 
               {/* 댓글 헤더 */}
@@ -988,26 +1037,38 @@ export default function NovelViewerPage() {
                   <span className={styles.commentUser}>{cm.user}</span>
                   <span className={styles.commentDate}>{cm.date}</span>
                 </div>
-                {cm.isMine && editingId !== cm.id && (
-                  <div style={{ marginLeft: "auto", position: "relative" }}>
-                    <button
-                      className={styles.moreBtn}
-                      onClick={e => { e.stopPropagation(); setOpenMoreId(openMoreId === cm.id ? null : cm.id) }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="12" cy="5" r="1.5" />
-                        <circle cx="12" cy="12" r="1.5" />
-                        <circle cx="12" cy="19" r="1.5" />
-                      </svg>
-                    </button>
-                    {openMoreId === cm.id && (
-                      <div className={styles.moreMenu}>
-                        <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleEditStart(cm); setOpenMoreId(null) }}>수정</button>
-                        <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleDelete(cm.id); setOpenMoreId(null) }}>삭제</button>
-                      </div>
-                    )}
-                  </div>
-                )}
+
+                <div className={styles.moreMenuWrapper}>
+                  <button
+                    className={styles.moreBtn}
+                    onClick={e => { e.stopPropagation(); setOpenMoreId(openMoreId === cm.id ? null : cm.id) }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                    </svg>
+                  </button>
+
+                  {openMoreId === cm.id && (
+                    <div className={styles.moreMenu}>
+                      {cm.isMine ? (
+                        <>
+                          <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleEditStart(cm); setOpenMoreId(null) }}>수정</button>
+                          <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleDelete(cm.id); setOpenMoreId(null) }}>삭제</button>
+                        </>
+                      ) : (
+                        <button 
+                          className={`${styles.moreMenuItem} ${styles.moreMenuItemReport}`} 
+                          onClick={() => { handleReportClick(cm, 'NOVEL_COMMENT'); setOpenMoreId(null) }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 18h14" /><path d="M17 18v-5a5 5 0 0 0-10 0v5" /><path d="M2 13h2" /><path d="M20 13h2" /><path d="M12 2v2" />
+                          </svg>
+                          신고하기
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 댓글 내용 */}
@@ -1042,7 +1103,7 @@ export default function NovelViewerPage() {
                         onClick={() => handleCommentLike(cm.id, "dislike")}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill={cm.myLike === "dislike" ? "#E53935" : "none"} stroke={cm.myLike === "dislike" ? "#E53935" : "#90A4C8"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+                          <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2-2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
                         </svg>
                         <span>{cm.dislikes}</span>
                       </button>
@@ -1055,7 +1116,7 @@ export default function NovelViewerPage() {
               {expandedReplies[cm.id] && cm.replies?.length > 0 && (
                 <div className={styles.replyList}>
                   {cm.replies.map(reply => (
-                    <div key={reply.id} className={styles.replyItem}>
+                    <div key={reply.id} id={`reply-${reply.id}`} className={styles.replyItem}>
                       <div className={styles.replyArrow}>↳</div>
                       <div className={styles.replyContent}>
                         <div className={styles.commentHeader}>
@@ -1064,26 +1125,38 @@ export default function NovelViewerPage() {
                             <span className={styles.commentUser}>{reply.user}</span>
                             <span className={styles.commentDate}>{reply.date}</span>
                           </div>
-                          {reply.isMine && !(editingReply?.replyId === reply.id) && (
-                            <div style={{ marginLeft: "auto", position: "relative" }}>
-                              <button
-                                className={styles.moreBtn}
-                                onClick={e => { e.stopPropagation(); setOpenMoreReplyId(openMoreReplyId === reply.id ? null : reply.id) }}
-                              >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                  <circle cx="12" cy="5" r="1.5" />
-                                  <circle cx="12" cy="12" r="1.5" />
-                                  <circle cx="12" cy="19" r="1.5" />
-                                </svg>
-                              </button>
-                              {openMoreReplyId === reply.id && (
-                                <div className={styles.moreMenu}>
-                                  <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleReplyEditStart(cm.id, reply); setOpenMoreReplyId(null) }}>수정</button>
-                                  <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleReplyDelete(cm.id, reply.id); setOpenMoreReplyId(null) }}>삭제</button>
-                                </div>
-                              )}
-                            </div>
-                          )}
+
+                          <div className={styles.moreMenuWrapper}>
+                            <button
+                              className={styles.moreBtn}
+                              onClick={e => { e.stopPropagation(); setOpenMoreReplyId(openMoreReplyId === reply.id ? null : reply.id) }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                              </svg>
+                            </button>
+
+                            {openMoreReplyId === reply.id && (
+                              <div className={styles.moreMenu}>
+                                {reply.isMine ? (
+                                  <>
+                                    <button className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`} onClick={() => { handleReplyEditStart(cm.id, reply); setOpenMoreReplyId(null) }}>수정</button>
+                                    <button className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`} onClick={() => { handleReplyDelete(cm.id, reply.id); setOpenMoreReplyId(null) }}>삭제</button>
+                                  </>
+                                ) : (
+                                  <button 
+                                    className={`${styles.moreMenuItem} ${styles.moreMenuItemReport}`} 
+                                    onClick={() => { handleReportClick(reply, 'NOVEL_REPLY'); setOpenMoreReplyId(null) }}
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M5 18h14" /><path d="M17 18v-5a5 5 0 0 0-10 0v5" /><path d="M2 13h2" /><path d="M20 13h2" /><path d="M12 2v2" />
+                                    </svg>
+                                    신고하기
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         {editingReply?.replyId === reply.id ? (
                           <div className={styles.editRow}>
@@ -1111,7 +1184,7 @@ export default function NovelViewerPage() {
                                   onClick={() => handleReplyLike(cm.id, reply.id, "dislike")}
                                 >
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill={reply.myLike === "dislike" ? "#E53935" : "none"} stroke={reply.myLike === "dislike" ? "#E53935" : "#90A4C8"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+                                    <path d="M17 14V2" /><path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2-2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
                                   </svg>
                                   <span>{reply.dislikes}</span>
                                 </button>
@@ -1125,7 +1198,6 @@ export default function NovelViewerPage() {
                 </div>
               )}
 
-              {/* 🌟 [수정 포인트] 삭제된 댓글은 차단하고, 정상 답글은 등록 후에도 창을 닫지 않게! */}
               {replyingId === cm.id && cm.text !== "삭제된 댓글입니다." && (
                 <div className={styles.replyInputRow}>
                   <div className={styles.replyArrow}>↳</div>
@@ -1150,6 +1222,13 @@ export default function NovelViewerPage() {
           {!hasMoreComments && comments.length > 0 && <span className={styles.commentObserverText}>모든 댓글을 불러왔습니다.</span>}
         </div>
       </div>
+      
+      {/* 🌟 최하단 모달 렌더링 유지 */}
+      <ReportModal 
+        isOpen={!!reportInfo} 
+        onClose={() => setReportInfo(null)} 
+        targetInfo={reportInfo} 
+      />
     </div>
   )
 }
