@@ -25,11 +25,35 @@ export default function ContentManagePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get("/api/mypage")
-      .then(res => setMyContents(res.data.myPosts || []))
-      .catch(() => setMyContents([]))
-      .finally(() => setLoading(false))
-  }, [])
+    const loadMyContents = async () => {
+      try {
+        const response = await api.get("/api/contents/my")
+        const data = response.data
+        setMyContents(Array.isArray(data) ? data : (data.content ?? []))
+      } catch (error) {
+        console.error("내 작품 불러오기 실패 : ", error)
+      }
+    }
+    loadMyContents()
+}, [])
+
+  const statusLabel = (status) => {
+    switch (status) {
+      case "DRAFT": return "임시저장"
+      case "PENDING": return "검수중"
+      case "APPROVED": return "승인됨"
+      case "PUBLISHED": return "게시중"
+      case "REJECTED": return "반려됨"
+      case "BLINDED": return "블라인드"
+      default: return status
+    }
+  }
+
+  const statusStyle = (status) => {
+    if (status === "PENDING") return styles.statusReview
+    if (status === "REJECTED" || status === "BLINDED") return styles.statusReject
+    return styles.statusActive
+  }
 
   return (
     <div className={styles.pageWrapper}>
@@ -56,18 +80,19 @@ export default function ContentManagePage() {
           </div>
         ) : (
           myContents.map(item => (
-            <div key={item.contentId} className={styles.itemCard} onClick={() => navigate(`/author/contents/${item.contentId}`)}>
+            <div key={item.contentId} className={styles.itemCard}
+              // ✅ 클릭 시 회차 목록 페이지로 이동
+              onClick={() => navigate(`/author/contents/${item.contentId}`)}
+            >
               <div className={styles.itemLeft}>
-                {item.thumbnailUrl ? (
-                  <img src={item.thumbnailUrl} className={styles.thumbnail} alt="썸네일" style={{ objectFit: "cover" }} />
-                ) : (
-                  <div className={styles.thumbnail} />
-                )}
+                <div className={styles.thumbnail}>
+                  {item.thumbnailUrl && <img src={item.thumbnailUrl} alt="썸네일" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                </div>
                 <div>
                   <div className={styles.itemTitle}>{item.title}</div>
-                  <div className={styles.itemMeta}>{item.type} · {item.genre || "장르 미설정"}</div>
-                  <span className={`${styles.statusBadge} ${styles[STATUS_STYLE[item.status]] || styles.statusReview}`}>
-                    {STATUS_LABEL[item.status] || item.status}
+                  <div className={styles.itemMeta}>{item.type} · {item.genre}</div>
+                  <span className={`${styles.statusBadge} ${statusStyle(item.status)}`}>
+                    {statusLabel(item.status)}
                   </span>
                 </div>
               </div>

@@ -333,7 +333,7 @@ export default function ContentDetailPage() {
             <div className={styles.epInfo}>
                 {isBlinded ? (
                     <div style={{ fontSize: 12, color: "#90A4C8", lineHeight: 1.5 }}>
-                        운영 정책에 따른 콘텐츠 검토 및 수정 작업으로 인해 잠시 이용이 제한된 회차입니다. 최대한 빠르게 조치를 완료하여 다시 제공해 드릴 수 있도록 하겠습니다.
+                        운영 정책에 따른 콘텐츠 검토 및 수정 작업으로 인해 잠시 이용이 제한된 회차입니다.<br />최대한 빠르게 조치를 완료하여 다시 제공해 드릴 수 있도록 하겠습니다.
                     </div>
                 ) : (
                     <>
