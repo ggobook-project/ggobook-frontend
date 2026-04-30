@@ -21,7 +21,7 @@ export default function SearchResultPage() {
   const loadResults = async (keyword, filterType) => {
     try {
       setLoading(true)
-      const token = localStorage.getItem('accessToken')
+      const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
       const params = new URLSearchParams({ page: 0, size: 20 })
       if (keyword) params.append("keyword", keyword)
       if (filterType) params.append("type", filterType)

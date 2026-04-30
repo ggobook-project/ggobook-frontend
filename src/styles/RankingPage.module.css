@@ -127,3 +127,13 @@
   font-size: 13px;
   color: #4A6FA5;
 }
+
+.thumbnail {
+  width: 48px;
+  height: 62px;
+  background: #E8F4FD;
+  border-radius: 6px;
+  border: 1px solid #BBDEFB;
+  flex-shrink: 0;
+  object-fit: cover; /* 🌟 이 줄 추가 */
+}

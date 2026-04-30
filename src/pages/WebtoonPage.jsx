@@ -6,6 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import styles from "../styles/WebtoonPage.module.css"
 import AiChatbotWidget from "../components/AiChatbotWidget";
+import api from "../api/axios"; // 🌟 axios 추가
 
 const days = ["전체", "월", "화", "수", "목", "금", "토", "일", "완결"];
 
@@ -60,12 +61,13 @@ export default function WebtoonPage() {
 
   const fetchMainData = async () => {
     try {
+      // 🌟 핵심: fetch 대신 api.get 사용, 인기작에는 sortType=popular 무전기 부착!
       const [popRes, newRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/contents/?type=웹툰&page=0&size=10`),
-        fetch(`http://localhost:8080/api/contents/?type=웹툰&page=0&size=10`),
+        api.get(`/api/contents/?type=웹툰&sortType=popular&page=0&size=10`),
+        api.get(`/api/contents/?type=웹툰&page=0&size=10`),
       ]);
-      if (popRes.ok) { const d = await popRes.json(); setPopularContents(d.content); }
-      if (newRes.ok) { const d = await newRes.json(); setNewContents(d.content); }
+      setPopularContents(popRes.data.content);
+      setNewContents(newRes.data.content);
     } catch (error) { console.error("메인 데이터 로딩 실패:", error); }
   };
 
@@ -73,14 +75,13 @@ export default function WebtoonPage() {
     if (isLoading) return;
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/contents/?type=웹툰&page=${pageNum}&size=10&serialDay=${day}`
+      // 🌟 핵심: 요일별 데이터도 api.get 사용
+      const response = await api.get(
+        `/api/contents/?type=웹툰&page=${pageNum}&size=10&serialDay=${day}`
       );
-      if (response.ok) {
-        const data = await response.json();
-        setDailyContents((prev) => pageNum === 0 ? data.content : [...prev, ...data.content]);
-        setHasNext(!data.last);
-      }
+      const data = response.data;
+      setDailyContents((prev) => pageNum === 0 ? data.content : [...prev, ...data.content]);
+      setHasNext(!data.last);
     } catch (error) { console.error("요일별 웹툰 불러오기 실패:", error); }
     finally { setIsLoading(false); }
   };
@@ -124,8 +125,7 @@ export default function WebtoonPage() {
     <div className={styles.pageWrapper}>
       <style>{swiperNavStyle}</style>
 
-  
-      {/* 히어로 섹션 */}
+      
       <div className={styles.heroSection}>
         {HERO_ITEMS.map((item, i) => (
           <img key={i} src={item.gif} alt="" className={`${styles.heroBg} ${i === heroIndex ? styles.heroBgActive : ""}`} />
@@ -157,9 +157,9 @@ export default function WebtoonPage() {
         </div>
       </div>
 
-      {/* 본문 */}
+      
       <div className={styles.content}>
-        {/* 검색 */}
+        
         <div className={styles.searchBox}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#90A4C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -167,7 +167,7 @@ export default function WebtoonPage() {
           <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="작품명, 작가명 검색" className={styles.searchInput} />
         </div>
 
-        {/* 요일 탭 */}
+        
         <div className={styles.tabGroup}>
           {days.map((d) => (
             <button key={d} onClick={() => setActiveDay(d)} className={`${styles.tabBtn} ${activeDay === d ? styles.tabBtnActive : ""}`}>{d}</button>
@@ -180,7 +180,7 @@ export default function WebtoonPage() {
             <div className={styles.swiperWrap}>
               <Swiper modules={[Navigation]} spaceBetween={20} slidesPerView={4} onSwiper={(s) => (popularSwiperRef.current = s)} style={{ width: "100%", maxWidth: "100%" }}>
                 {popularContents.map((item) => (
-                  <SwiperSlide key={item.contentId}>
+                  <SwiperSlide key="{item.contentId}">
                     <div onClick={() => navigate(`/contents/${item.contentId}`)} className={styles.cardItem}>
                       <img src={item.thumbnailUrl} alt={item.title} className={styles.cardImg} />
                       <div className={styles.cardTitle}>{item.title}</div>
@@ -189,15 +189,15 @@ export default function WebtoonPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef={popularSwiperRef} />
-              <NavBtn direction="next" swiperRef={popularSwiperRef} />
+              <NavBtn direction="prev" swiperRef="{popularSwiperRef}"/>
+              <NavBtn direction="next" swiperRef="{popularSwiperRef}"/>
             </div>
 
             <div className={styles.sectionTitle}>신작 웹툰</div>
             <div className={styles.swiperWrap}>
               <Swiper modules={[Navigation]} spaceBetween={20} slidesPerView={4} onSwiper={(s) => (newSwiperRef.current = s)} style={{ width: "100%", maxWidth: "100%" }}>
                 {newContents.map((item) => (
-                  <SwiperSlide key={item.contentId}>
+                  <SwiperSlide key="{item.contentId}">
                     <div onClick={() => navigate(`/contents/${item.contentId}`)} className={styles.cardItem}>
                       <img src={item.thumbnailUrl} alt={item.title} className={styles.cardImg} />
                       <div className={styles.cardTitle}>{item.title}</div>
@@ -206,8 +206,8 @@ export default function WebtoonPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef={newSwiperRef} />
-              <NavBtn direction="next" swiperRef={newSwiperRef} />
+              <NavBtn direction="prev" swiperRef="{newSwiperRef}"/>
+              <NavBtn direction="next" swiperRef="{newSwiperRef}"/>
             </div>
           </div>
         ) : (
@@ -229,7 +229,7 @@ export default function WebtoonPage() {
           </div>
         )}
       </div>
-      <AiChatbotWidget />
+      <AiChatbotWidget/>
     </div>
   );
 }

@@ -15,7 +15,7 @@ export default function NovelViewerPage() {
   const savedProgress = parseInt(searchParams.get("progress") || "0", 10)
   const focusCommentId = searchParams.get("focusComment") // 🌟 마이페이지에서 넘어온 타겟 댓글 ID
 
-  const isLoggedIn = !!localStorage.getItem("accessToken")
+  const isLoggedIn = !!localStorage.getItem("accessToken") || !!sessionStorage.getItem("accessToken");
   const currentUser = "나"
   const COMMENTS_PER_PAGE = 5
 
@@ -87,7 +87,7 @@ export default function NovelViewerPage() {
   // 3. 헬퍼 함수
   // ==========================================
   const getUserId = () => {
-    const token = localStorage.getItem('accessToken')
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     if (!token) return null
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
@@ -148,19 +148,21 @@ export default function NovelViewerPage() {
     }
   }
 
+  // 🌟 [수정] episodeId 기준으로 평균 별점 로드
   const loadAverageRating = async () => {
-    if (!contentId) return
+    if (!episodeId) return
     try {
-      const response = await api.get(`/api/ratings/${contentId}`)
+      const response = await api.get(`/api/ratings/${episodeId}`)
       setAvgRating(response.data || 0)
     } catch (error) { console.error("평균 평점 로드 실패 : ", error) }
   }
 
+  // 🌟 [수정] episodeId 기준으로 내 별점 로드
   const loadMyRating = async () => {
     const userId = getUserId()
-    if (!userId || !contentId) return
+    if (!userId || !episodeId) return
     try {
-      const response = await api.get(`/api/ratings/${contentId}/users/${userId}`)
+      const response = await api.get(`/api/ratings/${episodeId}/users/${userId}`)
       if (response.data && response.data.score) { 
         setMyRating(response.data.score); 
         setTempRating(response.data.score); 
@@ -335,8 +337,6 @@ export default function NovelViewerPage() {
     }
   }, [chunkUrls[currentChunkIndex], currentChunkIndex])
 
-
-
   // 5-6. 배속 변경 시 오디오에 즉시 반영
   useEffect(() => {
     if (audioRef.current) audioRef.current.playbackRate = playbackRate
@@ -354,8 +354,13 @@ export default function NovelViewerPage() {
     return () => document.removeEventListener("mousedown", handleOutside)
   }, [showSettings])
 
-  // 5-7. 기타 useEffect 유지
-  useEffect(() => { if (contentId) { loadAverageRating(); loadMyRating() } }, [episode])
+  // 🌟 [수정] episodeId가 바뀔 때마다 별점을 새로 불러오도록 변경!
+  useEffect(() => { 
+    if (episodeId) { 
+      loadAverageRating(); 
+      loadMyRating();
+    } 
+  }, [episodeId])
 
   useEffect(() => {
     const handleClick = () => { setOpenMoreId(null); setOpenMoreReplyId(null) }
@@ -549,11 +554,12 @@ export default function NovelViewerPage() {
     const userId = getUserId()
     if (!userId) { navigate("/login"); return }
     try {
-      const response = await api.post(`/api/ratings/${contentId}?userId=${userId}`, { score: tempRating })
+      // 🌟 [수정] episodeId 로 요청 전송
+      const response = await api.post(`/api/ratings/${episodeId}?userId=${userId}`, { score: tempRating })
       if (response.status === 200 || response.status === 201) {
         setMyRating(tempRating)
         setShowRatingModal(false)
-        setAvgRating(prev => Math.round(((prev + tempRating) / 2) * 10) / 10)
+        // 🌟 [수정] 가짜 평균 계산식 삭제하고 서버에서 진짜 평균 다시 불러오기!
         loadAverageRating()
       } else {
         alert("별점 저장에 실패했습니다.")

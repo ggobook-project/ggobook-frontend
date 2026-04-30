@@ -15,42 +15,29 @@ export default function Header() {
   const [query, setQuery] = useState("");
 
   const getRole = () => {
-  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const r = payload.role || payload.roles?.[0] || payload.authority;
+      return typeof r === "string" ? r.replace("ROLE_", "") : null;
+    } catch { return null; }
+  }
   
-  if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
-    const r = payload.role || payload.roles?.[0] || payload.authority;
-    return typeof r === "string" ? r.replace("ROLE_", "") : null;
-  } catch { return null; }
-}
   const role = getRole() || localStorage.getItem("userRole") || "USER"
   const isAdmin = role === "ADMIN"
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
+  // 🌟 핵심 수술 완료: 시간 검사하는 팀킬 로직 삭제!
   useEffect(() => {
-  const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-
-  const isTokenExpired = (t) => {
-    try {
-      const payload = JSON.parse(atob(t.split('.')[1]));
-      return payload.exp < Math.floor(Date.now() / 1000);
-    } catch {
-      return true; 
-    }
-  }
-
+    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    
+    // 토큰이 있으면 무조건 로그인 상태로 표시합니다. (만료 체크는 axios 인터셉터가 알아서 합니다)
     if (token) {
-      if (isTokenExpired(token)) {
-        // 🌟 핵심 수정 1: 토큰 썩었을 때 양쪽 주머니 모두 파기!
-        localStorage.removeItem("accessToken")
-        sessionStorage.removeItem("accessToken")
-        setIsLoggedIn(false)
-      } else {
-        setIsLoggedIn(true)
-      }
+      setIsLoggedIn(true);
     } else {
-      setIsLoggedIn(false)
+      setIsLoggedIn(false);
     }
   }, [currentPath]) 
 
@@ -62,7 +49,6 @@ export default function Header() {
     } catch (error) {
       console.error("로그아웃 에러:", error);
     } finally {
-      // 🌟 핵심 수정 2: 로그아웃 할 때 양쪽 주머니 모두 파기!
       localStorage.removeItem("accessToken");
       sessionStorage.removeItem("accessToken");
       navigate("/", { replace: true });
@@ -77,13 +63,13 @@ export default function Header() {
     { path: "/notices", label: "공지" },
   ];
 
-const handleSearch = (e) => {
+  const handleSearch = (e) => {
     if (e.key === "Enter" && query.trim()) {
-        navigate(`/search?keyword=${encodeURIComponent(query)}`); // ✅ q → keyword
-        setSearchOpen(false); // ✅ searchOpen(false) → setSearchOpen(false)
+        navigate(`/search?keyword=${encodeURIComponent(query)}`); 
+        setSearchOpen(false); 
         setQuery("");
     }
-};
+  };
 
   const btnStyle = {
     fontSize: 13, color: c.textSub, cursor: "pointer",

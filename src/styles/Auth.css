@@ -166,3 +166,79 @@
   color: var(--text-sub);
   font-size: 14px;
 }
+
+
+/* ==========================================
+   커스텀 알림 모달 (alert 대체용)
+========================================== */
+.auth-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(13, 27, 42, 0.4); /* --text-main 색상 기반 투명도 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.auth-modal-box {
+  background: #FFFFFF;
+  width: 90%;
+  max-width: 320px;
+  border-radius: 16px;
+  padding: 30px 24px 24px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.auth-modal-icon {
+  font-size: 32px;
+  margin-bottom: 12px;
+}
+
+.auth-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 10px;
+}
+
+.auth-modal-message {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.5;
+  margin-bottom: 24px;
+  white-space: pre-wrap; /* \n 줄바꿈 적용되도록 설정 */
+  background: var(--bg-surface);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.auth-modal-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.auth-modal-btn:hover {
+  background: var(--primary-dark);
+}
+
+/* 모달 애니메이션 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

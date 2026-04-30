@@ -6,6 +6,7 @@ import "swiper/css";
 import "swiper/css/navigation";
 import styles from "../styles/NovelPage.module.css";
 import AiChatbotWidget from "../components/AiChatbotWidget";
+import api from "../api/axios"; // 🌟 axios 추가
 
 const days = ["전체", "월", "화", "수", "목", "금", "토", "일", "완결"];
 
@@ -58,12 +59,13 @@ export default function NovelPage() {
 
   const fetchMainData = async () => {
     try {
+      // 🌟 핵심: fetch 대신 api.get 사용, 인기작에는 sortType=popular 부착
       const [popRes, newRes] = await Promise.all([
-        fetch(`http://localhost:8080/api/contents/?type=웹소설&page=0&size=10`),
-        fetch(`http://localhost:8080/api/contents/?type=웹소설&page=0&size=10`),
+        api.get(`/api/contents/?type=웹소설&sortType=popular&page=0&size=10`),
+        api.get(`/api/contents/?type=웹소설&page=0&size=10`),
       ]);
-      if (popRes.ok) { const d = await popRes.json(); setPopularContents(d.content); }
-      if (newRes.ok) { const d = await newRes.json(); setNewContents(d.content); }
+      setPopularContents(popRes.data.content);
+      setNewContents(newRes.data.content);
     } catch (error) { console.error("메인 데이터 로딩 실패:", error); }
   };
 
@@ -72,12 +74,11 @@ export default function NovelPage() {
     setIsLoading(true);
     try {
       const dayParam = day === "전체" ? "" : `&serialDay=${day}`;
-      const response = await fetch(`http://localhost:8080/api/contents/?type=웹소설&page=${pageNum}&size=10${dayParam}`);
-      if (response.ok) {
-        const data = await response.json();
-        setDayContents((prev) => pageNum === 0 ? data.content : [...prev, ...data.content]);
-        setHasNext(!data.last);
-      }
+      // 🌟 핵심: 요일별 데이터도 api.get 사용
+      const response = await api.get(`/api/contents/?type=웹소설&page=${pageNum}&size=10${dayParam}`);
+      const data = response.data;
+      setDayContents((prev) => pageNum === 0 ? data.content : [...prev, ...data.content]);
+      setHasNext(!data.last);
     } catch (error) { console.error("요일별 소설 불러오기 실패:", error); }
     finally { setIsLoading(false); }
   };
@@ -154,7 +155,7 @@ export default function NovelPage() {
 
       <div className={styles.content}>
 
-        {/* 검색창 */}
+        
         <div className={styles.searchBox}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#90A4C8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="11" cy="11" r="8" />
@@ -173,7 +174,7 @@ export default function NovelPage() {
           />
         </div>
 
-        {/* 요일 탭 */}
+        
         <div className={styles.tabGroup}>
           {days.map((d) => (
             <button
@@ -190,7 +191,7 @@ export default function NovelPage() {
             <div className={styles.swiperWrap}>
               <Swiper modules={[Navigation]} spaceBetween={20} slidesPerView={4} onSwiper={(s) => (popularSwiperRef.current = s)} style={{ width: "100%", maxWidth: "100%" }}>
                 {popularContents.map((item) => (
-                  <SwiperSlide key={item.contentId}>
+                  <SwiperSlide key="{item.contentId}">
                     <div onClick={() => navigate(`/contents/${item.contentId}`)} className={styles.cardItem}>
                       <img src={item.thumbnailUrl} alt={item.title} className={styles.cardImg} />
                       <div className={styles.cardTitle}>{item.title}</div>
@@ -199,15 +200,15 @@ export default function NovelPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef={popularSwiperRef} />
-              <NavBtn direction="next" swiperRef={popularSwiperRef} />
+              <NavBtn direction="prev" swiperRef="{popularSwiperRef}"/>
+              <NavBtn direction="next" swiperRef="{popularSwiperRef}"/>
             </div>
 
             <div className={styles.sectionTitle}>신작 웹소설</div>
             <div className={styles.swiperWrap}>
               <Swiper modules={[Navigation]} spaceBetween={20} slidesPerView={4} onSwiper={(s) => (newSwiperRef.current = s)} style={{ width: "100%", maxWidth: "100%" }}>
                 {newContents.map((item) => (
-                  <SwiperSlide key={item.contentId}>
+                  <SwiperSlide key="{item.contentId}">
                     <div onClick={() => navigate(`/contents/${item.contentId}`)} className={styles.cardItem}>
                       <img src={item.thumbnailUrl} alt={item.title} className={styles.cardImg} />
                       <div className={styles.cardTitle}>{item.title}</div>
@@ -216,8 +217,8 @@ export default function NovelPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef={newSwiperRef} />
-              <NavBtn direction="next" swiperRef={newSwiperRef} />
+              <NavBtn direction="prev" swiperRef="{newSwiperRef}"/>
+              <NavBtn direction="next" swiperRef="{newSwiperRef}"/>
             </div>
           </div>
         ) : (
@@ -242,7 +243,7 @@ export default function NovelPage() {
           </div>
         )}
       </div>
-      <AiChatbotWidget />
+      <AiChatbotWidget/>
     </div>
   );
 }
