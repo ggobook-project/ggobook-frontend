@@ -177,15 +177,17 @@ export default function NovelViewerPage() {
       const serverComments = response.data.content || [];
       const mappedComments = serverComments.map(cm => ({
         id: cm.commentId,
-        user: `독자${cm.userId}`, 
+        userId: cm.userId,
+        user: `독자${cm.userId}`,
         text: cm.commentText,
-        date: cm.createdAt ? cm.createdAt.split('T')[0] : "방금", 
-        isMine: cm.userId === getUserId(), 
+        date: cm.createdAt ? cm.createdAt.split('T')[0] : "방금",
+        isMine: cm.userId === getUserId(),
         likes: cm.likeCount || 0,
         dislikes: cm.dislikeCount || 0,
         myLike: cm.myReaction ? cm.myReaction.toLowerCase() : null,
         replies: (cm.replies || []).map(r => ({
           id: r.replyId,
+          userId: r.userId,
           user: `독자${r.userId}`,
           text: r.replyText,
           date: r.createdAt ? r.createdAt.split('T')[0] : "방금",

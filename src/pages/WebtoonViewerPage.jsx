@@ -139,15 +139,17 @@ export default function WebtoonViewerPage() {
       const serverComments = response.data.content || [];
       const mappedComments = serverComments.map(cm => ({
         id: cm.commentId,
+        userId: cm.userId,
         user: cm.nickname || "알 수 없음",
         text: cm.commentText,
-        date: cm.createdAt ? cm.createdAt.split('T')[0] : "방금", 
-        isMine: cm.userId === getUserId(), 
+        date: cm.createdAt ? cm.createdAt.split('T')[0] : "방금",
+        isMine: cm.userId === getUserId(),
         likes: cm.likeCount || 0,
         dislikes: cm.dislikeCount || 0,
         myLike: cm.myReaction ? cm.myReaction.toLowerCase() : null,
         replies: (cm.replies || []).map(r => ({
           id: r.replyId,
+          userId: r.userId,
           user: r.nickname || "알 수 없음",
           text: r.replyText,
           date: r.createdAt ? r.createdAt.split('T')[0] : "방금",
