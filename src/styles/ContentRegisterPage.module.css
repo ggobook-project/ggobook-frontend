@@ -155,6 +155,65 @@
   border-color: #2196F3;
 }
 
+.dayGroup {
+  display: flex;
+  gap: 8px;
+}
+
+.dayBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: #E8F4FD;
+  color: #4A6FA5;
+  border: 1px solid #BBDEFB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.dayBtn:hover {
+  background: #BBDEFB;
+  color: #1565C0;
+  transform: translateY(-1px);
+}
+
+.dayBtnActive {
+  background: #2196F3;
+  color: #fff;
+  border-color: #2196F3;
+}
+
+.dayBtnActive:hover {
+  background: #1565C0;
+  border-color: #1565C0;
+}
+
+.dayBtnSat {
+  color: #1565C0;
+}
+
+.dayBtnSat.dayBtnActive {
+  background: #1565C0;
+  border-color: #1565C0;
+  color: #fff;
+}
+
+.dayBtnSun {
+  color: #E53935;
+}
+
+.dayBtnSun.dayBtnActive {
+  background: #E53935;
+  border-color: #E53935;
+  color: #fff;
+}
+
 .fileBtn {
   display: inline-flex;
   align-items: center;

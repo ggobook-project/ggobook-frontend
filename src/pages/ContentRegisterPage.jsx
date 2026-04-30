@@ -16,6 +16,12 @@ export default function ContentRegisterPage() {
   const [file, setFile] = useState(null)
   const [videoUrl, setVideoUrl] = useState("")
 
+  const [serialDay, setSerialDay] = useState([])
+
+  const toggleDay = (day) => {
+    setSerialDay(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
+  }
+
   const [tags, setTags] = useState([])
   const [tagInput, setTagInput] = useState("")
  
@@ -34,6 +40,7 @@ export default function ContentRegisterPage() {
         setSummary(data.summary || "")
         setDescription(data.description || "")
         setVideoUrl(data.videoUrl || "")
+        setSerialDay(data.serialDays || [])
       } catch (error) {
         console.error("작품 불러오기 실패 : ", error)
       }
@@ -98,11 +105,11 @@ export default function ContentRegisterPage() {
   }
  
   const handleSubmit = async () => {
-    if (!title || !genre || (!isEdit && !file)) {
-      alert(isEdit ? "작품명과 장르는 필수입니다." : "작품명, 장르, 대표 이미지는 필수입니다.")
+    if (!title || !genre || serialDay.length === 0 || (!isEdit && !file)) {
+      alert(isEdit ? "작품명, 장르, 연재 요일은 필수입니다." : "작품명, 장르, 연재 요일, 대표 이미지는 필수입니다.")
       return
     }
-    const userContent = { title, type, genre, summary, description, videoUrl }
+    const userContent = { title, type, genre, summary, description, videoUrl, serialDay: serialDay.join(",") }
     const formData = new FormData()
     formData.append("content", new Blob([JSON.stringify(userContent)], { type: "application/json" }))
     if (file) formData.append("file", file)
@@ -138,7 +145,6 @@ export default function ContentRegisterPage() {
       }
     } catch (error) {
       console.error("통신 에러:", error);
-      // 기존 팀원분의 설계: 백엔드 에러가 나도 프론트 단독 테스트를 위해 진행되도록 둔 부분 유지
       if (!isEdit) {
         saveToInspection()
         alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.")
@@ -191,6 +197,21 @@ export default function ContentRegisterPage() {
             <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="작품 줄거리를 입력해주세요" rows={4} className={styles.textarea} />
           </div>
  
+          <div className={styles.formGroup}>
+            <div className={styles.formLabel}>연재 요일 <span className={styles.optional}>(복수 가능)</span></div>
+            <div className={styles.dayGroup}>
+              {["월", "화", "수", "목", "금", "토", "일"].map(day => (
+                <button
+                  key={day}
+                  onClick={() => toggleDay(day)}
+                  className={`${styles.dayBtn} ${serialDay.includes(day) ? styles.dayBtnActive : ""} ${day === "토" ? styles.dayBtnSat : ""} ${day === "일" ? styles.dayBtnSun : ""}`}
+                >
+                  {day}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>태그</div>
             <div style={{ display: "flex", gap: 8 }}>
