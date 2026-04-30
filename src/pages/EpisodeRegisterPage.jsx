@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,6 +17,7 @@ const mockEpisodes = Array.from({ length: 20 }, (_, i) => ({
 export default function EpisodeRegisterPage() {
   const navigate = useNavigate();
   const { contentId, episodeId } = useParams();
+  const [searchParams] = useSearchParams();
   const isEdit = !!episodeId;
   const editEpisode = isEdit
     ? mockEpisodes.find((e) => e.id === Number(episodeId))
@@ -24,7 +25,7 @@ export default function EpisodeRegisterPage() {
 
   const [isFree, setIsFree] = useState(editEpisode?.isFree ?? true);
   const [scheduled, setScheduled] = useState(false);
-  const [isNovel, setIsNovel] = useState(false);
+  const [isNovel, setIsNovel] = useState(searchParams.get("novel") === "true");
   const [thumbFile, setThumbFile] = useState(null);
   const [episodeNumber, setEpisodeNumber] = useState(editEpisode?.number ?? "");
   const [episodeTitle, setEpisodeTitle] = useState(editEpisode?.title ?? "");
@@ -32,6 +33,27 @@ export default function EpisodeRegisterPage() {
   const [novelText, setNovelText] = useState(editEpisode?.novelText ?? "");
   const [comicFiles, setComicFiles] = useState([]);
   const [ttsFileUrl, setTtsFileUrl] = useState("");
+  const [formatLoading, setFormatLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+
+  const handleFormatDialogue = async () => {
+    if (!novelText.trim()) { alert("원고 내용을 먼저 입력해주세요."); return }
+    try {
+      setFormatLoading(true)
+      const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: novelText }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setNovelText(data.formatted_text)
+    } catch {
+      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.")
+    } finally {
+      setFormatLoading(false)
+    }
+  }
 
   const handleSubmit = async () => {
     if (!episodeTitle) {
@@ -96,15 +118,12 @@ export default function EpisodeRegisterPage() {
 
   useEffect(() => {
     const checkNovelForTTS = async () => {
+      if (searchParams.get("novel") === "true") return;
       try {
-        // 🌟 3. 작품 상세 조회도 요원(api)으로 교체!
         const response = await api.get(`/api/contents/${contentId}`);
-        
-        // axios는 response.data에 실제 JSON 결과물이 들어있습니다!
         setIsNovel(response.data.type === "웹소설");
       } catch (error) {
         console.error("작품 상세 불러오기 실패 : ", error);
-        alert("백엔드 통신 실패(작품 상세)");
       }
     };
     checkNovelForTTS();
@@ -204,7 +223,49 @@ export default function EpisodeRegisterPage() {
           </div>
 
           <div className={styles.formGroup}>
-            <div className={styles.formLabel}>원고 업로드</div>
+            <div className={styles.textareaHeader}>
+              <div className={styles.formLabel} style={{ marginBottom: 0 }}>원고 업로드</div>
+              {isNovel && (
+                <div className={styles.textareaActions}>
+                  <button className={styles.guideToggleBtn} onClick={() => setShowGuide(v => !v)}>
+                    {showGuide ? "가이드 닫기" : "멀티 보이스 TTS 가이드"}
+                  </button>
+                  <button
+                    className={styles.aiFormatBtn}
+                    onClick={handleFormatDialogue}
+                    disabled={formatLoading}
+                  >
+                    {formatLoading ? "변환 중..." : "AI 대사 자동 변환"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {isNovel && showGuide && (
+              <div className={styles.guideBox}>
+                <div className={styles.guideTitle}>멀티 보이스 TTS 포맷 가이드</div>
+                <div className={styles.guideDesc}>대사를 큰따옴표("")로 감싸면 등장인물별 목소리가 자동 적용됩니다.</div>
+                <div className={styles.guideItems}>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#E3F2FD", color: "#1565C0" }}>나레이터</span>
+                    <span className={styles.guideText}>따옴표 없는 서술 텍스트 → 나레이터 목소리</span>
+                  </div>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#E8F5E9", color: "#2E7D32" }}>주인공</span>
+                    <span className={styles.guideText}>첫·세·다섯 번째 <code className={styles.guideCode}>"대사"</code> → 주인공 목소리</span>
+                  </div>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#FFF3E0", color: "#E65100" }}>상대방</span>
+                    <span className={styles.guideText}>둘·넷·여섯 번째 <code className={styles.guideCode}>"대사"</code> → 상대방 목소리</span>
+                  </div>
+                </div>
+                <div className={styles.guideExample}>
+                  <div className={styles.guideExampleTitle}>예시</div>
+                  <pre className={styles.guideExampleCode}>{`그는 천천히 걸어왔다.\n"오랜만이야." 그가 말했다.\n그녀가 고개를 들었다.\n"정말 오래됐네." 그녀가 속삭였다.`}</pre>
+                </div>
+              </div>
+            )}
+
             {isNovel ? (
               <textarea
                 placeholder="원고 내용을 입력하세요"
@@ -320,26 +381,6 @@ export default function EpisodeRegisterPage() {
             )}
           </div>
 
-          {isNovel && (
-            <div className={styles.formGroup}>
-              <div className={styles.formLabel}>TTS 목소리 설정</div>
-              <div className={styles.ttsBox}>
-                <div className={styles.ttsHint}>
-                  등장인물별 목소리를 설정하세요
-                </div>
-                {["나레이터", "주인공", "상대방"].map((ch) => (
-                  <div key={ch} className={styles.ttsRow}>
-                    <span className={styles.ttsChar}>{ch}</span>
-                    <select className={styles.ttsSelect}>
-                      <option>목소리 선택</option>
-                      <option>차분한 여성</option>
-                      <option>활발한 남성</option>
-                    </select>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className={styles.btnGroup}>
             <button

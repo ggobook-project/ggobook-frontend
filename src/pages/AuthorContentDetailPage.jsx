@@ -1,36 +1,57 @@
 import { useNavigate, useParams } from "react-router-dom"
+import { useState, useEffect } from "react"
+import api from "../api/axios"
 import styles from "../styles/AuthorContentDetailPage.module.css"
+
+const STATUS_LABEL = {
+  PENDING: "검수중",
+  APPROVED: "공개",
+  REJECTED: "반려됨",
+  DRAFT: "임시저장",
+  BLINDED: "블라인드",
+}
+
+const STATUS_STYLE = {
+  PENDING: "statusReview",
+  APPROVED: "statusPublic",
+  REJECTED: "statusReview",
+  DRAFT: "statusReview",
+  BLINDED: "statusReview",
+}
 
 export default function AuthorContentDetailPage() {
   const navigate = useNavigate()
   const { contentId } = useParams()
+  const [content, setContent] = useState(null)
+  const [episodes, setEpisodes] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const myContents = Array.from({ length: 4 }, (_, i) => ({
-    id: i + 1, title: `내 작품 ${i + 1}`, type: i % 2 === 0 ? "웹툰" : "웹소설",
-    episodes: i * 5 + 3, status: i % 3 === 0 ? "검수중" : "연재중"
-  }))
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [contentRes, episodeRes] = await Promise.all([
+          api.get(`/api/contents/${contentId}`),
+          api.get(`/api/contents/${contentId}/episodes`, { params: { size: 100 } }),
+        ])
+        setContent(contentRes.data)
+        setEpisodes(episodeRes.data.content || episodeRes.data || [])
+      } catch {
+        setContent(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [contentId])
 
-  const content = myContents.find(c => c.id === Number(contentId))
-
-  if (!content) return (
-    <div style={{ padding: 40, color: "#4A6FA5", textAlign: "center" }}>
-      작품을 찾을 수 없습니다.
-    </div>
-  )
-
-  const episodes = Array.from({ length: content.episodes }, (_, i) => ({
-    id: i + 1,
-    number: i + 1,
-    title: `${content.title} ${i + 1}화`,
-    uploadDate: `2024.${String(Math.floor(i / 4) + 1).padStart(2, "0")}.${String((i % 28) + 1).padStart(2, "0")}`,
-    status: i === 0 ? "검수중" : "공개"
-  }))
+  if (loading) return <div style={{ padding: 40, textAlign: "center", color: "#4A6FA5" }}>불러오는 중...</div>
+  if (!content) return <div style={{ padding: 40, textAlign: "center", color: "#4A6FA5" }}>작품을 찾을 수 없습니다.</div>
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>{content.title}</div>
-        <div className={styles.headerMeta}>{content.type} · 총 {content.episodes}화 · {content.status}</div>
+        <div className={styles.headerMeta}>{content.type} · {content.genre} · 총 {episodes.length}화</div>
       </div>
 
       <div className={styles.content}>
@@ -46,28 +67,34 @@ export default function AuthorContentDetailPage() {
           </button>
         </div>
 
-        {episodes.map(ep => (
-          <div key={ep.id} className={styles.episodeCard}>
-            <div className={styles.episodeLeft}>
-              <div className={styles.episodeNumber}>{ep.number}화</div>
-              <div>
-                <div className={styles.episodeTitle}>{ep.title}</div>
-                <div className={styles.episodeMeta}>{ep.uploadDate}</div>
+        {episodes.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "48px 0", color: "#90A4C8", fontSize: 14 }}>
+            등록된 회차가 없습니다.
+          </div>
+        ) : (
+          episodes.map(ep => (
+            <div key={ep.episodeId} className={styles.episodeCard}>
+              <div className={styles.episodeLeft}>
+                <div className={styles.episodeNumber}>{ep.episodeNumber}화</div>
+                <div>
+                  <div className={styles.episodeTitle}>{ep.episodeTitle}</div>
+                  <div className={styles.episodeMeta}>{ep.createdAt?.substring(0, 10)}</div>
+                </div>
+              </div>
+              <div className={styles.episodeRight}>
+                <span className={`${styles.epStatusBadge} ${styles[STATUS_STYLE[ep.status]] || styles.statusReview}`}>
+                  {STATUS_LABEL[ep.status] || ep.status}
+                </span>
+                <button
+                  className={styles.editBtn}
+                  onClick={() => navigate(`/author/contents/${contentId}/episode/${ep.episodeId}/edit`)}
+                >
+                  수정
+                </button>
               </div>
             </div>
-            <div className={styles.episodeRight}>
-              <span className={`${styles.epStatusBadge} ${ep.status === "검수중" ? styles.statusReview : styles.statusPublic}`}>
-                {ep.status}
-              </span>
-              <button
-                className={styles.editBtn}
-                onClick={() => navigate(`/author/contents/${contentId}/episode/${ep.id}/edit`)}
-              >
-                수정
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   )
