@@ -43,7 +43,7 @@
 .aiSummaryLabel { font-size: 12px; font-weight: 600; color: #2196F3; margin-bottom: 8px; }
 .aiSummaryText { font-size: 14px; color: #4A6FA5; line-height: 1.7; }
 
-/* TTS 바 — 원래 사이즈 유지, 설정 패널은 오른쪽에 절대 배치 */
+/* TTS 바 */
 .bottomBar {
   background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(8px);
   border-top: 1px solid #BBDEFB; border-bottom: 1px solid #BBDEFB;
@@ -95,7 +95,7 @@
   white-space: nowrap; min-width: 28px; text-align: center;
 }
 
-/* ===== 설정 버튼 ===== */
+/* 설정 버튼 */
 .settingsBtn {
   background: none; border: 1px solid #BBDEFB;
   border-radius: 6px; padding: 4px 12px;
@@ -109,20 +109,13 @@
 }
 .settingsBtn:active { transform: translateY(0); }
 
-/* ===== 설정 패널 — TTS 바 바로 아래 인라인 배치 ===== */
+/* 설정 패널 */
 .settingsPanel {
-  max-width: 700px;
-  margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.97);
-  backdrop-filter: blur(8px);
-  border-left: 1px solid #BBDEFB;
-  border-right: 1px solid #BBDEFB;
-  border-bottom: 1px solid #BBDEFB;
-  border-radius: 0 0 14px 14px;
-  padding: 16px 24px 20px;
-  animation: settingsFadeIn 0.2s ease-out;
+  max-width: 700px; margin: 0 auto; width: 100%; box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.97); backdrop-filter: blur(8px);
+  border-left: 1px solid #BBDEFB; border-right: 1px solid #BBDEFB;
+  border-bottom: 1px solid #BBDEFB; border-radius: 0 0 14px 14px;
+  padding: 16px 24px 20px; animation: settingsFadeIn 0.2s ease-out;
 }
 
 @keyframes settingsFadeIn {
@@ -141,23 +134,11 @@
   width: 100%; padding: 9px 12px; margin-bottom: 10px;
   border: 1.5px solid #E2E8F0; border-radius: 8px;
   background: #F8FAFC; color: #1E293B; font-size: 13px;
-  cursor: pointer; outline: none;
-  transition: border-color 0.15s;
+  cursor: pointer; outline: none; transition: border-color 0.15s;
 }
 .voiceSelect:focus { border-color: #2196F3; }
 .voiceSelect:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* 목소리 칩 (레거시) */
-.voiceGrid { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.voiceChip {
-  display: flex; flex-direction: column; align-items: center;
-  padding: 8px 12px; border: 1.5px solid #E2E8F0; border-radius: 10px;
-  background: #F8FAFC; cursor: pointer; transition: all 0.15s;
-}
-.voiceChip:hover { border-color: #90CAF9; background: #EBF5FF; }
-.voiceChipActive { border-color: #2196F3 !important; background: #EBF5FF !important; }
-.voiceChipLabel { font-size: 13px; font-weight: 600; color: #1E293B; }
-.voiceChipType { font-size: 10px; color: #90A4C8; margin-top: 2px; }
 .applyBtn {
   width: 100%; padding: 8px; background: #2196F3; color: #fff;
   border: none; border-radius: 8px; font-weight: 700; font-size: 13px;
@@ -328,33 +309,49 @@
 .commentUser { font-size: 13px; font-weight: 600; color: #1565C0; }
 .commentDate { font-size: 12px; color: #90A4C8; }
 
-/* ... 더보기 메뉴 */
+/* 🌟 더보기 햄버거 메뉴 래퍼 & 버튼 & 스타일 수정 완벽판 */
+.moreMenuWrapper {
+  margin-left: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .moreBtn {
   background: none; border: none; color: #90A4C8; cursor: pointer;
-  padding: 2px 6px; border-radius: 4px;
+  padding: 4px; border-radius: 4px;
   line-height: 1; transition: background 0.2s, color 0.2s;
-  position: relative; display: flex; align-items: center;
+  display: flex; align-items: center; justify-content: center;
 }
 
 .moreBtn:hover { background: #E3F2FD; color: #4A6FA5; }
 
 .moreMenu {
-  position: absolute; right: 0; top: 100%;
+  position: absolute; right: 0; top: calc(100% + 4px);
   background: #fff; border: 1px solid #BBDEFB; border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
-  z-index: 50; overflow: hidden; min-width: 80px;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.15);
+  z-index: 50; overflow: hidden; 
+  min-width: 120px; /* 🌟 텍스트 잘림 방지를 위해 너비 증가 */
+  display: flex; flex-direction: column;
+  padding: 4px 0; /* 위아래 약간의 여백 추가 */
 }
 
 .moreMenuItem {
-  display: block; width: 100%; padding: 8px 14px;
-  background: none; border: none; font-size: 13px;
+  display: flex; align-items: center; gap: 8px; /* 🌟 아이콘과 텍스트 가로 정렬 */
+  width: 100%; padding: 10px 16px;
+  background: none; border: none; font-size: 13px; font-weight: 500;
   text-align: left; cursor: pointer; transition: background 0.2s, color 0.2s;
+  white-space: nowrap; /* 🌟 텍스트 두 줄로 깨지는 현상 완벽 방지 */
 }
 
 .moreMenuItemEdit { color: #4A6FA5; }
 .moreMenuItemEdit:hover { background: #E3F2FD; color: #1565C0; }
+
 .moreMenuItemDelete { color: #E53935; }
 .moreMenuItemDelete:hover { background: #FFEBEE; }
+
+.moreMenuItemReport { color: #FF8A80; }
+.moreMenuItemReport:hover { background-color: #FFF5F5; color: #FF5252; }
 
 .commentBody { padding-left: 36px; }
 .commentText { font-size: 14px; color: #0D1B2A; line-height: 1.6; margin-bottom: 4px; }

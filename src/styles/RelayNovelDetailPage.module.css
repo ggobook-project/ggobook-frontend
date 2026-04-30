@@ -176,9 +176,12 @@
 }
 
 .entryText {
-  font-size: 14px;
-  color: #0D1B2A;
-  line-height: 1.8;
+  font-size: 15px;
+  color: #2C3E50;
+  line-height: 1.7;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 /* 🌟 [수정] 신고 메뉴 관련 스타일 */

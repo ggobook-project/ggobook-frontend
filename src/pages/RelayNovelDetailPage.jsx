@@ -6,6 +6,7 @@ import ReportModal from "../components/ReportModal";
 
 const MAX_CHARS = 500;
 const MIN_CHARS = 50;
+const MAX_TIME_SECONDS = 30 * 60; // 🌟 30분 (최대 작성 허용 시간)
 
 export default function RelayNovelDetailPage() {
   const navigate = useNavigate();
@@ -24,10 +25,74 @@ export default function RelayNovelDetailPage() {
   const [reportInfo, setReportInfo] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
 
+  // 🌟 타이머를 위한 상태 추가
+  const [timeLeft, setTimeLeft] = useState(MAX_TIME_SECONDS);
+
   const isLoggedIn = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
 
   // ==========================================
-  // 🌟 [추가] 어드민 이동 시 자동 스크롤 로직
+  // 🌟 하트비트 및 시각적 타이머 (좀비 락 방지)
+  // ==========================================
+  useEffect(() => {
+    if (!isWriting) return;
+
+    // 글쓰기 시작 시 타이머 30분으로 초기화
+    setTimeLeft(MAX_TIME_SECONDS);
+
+    // 1. 화면에 보여줄 1초 단위 카운트다운 타이머
+    const countdownInterval = setInterval(() => {
+      setTimeLeft((prevTime) => {
+        if (prevTime <= 1) {
+          clearInterval(countdownInterval);
+          // 시간 초과 시 강제 종료
+          alert("최대 작성 허용 시간(30분)이 초과되어 강제 종료됩니다. 😢\n작성 중인 내용은 저장되지 않습니다.");
+          setIsWriting(false);
+          setMyText("");
+          api.post(`/api/relay-novels/${relayNovelId}/cancel`).catch(() => {});
+          return 0;
+        }
+        return prevTime - 1;
+      });
+    }, 1000);
+
+    // 2. 1분(60초)마다 서버에 락 연장 요청 (하트비트)
+    const heartbeatInterval = setInterval(() => {
+      api.post(`/api/relay-novels/${relayNovelId}/extend`)
+        .catch(err => {
+          console.error("락 연장 실패:", err);
+          clearInterval(heartbeatInterval);
+          clearInterval(countdownInterval);
+          alert("서버 통신 문제 또는 권한 만료로 강제 종료됩니다.");
+          setIsWriting(false);
+          setMyText("");
+        });
+    }, 60 * 1000);
+
+    // 3. 브라우저 탭 닫힘 / 새로고침 감지
+    const handleBeforeUnload = (e) => {
+      api.post(`/api/relay-novels/${relayNovelId}/cancel`);
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // 4. Cleanup
+    return () => {
+      clearInterval(countdownInterval);
+      clearInterval(heartbeatInterval);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      
+      api.post(`/api/relay-novels/${relayNovelId}/cancel`).catch(() => {});
+    };
+  }, [isWriting, relayNovelId]);
+
+  // 타이머 텍스트 포맷 (MM:SS)
+  const formatTimer = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  // ==========================================
+  // 어드민 이동 시 자동 스크롤 로직
   // ==========================================
   useEffect(() => {
     if (isLoading || entries.length === 0) return;
@@ -40,7 +105,6 @@ export default function RelayNovelDetailPage() {
         const element = document.getElementById(`entry-${targetId}`);
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
-          // CSS 모듈에 정의한 adminHighlight 클래스 추가
           element.classList.add(styles.adminHighlight);
           
           setTimeout(() => {
@@ -80,7 +144,7 @@ export default function RelayNovelDetailPage() {
   const settingsPanelRef = useRef(null);
   const settingsBtnRef = useRef(null);
 
-  const formatTime = (secs) => {
+  const formatAudioTime = (secs) => {
     if (!secs || isNaN(secs)) return "00:00";
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
@@ -338,20 +402,19 @@ export default function RelayNovelDetailPage() {
 
   const handleCancelWriting = async () => {
     setIsWriting(false); setMyText("");
-    try { await api.post(`/api/relay-novels/${relayNovelId}/cancel`); } catch (e) { console.error(e); }
   };
 
   // 신고 로직
   const openEntryReport = (entry) => {
-  setReportInfo({
-    targetType: 'RELAY_ENTRY',
-    targetId: entry.entryId,
-    targetParentId: relayNovelId, 
-    reportedUserId: entry.userId || entry.authorId,
-    targetTitle: `${entry.nickname || "알 수 없음"} 님`
-  });
-  setActiveMenu(null);
-};
+    setReportInfo({
+      targetType: 'RELAY_ENTRY',
+      targetId: entry.entryId,
+      targetParentId: relayNovelId, 
+      reportedUserId: entry.userId || entry.authorId,
+      targetTitle: `${entry.nickname || "알 수 없음"} 님`
+    });
+    setActiveMenu(null);
+  };
 
   const charColor = () => (myText.length < MIN_CHARS || myText.length > MAX_CHARS) ? "#E53935" : "#2196F3";
 
@@ -403,14 +466,14 @@ export default function RelayNovelDetailPage() {
                   <div className={styles.reportDropdown}>
                     <button onClick={() => openEntryReport(entry)} className={styles.reportBtn}>
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 18h14"></path>
-                  <path d="M17 18v-5a5 5 0 0 0-10 0v5"></path>
-                  <path d="M2 13h2"></path>
-                  <path d="M20 13h2"></path>
-                  <path d="M12 2v2"></path>
-                  <path d="m4.93 4.93 1.41 1.41"></path>
-                  <path d="m17.66 6.34 1.41-1.41"></path>
-                </svg>신고하기
+                        <path d="M5 18h14"></path>
+                        <path d="M17 18v-5a5 5 0 0 0-10 0v5"></path>
+                        <path d="M2 13h2"></path>
+                        <path d="M20 13h2"></path>
+                        <path d="M12 2v2"></path>
+                        <path d="m4.93 4.93 1.41 1.41"></path>
+                        <path d="m17.66 6.34 1.41-1.41"></path>
+                      </svg>신고하기
                     </button>
                   </div>
                 )}
@@ -444,7 +507,7 @@ export default function RelayNovelDetailPage() {
                 <div className={styles.ttsProgressThumb} style={{ left: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%` }} />
               </div>
             </div>
-            <span className={styles.timeLabel}>{formatTime(audioTime)} / {formatTime(audioDuration)}</span>
+            <span className={styles.timeLabel}>{formatAudioTime(audioTime)} / {formatAudioTime(audioDuration)}</span>
             <span className={styles.speedBadge}>{playbackRate}×</span>
             <button className={styles.settingsBtn} onClick={handleSettingsClick}>설정</button>
           </div>
@@ -507,7 +570,17 @@ export default function RelayNovelDetailPage() {
           <div className={styles.writeCard}>
             <div className={styles.writeHeader}>
               <div className={styles.writeTitle}>직접 쓰는 다음 이야기</div>
-              <button className={styles.closeWriteBtn} onClick={handleCancelWriting}>✕ 취소</button> 
+              {/* 🌟 타이머 및 닫기 버튼 배치 */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <span style={{ 
+                  fontSize: "13px", 
+                  fontWeight: "600", 
+                  color: timeLeft <= 300 ? "#E53935" : "#4A6FA5" // 5분 이하면 빨간색 경고
+                }}>
+                  ⏳ 남은 시간: {formatTimer(timeLeft)}
+                </span>
+                <button className={styles.closeWriteBtn} onClick={handleCancelWriting}>✕ 취소</button> 
+              </div>
             </div>
             <textarea value={myText} onChange={e => setMyText(e.target.value)} placeholder="최소 50자 이상 작성해 주세요..." rows={6} className={styles.textarea} maxLength={MAX_CHARS + 20} />
             <div className={styles.writeFooter}>

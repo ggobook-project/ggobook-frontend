@@ -155,3 +155,104 @@
   transform: translateY(-1px);
 }
 
+/* ==========================================
+   🌟 아래부터 새로 추가된 스타일 영역입니다. 
+   ========================================== */
+
+/* 1. 작품 타입 구분 뱃지 (웹소설 / 웹툰) */
+.badgeNovel {
+  background-color: #FCE4EC; /* 연한 핑크 배경 */
+  color: #C2185B;            /* 진한 핑크 글씨 */
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badgeWebtoon {
+  background-color: #E8F5E9; /* 연한 초록 배경 */
+  color: #2E7D32;            /* 진한 초록 글씨 */
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* 2. 등록 날짜 텍스트 */
+.dateText {
+  margin-left: 8px;
+  color: #2196F3;
+  font-weight: 500;
+}
+
+/* 3. 페이지네이션 (하단 번호 이동 영역) */
+.paginationWrapper {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 32px;
+  padding-bottom: 40px;
+}
+
+/* 페이지네이션 기본 버튼 */
+.pageBtn {
+  padding: 6px 12px;
+  border: 1px solid #BBDEFB;
+  border-radius: 6px;
+  background: #fff;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+/* 마우스 올렸을 때 효과 (비활성화 상태 아닐 때만) */
+.pageBtn:hover:not(:disabled) {
+  background: #E3F2FD;
+  color: #1565C0;
+  border-color: #90CAF9;
+}
+
+/* 현재 보고 있는 페이지 (Active 상태) */
+.pageBtnActive {
+  background: #2196F3;
+  color: #fff;
+  font-weight: bold;
+  border-color: #2196F3;
+}
+
+.pageBtnActive:hover {
+  background: #1565C0;
+  border-color: #1565C0;
+}
+
+/* 비활성화 상태 (이전/다음 버튼 끝에 도달했을 때) */
+.pageBtn:disabled {
+  background: #F8FAFC;
+  color: #90A4C8;
+  cursor: default;
+  border-color: #E3F2FD;
+}
+
+/* ==========================================
+   🌟 새로 추가된 뒤로가기 버튼 스타일 
+   ========================================== */
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #1565C0;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px; /* 타이틀과의 간격 띄우기 */
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.backBtn:hover {
+  color: #0D47A1;
+  transform: translateX(-2px); /* 마우스 올렸을 때 살짝 왼쪽으로 당겨지는 효과 */
+}
