@@ -33,9 +33,8 @@ export default function AdminInspectionPage() {
 
   const filteredItems = items.filter((item) => {
     if (filter === "전체") return true;
-    const type = item.content?.type;
-    if (filter === "웹소설" && type === "웹소설") return true;
-    if (filter === "웹툰" && type === "웹툰") return true;
+    if (filter === "웹소설" && item.type === "웹소설") return true;
+    if (filter === "웹툰" && item.type === "웹툰") return true;
     return false;
   });
 
@@ -66,70 +65,32 @@ export default function AdminInspectionPage() {
             현재 대기 중인 검수 요청이 없습니다.
           </div>
         ) : (
-          filteredItems.map((item) => {
-            const contentInfo = item.content || {};
-            return (
-              <div
-                key={item.episodeId}
-                className={styles.itemCard}
-                onClick={() =>
-                  navigate(`/admin/inspection/detail/${item.episodeId}`)
-                }
-              >
-                <div className={styles.itemLeft}>
-                  {contentInfo.thumbnailUrl ? (
-                    <img
-                      src={contentInfo.thumbnailUrl}
-                      className={styles.thumbnail}
-                      alt="썸네일"
-                      style={{ objectFit: "cover" }}
-                    />
-                  ) : (
-                    <div
-                      className={styles.thumbnail}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "10px",
-                        color: "#999",
-                      }}
-                    >
-                      No IMG
-                    </div>
-                  )}
-                  <div>
-                    <div className={styles.itemTitle}>
-                      {contentInfo.title || item.episodeTitle || "제목 없음"}
-                    </div>
-                    <div className={styles.itemMeta}>
-                      작가:{" "}
-                      {contentInfo.author?.nickname ||
-                        contentInfo.author?.id ||
-                        "미상"}{" "}
-                      ·{" "}
-                      {contentInfo.type === "웹소설" ||
-                      contentInfo.type === "NOVEL"
-                        ? "웹소설"
-                        : "웹툰"}{" "}
-                      · {item.episodeNumber}화
-                    </div>
+          filteredItems.map((item) => (
+            <div
+              key={item.contentId}
+              className={styles.itemCard}
+              onClick={() => navigate(`/admin/inspection/detail/${item.contentId}`)}
+            >
+              <div className={styles.itemLeft}>
+                {item.thumbnailUrl ? (
+                  <img src={item.thumbnailUrl} className={styles.thumbnail} alt="썸네일" style={{ objectFit: "cover" }} />
+                ) : (
+                  <div className={styles.thumbnail} style={{ display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "#999" }}>
+                    No IMG
+                  </div>
+                )}
+                <div>
+                  <div className={styles.itemTitle}>{item.title || "제목 없음"}</div>
+                  <div className={styles.itemMeta}>
+                    작가: {item.author?.nickname || item.author?.id || "미상"} · {item.type === "웹소설" ? "웹소설" : "웹툰"}
                   </div>
                 </div>
-                <div className={styles.actionGroup}>
-                  <span
-                    style={{
-                      fontSize: "13px",
-                      color: "#2196F3",
-                      fontWeight: "600",
-                    }}
-                  >
-                    상세 검토하기 ➔
-                  </span>
-                </div>
               </div>
-            );
-          })
+              <div className={styles.actionGroup}>
+                <span style={{ fontSize: "13px", color: "#2196F3", fontWeight: "600" }}>상세 검토하기 ➔</span>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

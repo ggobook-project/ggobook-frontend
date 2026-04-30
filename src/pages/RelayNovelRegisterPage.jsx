@@ -18,6 +18,27 @@ export default function RelayNovelRegisterPage() {
   const [description, setDescription] = useState("")
   const [startText, setStartText] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formatLoading, setFormatLoading] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
+
+  const handleFormatDialogue = async () => {
+    if (!startText.trim()) { alert("내용을 먼저 입력해주세요."); return }
+    try {
+      setFormatLoading(true)
+      const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: startText }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setStartText(data.formatted_text)
+    } catch {
+      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.")
+    } finally {
+      setFormatLoading(false)
+    }
+  }
 
   // 1. 데이터 로딩 (api 인스턴스 사용)
   useEffect(() => {
@@ -131,12 +152,46 @@ export default function RelayNovelRegisterPage() {
 
           {/* 1회차 시작 내용 (글자 수 표시 기능 포함) */}
           <div className={styles.formGroup}>
-            <div className={styles.label}>1회차 시작 내용</div>
-            <textarea 
-              className={styles.textarea} 
-              rows={6} 
-              value={startText} 
-              onChange={e => setStartText(e.target.value)} 
+            <div className={styles.textareaHeader}>
+              <div className={styles.label} style={{ marginBottom: 0 }}>1회차 시작 내용</div>
+              <div className={styles.textareaActions}>
+                <button type="button" className={styles.guideToggleBtn} onClick={() => setShowGuide(v => !v)}>
+                  {showGuide ? "가이드 닫기" : "멀티 보이스 TTS 가이드"}
+                </button>
+                <button type="button" className={styles.aiFormatBtn} onClick={handleFormatDialogue} disabled={formatLoading}>
+                  {formatLoading ? "변환 중..." : "AI 대사 자동 변환"}
+                </button>
+              </div>
+            </div>
+            {showGuide && (
+              <div className={styles.guideBox}>
+                <div className={styles.guideTitle}>멀티 보이스 TTS 포맷 가이드</div>
+                <div className={styles.guideDesc}>대사를 큰따옴표("")로 감싸면 등장인물별 목소리가 자동 적용됩니다.</div>
+                <div className={styles.guideItems}>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#E3F2FD", color: "#1565C0" }}>나레이터</span>
+                    <span className={styles.guideText}>따옴표 없는 서술 텍스트</span>
+                  </div>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#E8F5E9", color: "#2E7D32" }}>참여자1</span>
+                    <span className={styles.guideText}>홀수 번째 <code className={styles.guideCode}>"대사"</code></span>
+                  </div>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#FFF3E0", color: "#E65100" }}>참여자2</span>
+                    <span className={styles.guideText}>짝수 번째 <code className={styles.guideCode}>"대사"</code></span>
+                  </div>
+                </div>
+                <div className={styles.guideExample}>
+                  <div className={styles.guideExampleTitle}>예시</div>
+                  <pre className={styles.guideExampleCode}>{`그는 천천히 걸어왔다.\n"오랜만이야." 그가 말했다.\n그녀가 고개를 들었다.\n"정말 오래됐네." 그녀가 속삭였다.`}</pre>
+                </div>
+              </div>
+            )}
+            <textarea
+              className={styles.textarea}
+              rows={6}
+              value={startText}
+              onChange={e => setStartText(e.target.value)}
               maxLength={MAX_CHARS + 50}
             />
             <div className={styles.charCountWrap} style={{ marginTop: "8px", textAlign: "right" }}>

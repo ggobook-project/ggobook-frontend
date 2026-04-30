@@ -419,3 +419,135 @@
   background: #1565C0;
   transform: translateY(-1px);
 }
+
+.textareaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.textareaActions {
+  display: flex;
+  gap: 8px;
+}
+
+.guideToggleBtn {
+  padding: 5px 12px;
+  background: #E8F4FD;
+  border: 1px solid #BBDEFB;
+  border-radius: 8px;
+  color: #4A6FA5;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.guideToggleBtn:hover {
+  background: #BBDEFB;
+  color: #1565C0;
+}
+
+.aiFormatBtn {
+  padding: 5px 14px;
+  background: linear-gradient(135deg, #7C3AED, #2196F3);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.aiFormatBtn:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.aiFormatBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.guideBox {
+  background: #F8FAFF;
+  border: 1px solid #BBDEFB;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.guideTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1565C0;
+  margin-bottom: 4px;
+}
+
+.guideDesc {
+  font-size: 12px;
+  color: #64748B;
+  margin-bottom: 10px;
+}
+
+.guideItems {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.guideItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.guideTag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.guideText {
+  font-size: 12px;
+  color: #4A6FA5;
+}
+
+.guideCode {
+  background: #E8F4FD;
+  color: #1565C0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.guideExample {
+  border-top: 1px solid #BBDEFB;
+  padding-top: 10px;
+}
+
+.guideExampleTitle {
+  font-size: 11px;
+  color: #90A4C8;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.guideExampleCode {
+  background: #EBF5FF;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #0D1B2A;
+  line-height: 1.8;
+  margin: 0;
+  font-family: 'Noto Sans KR', sans-serif;
+  white-space: pre-wrap;
+}

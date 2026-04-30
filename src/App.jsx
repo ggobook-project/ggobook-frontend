@@ -50,14 +50,17 @@ import AdminTTSPage from "./pages/AdminTTSPage"
 import NotFoundPage from "./pages/NotFoundPage"
 import { useLocation } from "react-router-dom"
 import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler"
+import FloatingChatbot from "./components/FloatingChatbot"
 
 const hideHeader = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password"]
 const hideFooter = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password", "/ai/chatbot"]
+const showChatbotPaths = ["/webtoon", "/novel", "/relay", "/ranking", "/notices"]
 
 function Layout() {
   const location = useLocation()
   const showHeader = !hideHeader.includes(location.pathname)
   const showFooter = !hideFooter.includes(location.pathname)
+  const showChatbot = showChatbotPaths.some(p => location.pathname === p || location.pathname.startsWith(p + "/"))
   const isViewer =
     location.pathname.startsWith("/webtoon/viewer") ||
     location.pathname.startsWith("/novel/viewer")
@@ -149,6 +152,7 @@ function Layout() {
           <Footer />
         </div>
       )}
+      {showChatbot && <FloatingChatbot />}
     </div>
   )
 }

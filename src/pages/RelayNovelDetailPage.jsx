@@ -12,17 +12,20 @@ export default function RelayNovelDetailPage() {
   const { relayNovelId } = useParams();
   const location = useLocation();
   
-  const [myText, setMyText] = useState("");
-  const [novel, setNovel] = useState(null);
-  const [entries, setEntries] = useState([]);
-  const [isGuideOpen, setIsGuideOpen] = useState(true);
-  const [isWriting, setIsWriting] = useState(false);
-  const [guideline, setGuideline] = useState(""); 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [reportInfo, setReportInfo] = useState(null);
-  const [activeMenu, setActiveMenu] = useState(null);
+  const [myText, setMyText] = useState("")
+  const [novel, setNovel] = useState(null)
+  const [entries, setEntries] = useState([])
+  const [isGuideOpen, setIsGuideOpen] = useState(true)
+  const [isWriting, setIsWriting] = useState(false)
+  const [guideline, setGuideline] = useState("") 
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [formatLoading, setFormatLoading] = useState(false)
+  const [showGuide, setShowGuide] = useState(false)
+
+  // 🌟 신고 및 메뉴 상태
+  const [reportInfo, setReportInfo] = useState(null)
+  const [activeMenu, setActiveMenu] = useState(null)
 
   const isLoggedIn = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
 
@@ -313,7 +316,25 @@ export default function RelayNovelDetailPage() {
     document.addEventListener("mouseup", onUp);
   };
 
-  // 이어쓰기 로직
+  const handleFormatDialogue = async () => {
+    if (!myText.trim()) { alert("내용을 먼저 입력해주세요."); return }
+    try {
+      setFormatLoading(true)
+      const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: myText }),
+      })
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setMyText(data.formatted_text)
+    } catch {
+      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.")
+    } finally {
+      setFormatLoading(false)
+    }
+  }
+
   const handleSubmit = async () => {
     if (!isLoggedIn) { navigate("/login"); return; }
     if (myText.length < MIN_CHARS || myText.length > MAX_CHARS) return;
@@ -510,7 +531,39 @@ export default function RelayNovelDetailPage() {
               <div className={styles.writeTitle}>직접 쓰는 다음 이야기</div>
               <button className={styles.closeWriteBtn} onClick={handleCancelWriting}>✕ 취소</button> 
             </div>
-            <textarea value={myText} onChange={e => setMyText(e.target.value)} placeholder="최소 50자 이상 작성해 주세요..." rows={6} className={styles.textarea} maxLength={MAX_CHARS + 20} />
+            <div className={styles.textareaActions}>
+              <button type="button" className={styles.guideToggleBtn} onClick={() => setShowGuide(v => !v)}>
+                {showGuide ? "가이드 닫기" : "멀티 보이스 TTS 가이드"}
+              </button>
+              <button type="button" className={styles.aiFormatBtn} onClick={handleFormatDialogue} disabled={formatLoading}>
+                {formatLoading ? "변환 중..." : "AI 대사 자동 변환"}
+              </button>
+            </div>
+            {showGuide && (
+              <div className={styles.guideBox}>
+                <div className={styles.guideTitle}>멀티 보이스 TTS 포맷 가이드</div>
+                <div className={styles.guideDesc}>대사를 큰따옴표("")로 감싸면 등장인물별 목소리가 자동 적용됩니다.</div>
+                <div className={styles.guideItems}>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#E3F2FD", color: "#1565C0" }}>나레이터</span>
+                    <span className={styles.guideText}>따옴표 없는 서술 텍스트</span>
+                  </div>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#E8F5E9", color: "#2E7D32" }}>참여자1</span>
+                    <span className={styles.guideText}>홀수 번째 <code className={styles.guideCode}>"대사"</code></span>
+                  </div>
+                  <div className={styles.guideItem}>
+                    <span className={styles.guideTag} style={{ background: "#FFF3E0", color: "#E65100" }}>참여자2</span>
+                    <span className={styles.guideText}>짝수 번째 <code className={styles.guideCode}>"대사"</code></span>
+                  </div>
+                </div>
+                <div className={styles.guideExample}>
+                  <div className={styles.guideExampleTitle}>예시</div>
+                  <pre className={styles.guideExampleCode}>{`그는 천천히 걸어왔다.\n"오랜만이야." 그가 말했다.\n그녀가 고개를 들었다.\n"정말 오래됐네." 그녀가 속삭였다.`}</pre>
+                </div>
+              </div>
+            )}
+            <textarea value={myText} onChange={e => setMyText(e.target.value)} onFocus={() => !isLoggedIn && navigate("/login")} placeholder="이야기를 이어서 써주세요..." rows={6} className={styles.textarea} readOnly={!isLoggedIn} maxLength={MAX_CHARS + 50} />
             <div className={styles.writeFooter}>
               <div className={styles.charCountWrap}><span style={{ color: charColor() }}>{myText.length}</span> <span className={styles.charCountSep}>/</span> <span className={styles.charCountMax}>{MAX_CHARS}자</span></div>
               <button className={styles.submitBtn} onClick={handleSubmit} disabled={isSubmitting || myText.length < MIN_CHARS || myText.length > MAX_CHARS}>
