@@ -44,24 +44,28 @@ export default function AdminReportPage() {
 
   // 🌟 [동적 내비게이션] 팀장님의 주소 체계 반영
   const handleMoveToTarget = (report) => {
-    const { targetType, targetId, targetParentId } = report;
-    // targetParentId(소설ID)가 있으면 해당 소설 상세로, 없으면 targetId로 이동
-    const moveId = targetParentId || targetId;
+  const { targetType, targetId, targetParentId } = report;
 
-    if (!moveId) return alert("이동할 주소 정보가 없습니다.");
+  // 1. 소설 주제(RELAY_NOVEL) 자체를 신고한 경우
+  if (targetType === "RELAY_NOVEL") {
+    // 리스트 페이지(/relay)로 가서 해당 소설 카드를 찾습니다.
+    // targetId가 곧 novelId입니다.
+    navigate(`/relay?novelId=${targetId}`);
+    return;
+  }
 
-    switch (targetType) {
-      case "RELAY_NOVEL":
-      case "RELAY_ENTRY":
-      case "COMMENT":
-      case "REPLY":
-        // http://localhost:5173/relay/4 형태로 이동
-        navigate(`/relay/${moveId}`);
-        break;
-      default:
-        console.warn("알 수 없는 타입:", targetType);
-    }
-  };
+  // 2. 소설 속 회차(RELAY_ENTRY)나 댓글을 신고한 경우
+  // 상세 페이지(/relay/4)로 가서 해당 위치로 스크롤합니다.
+  const novelId = targetParentId; // 부모인 소설 ID를 주소로 사용
+
+  if (!novelId) {
+    return alert("부모 소설 정보(targetParentId)가 없어 상세 페이지로 이동할 수 없습니다.");
+  }
+
+  // 기존 방식대로 상세 페이지 + 쿼리 스트링
+  const queryPath = `?targetId=${targetId}&type=${targetType}`;
+  navigate(`/relay/${novelId}${queryPath}`);
+};
 
   const handleConfirm = async () => {
     if (!processData.processReason.trim()) return alert("처리 사유를 입력하세요.");
