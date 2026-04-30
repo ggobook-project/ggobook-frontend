@@ -29,31 +29,65 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
-  
-  // 🌟 1. 체크박스 상태를 기억할 변수 추가! (기본값은 체크 안됨: false)
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+
+  // 🌟 커스텀 모달 상태 관리 (alert 대체)
+  const [modalData, setModalData] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    icon: ""
+  });
+
+  const closeModal = () => setModalData({ ...modalData, isOpen: false });
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (!userId || !password) return alert("아이디와 비밀번호를 모두 입력해주세요.");
+    if (!userId || !password) {
+      return setModalData({
+        isOpen: true,
+        title: "입력 오류",
+        message: "아이디와 비밀번호를 모두 입력해주세요.",
+        icon: "⚠️"
+      });
+    }
 
     try {
-      // 🌟 2. 백엔드로 데이터 보낼 때 keepLoggedIn 상태도 택배 상자에 같이 포장합니다!
       const response = await api.post("/api/auth/login", { userId, password, keepLoggedIn });
       const accessToken = response.data;
       if (accessToken) {
         const cleanToken = accessToken.replace("Bearer ", "");
         if (keepLoggedIn) {
-          localStorage.setItem("accessToken", cleanToken); // 체크 O: 영구 보관
+          localStorage.setItem("accessToken", cleanToken);
         } else {
-          sessionStorage.setItem("accessToken", cleanToken); // 체크 X: 끄면 즉시 폭파
+          sessionStorage.setItem("accessToken", cleanToken);
         }
       }
       
-      alert("로그인 성공! 환영합니다.");
+      // 로그인 성공 시 바로 메인 화면으로 이동
       navigate("/");
-    } catch {
-      alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+    } catch (err) {
+      // 백엔드가 던진 에러 메시지 낚아채기
+      const errorMsg = err.response?.data || "아이디 또는 비밀번호가 일치하지 않습니다.";
+
+      // 🌟 핵심: 백엔드가 보낸 에러 메시지가 'SUSPENDED'로 시작하면 정지 안내창 띄우기
+      if (typeof errorMsg === "string" && errorMsg.startsWith("SUSPENDED")) {
+        const [_, reason, date] = errorMsg.split("|");
+        setModalData({
+          isOpen: true,
+          title: "로그인 제한 안내",
+          message: `해당 계정은 정지 상태입니다.\n\n🚨 사유 : ${reason}\n📅 해제일 : ${date}`,
+          icon: "⛔"
+        });
+      } else {
+        // 비밀번호 틀림 등 일반 에러 처리
+        setModalData({
+          isOpen: true,
+          title: "로그인 실패",
+          message: errorMsg,
+          icon: "❌"
+        });
+      }
     }
   };
 
@@ -94,7 +128,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* 🌟 3. 로그인 상태 유지 체크박스 UI 추가 (버튼 바로 위) */}
             <div style={{ display: "flex", alignItems: "center", marginBottom: "20px", fontSize: "13px", color: "#4A6FA5" }}>
               <input 
                 type="checkbox" 
@@ -138,6 +171,18 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* 🌟 커스텀 모달 UI (이전 대화에서 드린 Auth.css와 찰떡으로 맞습니다) */}
+      {modalData.isOpen && (
+        <div className="auth-modal-overlay" onClick={closeModal}>
+          <div className="auth-modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="auth-modal-icon">{modalData.icon}</div>
+            <div className="auth-modal-title">{modalData.title}</div>
+            <div className="auth-modal-message">{modalData.message}</div>
+            <button className="auth-modal-btn" onClick={closeModal}>확인</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,7 @@ export default function WebtoonViewerPage() {
   const savedProgress = parseInt(searchParams.get("progress") || "0", 10);
   const { episodeId } = useParams()
 
-  const isLoggedIn = !!localStorage.getItem("accessToken")
+  const isLoggedIn = !!localStorage.getItem("accessToken") || !!sessionStorage.getItem("accessToken");
   const currentUser = "나"
   const COMMENTS_PER_PAGE = 5
 
@@ -57,7 +57,7 @@ export default function WebtoonViewerPage() {
   // 3. 헬퍼 함수
   // ==========================================
   const getUserId = () => {
-    const token = localStorage.getItem('accessToken')
+    const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
     if (!token) return null
     try {
       const payload = JSON.parse(atob(token.split('.')[1]))
@@ -112,18 +112,20 @@ export default function WebtoonViewerPage() {
     }
   }
 
+  // 🌟 [수정] episodeId 기준으로 평균 별점 로드
   const loadAverageRating = async () => {
     try {
-      const response = await api.get(`/api/ratings/${contentId}`);
+      const response = await api.get(`/api/ratings/${episodeId}`);
       setAvgRating(response.data || 0)
     } catch (error) { console.error("평균 평점 로드 실패:", error) }
   }
 
+  // 🌟 [수정] episodeId 기준으로 내 별점 로드
   const loadMyRating = async () => {
     const userId = getUserId()
     if (!userId) return
     try {
-      const response = await api.get(`/api/ratings/${contentId}/users/${userId}`);
+      const response = await api.get(`/api/ratings/${episodeId}/users/${userId}`);
       if (response.data?.score) { setMyRating(response.data.score); setTempRating(response.data.score) }
     } catch (error) { console.error("내 평점 로드 실패:", error) }
   }
@@ -134,7 +136,7 @@ export default function WebtoonViewerPage() {
       const serverComments = response.data.content || [];
       const mappedComments = serverComments.map(cm => ({
         id: cm.commentId,
-        user: `독자${cm.userId}`, 
+        user: cm.nickname || "알 수 없음",
         text: cm.commentText,
         date: cm.createdAt ? cm.createdAt.split('T')[0] : "방금", 
         isMine: cm.userId === getUserId(), 
@@ -143,7 +145,7 @@ export default function WebtoonViewerPage() {
         myLike: cm.myReaction ? cm.myReaction.toLowerCase() : null,
         replies: (cm.replies || []).map(r => ({
           id: r.replyId,
-          user: `독자${r.userId}`,
+          user: r.nickname || "알 수 없음",
           text: r.replyText,
           date: r.createdAt ? r.createdAt.split('T')[0] : "방금",
           isMine: r.userId === getUserId(),
@@ -223,9 +225,13 @@ export default function WebtoonViewerPage() {
     }
   }, [comicToons, comments, focusCommentId, savedProgress]);
 
+  // 🌟 [수정] episodeId가 바뀔 때마다 별점을 새로 불러오도록 변경!
   useEffect(() => { 
-    if (contentId) { loadAverageRating(); loadMyRating() } 
-  }, [episode])
+    if (episodeId) { 
+      loadAverageRating(); 
+      loadMyRating();
+    } 
+  }, [episodeId])
 
   useEffect(() => {
     const handleClick = () => { setOpenMoreId(null); setOpenMoreReplyId(null) }
@@ -271,11 +277,12 @@ export default function WebtoonViewerPage() {
     const userId = getUserId()
     if (!userId) { navigate("/login"); return }
     try {
-      const response = await api.post(`/api/ratings/${contentId}?userId=${userId}`, { score: tempRating });
+      // 🌟 [수정] episodeId 로 요청 전송
+      const response = await api.post(`/api/ratings/${episodeId}?userId=${userId}`, { score: tempRating });
       if (response.status === 200 || response.status === 201) {
         setMyRating(tempRating)
         setShowRatingModal(false)
-        setAvgRating(prev => Math.round(((prev + tempRating) / 2) * 10) / 10)
+        // 🌟 [수정] 가짜 평균 계산식 삭제하고 서버에서 진짜 평균 다시 불러오기!
         loadAverageRating()
       } else {
         alert("별점 저장에 실패했습니다.")
@@ -327,7 +334,6 @@ export default function WebtoonViewerPage() {
     try {
       await api.post(`/api/comments/${commentId}/replies`, { replyText });
       setReplyText("");
-      // 🌟 [수정 포인트 1] 답글 창 닫기 방지 (setReplyingId(null) 삭제!)
       setExpandedReplies(prev => ({ ...prev, [commentId]: true }));
       loadComments(); 
     } catch (error) {
@@ -691,7 +697,6 @@ export default function WebtoonViewerPage() {
                   </div>
                 )}
 
-                {/* 🌟 [수정 포인트 2] 삭제된 댓글일 때 답글 입력창 렌더링 원천 차단! */}
                 {replyingId === cm.id && cm.text !== "삭제된 댓글입니다." && (
                   <div className={styles.replyInputRow}>
                     <div className={styles.replyArrow}>↳</div>

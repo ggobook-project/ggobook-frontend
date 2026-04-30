@@ -46,18 +46,23 @@ export default function MyPage() {
     fetchData()
   }, [])
 
-  const handleLogout = async () => {
-    if (!window.confirm("로그아웃 하시겠습니까?")) return;
+  // 🌟 추가: 회원 탈퇴 전용 함수
+  const handleWithdraw = async () => {
+    if (!window.confirm("정말 탈퇴하시겠습니까? 탈퇴 후 계정 복구는 불가능합니다.")) return;
 
     try {
-      await api.post("/api/auth/logout");
-    } catch (error) {
-      console.error("로그아웃 에러:", error);
-    } finally {
-      // 🌟 핵심 수정 2: 로그아웃 할 때는 양쪽 주머니를 자비 없이 싹 다 털어버려야 합니다!
+      // 방금 백엔드 MyPageController에 뚫어둔 주소를 호출합니다!
+      await api.post("/api/mypage/withdraw"); 
+      
+      alert("그동안 이용해 주셔서 감사합니다. 탈퇴 처리가 완료되었습니다.");
+      
+      // 탈퇴도 결국 로그아웃과 똑같이 주머니를 싹 다 털고 내쫓아야 합니다!
       localStorage.removeItem("accessToken");
       sessionStorage.removeItem("accessToken"); 
       navigate("/", { replace: true });
+      
+    } catch (error) {
+      alert("탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.");
     }
   }
 
@@ -113,8 +118,13 @@ export default function MyPage() {
         </div>
 
         <div className={styles.logoutWrap}>
-          <button className={styles.logoutBtn} onClick={handleLogout}>
-            로그아웃
+          {/* 🌟 수정: 로그아웃 버튼을 회원 탈퇴 버튼으로 교체 */}
+          <button 
+            className={styles.logoutBtn} 
+            style={{ backgroundColor: "#FAFAFA", color: "#E53935", border: "1px solid #E53935" }} // 위험한 버튼 느낌 주기
+            onClick={handleWithdraw}
+          >
+            회원 탈퇴
           </button>
         </div>
       </div>
