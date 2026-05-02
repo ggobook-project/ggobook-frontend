@@ -56,6 +56,8 @@ export default function WebtoonViewerPage() {
   const [isReady, setIsReady] = useState(false);
   const [reportInfo, setReportInfo] = useState(null);
 
+  const [allEpisodes, setAllEpisodes] = useState([])
+
   // ==========================================
   // 3. 헬퍼 함수
   // ==========================================
@@ -68,10 +70,6 @@ export default function WebtoonViewerPage() {
     } catch { return null }
   }
 
-  const allEpisodes = Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1, num: `${i + 1}화`, thumb: null,
-    current: i + 1 === parseInt(episodeId)
-  }))
   const visibleCount = 5
   const maxOffset = Math.max(0, allEpisodes.length - visibleCount)
   const visibleEpisodes = allEpisodes.slice(epOffset, epOffset + visibleCount)
@@ -187,6 +185,25 @@ export default function WebtoonViewerPage() {
     }
   };
 
+  const loadEpisodeList = async () => {
+    if (!contentId) return
+    try {
+        const response = await api.get(`/api/contents/${contentId}/episodes`)
+        const data = response.data
+        const list = Array.isArray(data) ? data : (data.content ?? [])
+        setAllEpisodes(list
+          .sort((a, b) => a.episodeNumber - b.episodeNumber)
+          .map(ep => ({
+            id: ep.episodeId,
+            num: `${ep.episodeNumber}화`,
+            thumb: ep.thumbnailUrl || null,
+            current: ep.episodeId === parseInt(episodeId)
+        })))
+    } catch (error) {
+        console.error("회차 목록 불러오기 실패:", error)
+    }
+}
+
   // ==========================================
   // 5. 컴포넌트 생명주기
   // ==========================================
@@ -194,6 +211,7 @@ export default function WebtoonViewerPage() {
     loadEpisodeDetail();
     loadComments(); 
     recordRecentView(0); 
+    loadEpisodeList()
 
     return () => {
       recordRecentView(progressRef.current); 
@@ -546,8 +564,11 @@ export default function WebtoonViewerPage() {
             {visibleEpisodes.map(ep => (
               <div key={`${epOffset}-${ep.id}`} className={`${styles.epNavItem} ${ep.current ? styles.epNavItemCurrent : ""}`} onClick={() => !ep.current && navigate(`/webtoon/viewer/${ep.id}?contentId=${contentId}`)}>
                 <div className={styles.epNavThumb}>
-                  {ep.thumb ? <img src={ep.thumb} alt={ep.num} className={styles.epNavThumbImg} /> : <div className={styles.epNavThumbPlaceholder} />}
-                </div>
+                {ep.thumb
+                    ? <img src={ep.thumb} alt={ep.num} className={styles.epNavThumbImg} />
+                    : <div className={styles.epNavThumbPlaceholder} />
+                }
+              </div>
                 <div className={styles.epNavNum}>{ep.num}</div>
               </div>
             ))}
