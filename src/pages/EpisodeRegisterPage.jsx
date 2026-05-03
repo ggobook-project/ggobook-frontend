@@ -37,23 +37,29 @@ export default function EpisodeRegisterPage() {
   const [showGuide, setShowGuide] = useState(false);
 
   const handleFormatDialogue = async () => {
-    if (!novelText.trim()) { alert("원고 내용을 먼저 입력해주세요."); return }
-    try {
-      setFormatLoading(true)
-      const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: novelText }),
-      })
-      if (!res.ok) throw new Error()
-      const data = await res.json()
-      setNovelText(data.formatted_text)
-    } catch {
-      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.")
-    } finally {
-      setFormatLoading(false)
+    if (!novelText.trim()) {
+      alert("원고 내용을 먼저 입력해주세요.");
+      return;
     }
-  }
+    try {
+      setFormatLoading(true);
+      const res = await fetch(
+        "http://localhost:8000/api/novel/format-dialogue",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: novelText }),
+        },
+      );
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setNovelText(data.formatted_text);
+    } catch {
+      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.");
+    } finally {
+      setFormatLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!episodeTitle) {
@@ -98,7 +104,7 @@ export default function EpisodeRegisterPage() {
       const url = isEdit
         ? `/api/contents/${contentId}/episodes/${episodeId}`
         : `/api/contents/${contentId}/episodes`;
-        
+
       const response = await api({
         method: isEdit ? "PUT" : "POST",
         url: url,
@@ -129,21 +135,43 @@ export default function EpisodeRegisterPage() {
     checkNovelForTTS();
 
     const loadNextEpisodeNumber = async () => {
-        if (isEdit) return; 
-        try {
-            const token = localStorage.getItem("accessToken");
-            const response = await fetch(
-                `http://localhost:8080/api/contents/${contentId}/episodes/next-number`,
-                { method: "GET", headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (!response.ok) return;
-            const nextNumber = await response.json();
-            setEpisodeNumber(nextNumber);
-        } catch (error) {
-            console.error("회차 번호 불러오기 실패 : ", error);
-        }
+      if (isEdit) return;
+      try {
+        const response = await api.get(
+          `/api/contents/${contentId}/episodes/next-number`,
+        );
+        setEpisodeNumber(response.data);
+      } catch (error) {
+        console.error("회차 번호 불러오기 실패 : ", error);
+      }
     };
     loadNextEpisodeNumber();
+
+    const loadLastEpisodeDate = async () => {
+      if (isEdit) return;
+      try {
+        const response = await api.get(
+          `/api/contents/${contentId}/episodes?size=1&page=0`,
+        );
+        const data = response.data;
+        const list = Array.isArray(data) ? data : (data.content ?? []);
+
+        if (list.length === 0) {
+          setScheduled(true);
+        } else {
+          const lastEpisode = list[0];
+          const lastDate = new Date(
+            lastEpisode.scheduledAt || lastEpisode.createdAt,
+          );
+          lastDate.setDate(lastDate.getDate() + 7);
+          setScheduledAt(lastDate.toISOString());
+          setScheduled(true);
+        }
+      } catch (error) {
+        console.error("이전 회차 날짜 불러오기 실패 : ", error);
+      }
+    };
+    loadLastEpisodeDate();
   }, [contentId]);
 
   return (
@@ -224,10 +252,15 @@ export default function EpisodeRegisterPage() {
 
           <div className={styles.formGroup}>
             <div className={styles.textareaHeader}>
-              <div className={styles.formLabel} style={{ marginBottom: 0 }}>원고 업로드</div>
+              <div className={styles.formLabel} style={{ marginBottom: 0 }}>
+                원고 업로드
+              </div>
               {isNovel && (
                 <div className={styles.textareaActions}>
-                  <button className={styles.guideToggleBtn} onClick={() => setShowGuide(v => !v)}>
+                  <button
+                    className={styles.guideToggleBtn}
+                    onClick={() => setShowGuide((v) => !v)}
+                  >
                     {showGuide ? "가이드 닫기" : "멀티 보이스 TTS 가이드"}
                   </button>
                   <button
@@ -243,25 +276,57 @@ export default function EpisodeRegisterPage() {
 
             {isNovel && showGuide && (
               <div className={styles.guideBox}>
-                <div className={styles.guideTitle}>멀티 보이스 TTS 포맷 가이드</div>
-                <div className={styles.guideDesc}>대사를 큰따옴표("")로 감싸면 등장인물별 목소리가 자동 적용됩니다.</div>
+                <div className={styles.guideTitle}>
+                  멀티 보이스 TTS 포맷 가이드
+                </div>
+                <div className={styles.guideDesc}>
+                  대사를 큰따옴표("")로 감싸면 등장인물별 목소리가 자동
+                  적용됩니다.
+                </div>
                 <div className={styles.guideItems}>
                   <div className={styles.guideItem}>
-                    <span className={styles.guideTag} style={{ background: "#E3F2FD", color: "#1565C0" }}>나레이터</span>
-                    <span className={styles.guideText}>따옴표 없는 서술 텍스트 → 나레이터 목소리</span>
+                    <span
+                      className={styles.guideTag}
+                      style={{ background: "#E3F2FD", color: "#1565C0" }}
+                    >
+                      나레이터
+                    </span>
+                    <span className={styles.guideText}>
+                      따옴표 없는 서술 텍스트 → 나레이터 목소리
+                    </span>
                   </div>
                   <div className={styles.guideItem}>
-                    <span className={styles.guideTag} style={{ background: "#E8F5E9", color: "#2E7D32" }}>주인공</span>
-                    <span className={styles.guideText}>첫·세·다섯 번째 <code className={styles.guideCode}>"대사"</code> → 주인공 목소리</span>
+                    <span
+                      className={styles.guideTag}
+                      style={{ background: "#E8F5E9", color: "#2E7D32" }}
+                    >
+                      주인공
+                    </span>
+                    <span className={styles.guideText}>
+                      첫·세·다섯 번째{" "}
+                      <code className={styles.guideCode}>"대사"</code> → 주인공
+                      목소리
+                    </span>
                   </div>
                   <div className={styles.guideItem}>
-                    <span className={styles.guideTag} style={{ background: "#FFF3E0", color: "#E65100" }}>상대방</span>
-                    <span className={styles.guideText}>둘·넷·여섯 번째 <code className={styles.guideCode}>"대사"</code> → 상대방 목소리</span>
+                    <span
+                      className={styles.guideTag}
+                      style={{ background: "#FFF3E0", color: "#E65100" }}
+                    >
+                      상대방
+                    </span>
+                    <span className={styles.guideText}>
+                      둘·넷·여섯 번째{" "}
+                      <code className={styles.guideCode}>"대사"</code> → 상대방
+                      목소리
+                    </span>
                   </div>
                 </div>
                 <div className={styles.guideExample}>
                   <div className={styles.guideExampleTitle}>예시</div>
-                  <pre className={styles.guideExampleCode}>{`그는 천천히 걸어왔다.\n"오랜만이야." 그가 말했다.\n그녀가 고개를 들었다.\n"정말 오래됐네." 그녀가 속삭였다.`}</pre>
+                  <pre
+                    className={styles.guideExampleCode}
+                  >{`그는 천천히 걸어왔다.\n"오랜만이야." 그가 말했다.\n그녀가 고개를 들었다.\n"정말 오래됐네." 그녀가 속삭였다.`}</pre>
                 </div>
               </div>
             )}
@@ -380,7 +445,6 @@ export default function EpisodeRegisterPage() {
               />
             )}
           </div>
-
 
           <div className={styles.btnGroup}>
             <button

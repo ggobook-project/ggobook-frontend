@@ -168,10 +168,11 @@ export default function ContentRegisterPage() {
         if (!isEdit) {
           saveToInspection();
           alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.");
+          navigate(`/author/contents/${newContentId}/episode/register`);
         } else {
           alert("작품 수정 성공");
+          navigate("/author/contents");
         }
-        navigate("/author/contents");
       }
     } catch (error) {
       console.error("통신 에러:", error);
