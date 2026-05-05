@@ -61,6 +61,29 @@
   color: rgba(255,255,255,0.8);
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resetBtn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.resetBtn:hover { background: rgba(255,255,255,0.35); }
+
 .closeBtn {
   background: rgba(255,255,255,0.2);
   border: none;
@@ -135,6 +158,23 @@
   white-space: pre-wrap;
 }
 
+.retryBtn {
+  display: block;
+  margin-top: 8px;
+  background: #FFF3E0;
+  border: 1px solid #FFB74D;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: #E65100;
+  cursor: pointer;
+  transition: background 0.15s;
+  width: 100%;
+  text-align: center;
+}
+
+.retryBtn:hover { background: #FFE0B2; }
+
 /* 타이핑 애니메이션 */
 .typing {
   display: flex;
@@ -200,6 +240,74 @@
 
 .sendBtn:hover:not(:disabled) { opacity: 0.88; transform: scale(1.05); }
 .sendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* FAQ 리스트 */
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding-left: 36px;
+}
+
+.faqBtn {
+  background: #fff;
+  border: 1px solid #90CAF9;
+  border-radius: 12px;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: #1565C0;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.4;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.faqBtn:hover {
+  background: #E3F2FD;
+  border-color: #2196F3;
+}
+
+/* FAQ 팝업 패널 (입력창 위) */
+.faqPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-top: 1px solid #E3F2FD;
+  background: #F7FBFF;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.faqPanel::-webkit-scrollbar { width: 4px; }
+.faqPanel::-webkit-scrollbar-thumb { background: #BBDEFB; border-radius: 4px; }
+
+/* FAQ 토글 버튼 */
+.faqToggleBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid #BBDEFB;
+  background: #fff;
+  color: #2196F3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.faqToggleBtn:hover {
+  background: #E3F2FD;
+  border-color: #2196F3;
+}
+
+.faqToggleBtnActive {
+  background: #E3F2FD;
+  border-color: #2196F3;
+}
 
 /* 플로팅 버튼 래퍼 */
 .floatBtnWrap {
