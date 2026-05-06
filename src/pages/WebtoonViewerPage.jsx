@@ -166,6 +166,7 @@ export default function WebtoonViewerPage() {
         id: cm.commentId,
         userId: cm.userId,
         user: cm.nickname || "알 수 없음",
+        profileImageUrl: cm.profileImageUrl || null,
         text: cm.commentText,
         date: cm.createdAt ? cm.createdAt.split("T")[0] : "방금",
         isMine: cm.userId === getUserId(),
@@ -176,6 +177,7 @@ export default function WebtoonViewerPage() {
           id: r.replyId,
           userId: r.userId,
           user: r.nickname || "알 수 없음",
+          profileImageUrl: r.profileImageUrl || null,
           text: r.replyText,
           date: r.createdAt ? r.createdAt.split("T")[0] : "방금",
           isMine: r.userId === getUserId(),
@@ -922,7 +924,14 @@ export default function WebtoonViewerPage() {
               >
                 {/* 댓글 헤더 */}
                 <div className={styles.commentHeader}>
-                  <div className={styles.commentAvatar} />
+                  <div 
+                    className={styles.commentAvatar} 
+                    style={cm.profileImageUrl ? {
+                      backgroundImage: `url(${cm.profileImageUrl})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center"
+                    } : undefined}
+                  />
                   <div className={styles.commentMeta}>
                     <span className={styles.commentUser}>{cm.user}</span>
                     <span className={styles.commentDate}>{cm.date}</span>
@@ -1069,7 +1078,14 @@ export default function WebtoonViewerPage() {
                         <div className={styles.replyArrow}>↳</div>
                         <div className={styles.replyContent}>
                           <div className={styles.commentHeader}>
-                            <div className={styles.replyAvatar} />
+                            <div 
+                              className={styles.replyAvatar} 
+                              style={reply.profileImageUrl ? {
+                                backgroundImage: `url(${reply.profileImageUrl})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center"
+                              } : undefined}
+                            />
                             <div className={styles.commentMeta}>
                               <span className={styles.commentUser}>
                                 {reply.user}

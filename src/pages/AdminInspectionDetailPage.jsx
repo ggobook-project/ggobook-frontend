@@ -34,28 +34,25 @@ export default function AdminInspectionDetailPage() {
     loadInspectionDetail();
   }, [loadInspectionDetail]);
 
-  const handleApprove = async () => {
-    const ok = await showConfirm("이 작품을 승인하시겠습니까?");
-    if (!ok) return;
+const handleApprove = async () => {
+    if (!window.confirm("이 작품을 승인하시겠습니까?")) return;
     setIsProcessing(true);
     try {
-      // [수정 포인트 3] 백엔드가 요구하는 'scheduledAt' 데이터 형식 맞추기
-      // 백엔드에서 "yyyy-MM-dd HH:mm:ss" 포맷을 기대하므로, 현재 시간을 해당 포맷으로 변환합니다.
+      // 🌟 1. 현재 시간을 백엔드가 원하는 "yyyy-MM-dd HH:mm:ss" 포맷으로 만들기
       const now = new Date();
-      const formattedDate = 
-        now.getFullYear() + '-' +
-        String(now.getMonth() + 1).padStart(2, '0') + '-' +
-        String(now.getDate()).padStart(2, '0') + ' ' +
-        String(now.getHours()).padStart(2, '0') + ':' +
-        String(now.getMinutes()).padStart(2, '0') + ':' +
-        String(now.getSeconds()).padStart(2, '0');
+      const formattedDate = now.getFullYear() + "-" + 
+          String(now.getMonth() + 1).padStart(2, '0') + "-" + 
+          String(now.getDate()).padStart(2, '0') + " " + 
+          String(now.getHours()).padStart(2, '0') + ":" + 
+          String(now.getMinutes()).padStart(2, '0') + ":" + 
+          String(now.getSeconds()).padStart(2, '0');
 
-      // [수정 포인트 4] 승인 URL 변경 및 Body 데이터 추가
+      // 🌟 2. 주소를 episodes로 고치고, scheduledAt을 상자에 담아 보냅니다!
       await api.post(`/api/admin/inspections/episodes/${episodeId}/approve`, {
-          scheduledAt: formattedDate // 백엔드의 @RequestBody Map이 이 값을 꺼내어 씁니다.
+        scheduledAt: formattedDate
       });
-      
-      alert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.");
+
+      await showAlert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.");
       navigate("/admin/inspections");
     } catch (error) {
       console.error("승인 실패", error);
@@ -72,8 +69,13 @@ export default function AdminInspectionDetailPage() {
     setIsProcessing(true);
     try {
       const finalReason = rejectReason === "기타 (직접 작성)" ? customRejectReason : rejectReason;
-      await api.post(`/api/admin/inspections/episodes/${episodeId}/reject`, { rejectReason: finalReason });
-      await showAlert("반려 처리가 완료되었습니다.", "success");
+      
+      // 🌟 주소를 episodes로 고칩니다!
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/reject`, { 
+        rejectReason: finalReason 
+      });
+
+      alert("반려 처리가 완료되었습니다.");
       navigate("/admin/inspections");
     } catch (error) {
       console.error("반려 실패", error);
@@ -133,6 +135,38 @@ export default function AdminInspectionDetailPage() {
                 <span className={styles.value}>{data.createdAt?.substring(0, 10) || "-"}</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className={styles.sectionCard}>
+          <div className={styles.episodeHeader}>
+            <div className={styles.episodeTitle}>
+              회차 원고 ({data.episodeNumber}화)
+            </div>
+          </div>
+          
+          <div className={styles.manuscriptArea}>
+            {data.type === "웹소설" || data.type === "NOVEL" ? (
+              <div className={styles.novelText}>
+                {data.episodeText || "등록된 텍스트 원고가 없습니다."}
+              </div>
+            ) : (
+              <div className={styles.webtoonImages}>
+                {data.imageUrls && data.imageUrls.length > 0 ? (
+                  data.imageUrls.map((url, idx) => (
+                    <img 
+                      key={idx} 
+                      src={url} 
+                      alt={`${idx + 1}컷`} 
+                    />
+                  ))
+                ) : (
+                  <div className={styles.noThumbnail} style={{ width: "100%" }}>
+                    등록된 웹툰 이미지가 없습니다.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
         <div className={styles.actionBar}>

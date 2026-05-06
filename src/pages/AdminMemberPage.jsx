@@ -141,7 +141,14 @@ export default function AdminMemberPage() {
           members.map(m => (
             <div key={m.id} className={styles.memberCard}>
               <div className={styles.memberLeft}>
-                <div className={styles.avatar} />
+                <div 
+                  className={styles.avatar} 
+                  style={m.profileImageUrl ? {
+                    backgroundImage: `url(${m.profileImageUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center"
+                  } : undefined}
+                />
                 <div>
                   <div className={styles.memberName}>{m.nickname}</div>
                   <div className={styles.memberMeta}>{m.userId} · {m.email}</div>

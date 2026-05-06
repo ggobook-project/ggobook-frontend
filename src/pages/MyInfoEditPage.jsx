@@ -5,6 +5,7 @@ import api from "../api/axios"
 import styles from "../styles/MyInfoEditPage.module.css"
 import { useAlert } from "../context/AlertContext"
 
+
 export default function MyInfoEditPage() {
   const navigate = useNavigate()
   const { showAlert, showConfirm } = useAlert()
@@ -19,6 +20,7 @@ export default function MyInfoEditPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [avatarFile, setAvatarFile] = useState(null)
   const avatarInputRef = useRef(null)
+  const [existingAvatar, setExistingAvatar] = useState(null)
 
   useEffect(() => {
     const fetchMyInfo = async () => {
@@ -27,6 +29,7 @@ export default function MyInfoEditPage() {
         setNickname(data.profile.nickname)
         setOriginalNickname(data.profile.nickname)
         setEmail(data.profile.email)
+        setExistingAvatar(data.profile.profileImageUrl)
       } catch {
         await showAlert("정보를 불러오지 못했습니다.", "error")
       } finally {
@@ -68,15 +71,56 @@ export default function MyInfoEditPage() {
   }
 
   const handleSubmit = async () => {
-    if (nickname !== originalNickname && !isNicknameChecked) { await showAlert("닉네임 중복 확인을 해주세요."); return }
-    if (newPassword && newPassword !== newPasswordConfirm) { await showAlert("새 비밀번호가 일치하지 않습니다."); return }
-    if (newPassword && !currentPassword) { await showAlert("비밀번호를 변경하려면 현재 비밀번호를 입력해야 합니다."); return }
+
+    if (nickname !== originalNickname && !isNicknameChecked) {
+      return alert("닉네임 중복 확인을 해주세요.")
+    }
+
+    if (newPassword && !currentPassword) {
+      return alert("비밀번호를 변경하려면 현재 비밀번호를 입력해야 합니다.")
+    }
+    
+    if (currentPassword && !newPassword) {
+      return alert("변경할 새 비밀번호를 입력해주세요.")
+    }
+    
+    if (currentPassword && newPassword) {
+      const pwRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,16}$/;
+      if (!pwRegex.test(newPassword)) {
+        return alert("새 비밀번호는 영문, 숫자, 특수문자를 모두 포함하여 8~16자리로 입력해주세요.");
+      }
+      if (newPassword !== newPasswordConfirm) {
+        return alert("새 비밀번호가 일치하지 않습니다.");
+      }
+    }
+
     try {
+     
       const updateData = { nickname, ...(newPassword && { currentPassword, newPassword }) }
-      await updateMyInfo(updateData)
+      const formData = new FormData();
+      
+      formData.append("request", new Blob([JSON.stringify(updateData)], { type: "application/json" }));
+      if (avatarFile) {
+        formData.append("file", avatarFile);
+      }
+
+      
+      await api.put("/api/mypage", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+
       await showAlert("정보가 성공적으로 수정되었습니다.", "success")
+
       navigate("/mypage")
     } catch (error) {
+      // 
+      const errorData = error.response?.data;
+      
+      // 
+      const errorMessage = typeof errorData === "object" 
+        ? (errorData.message || errorData.error || "정보 수정에 실패했습니다.") 
+        : errorData;
+
       await showAlert(error.response?.data?.message || "정보 수정에 실패했습니다.", "error")
     }
   }
@@ -97,11 +141,21 @@ export default function MyInfoEditPage() {
           <div className={styles.avatarWrap} onClick={() => avatarInputRef.current?.click()}>
             <div
               className={styles.avatar}
-              style={avatarFile ? {
-                backgroundImage: `url(${URL.createObjectURL(avatarFile)})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center"
-              } : undefined}
+              style={
+                avatarFile 
+                  ? { // 1. 방금 새로 올린 파일이 있으면 그걸 보여줌
+                      backgroundImage: `url(${URL.createObjectURL(avatarFile)})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center"
+                    } 
+                  : existingAvatar 
+                  ? { // 2. 새로 올린 건 없지만, 기존에 등록해둔 사진이 있으면 그걸 보여줌 (🌟 추가된 부분)
+                      backgroundImage: `url(${existingAvatar})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center"
+                    } 
+                  : undefined // 3. 둘 다 없으면 기본 회색 동그라미
+              }
             />
             <div className={styles.avatarEdit}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
