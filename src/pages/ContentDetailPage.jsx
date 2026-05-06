@@ -21,6 +21,7 @@ export default function ContentDetailPage() {
   const [readEps, setReadEps] = useState([]);
   const [payTarget, setPayTarget] = useState(null);
   const [showToast, setShowToast] = useState(false);
+  const [showInsufficientAlert, setShowInsufficientAlert] = useState(false);
 
   const [walletBalance, setWalletBalance] = useState(0);
 
@@ -168,6 +169,10 @@ export default function ContentDetailPage() {
   };
 
   const handlePay = async () => {
+    if (walletBalance < 200) {
+      setShowInsufficientAlert(true);
+      return;
+    }
     try {
       await api.post(`/api/episodes/${payTarget.episodeId}/purchase`);
 
@@ -471,26 +476,47 @@ export default function ContentDetailPage() {
 
       {/* 유료 결제 모달 */}
       {payTarget && (
-        <div className={styles.modalOverlay} onClick={() => setPayTarget(null)}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => { setPayTarget(null); setShowInsufficientAlert(false); }}
+        >
           <div className={styles.payModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.payModalTitle}>유료 회차</div>
             <div className={styles.payModalEp}>
               {payTarget.episodeTitle || `${payTarget.episodeNumber}화`}
             </div>
             <div className={styles.payModalCost}>200 P</div>
-            <div className={styles.payModalBalance}>
+            <div
+              className={styles.payModalBalance}
+              style={showInsufficientAlert ? { color: "#E53935", fontWeight: 600 } : {}}
+            >
               보유 포인트: {walletBalance.toLocaleString()} P
             </div>
+            {showInsufficientAlert && (
+              <div className={styles.payModalInsufficientMsg}>
+                포인트가 부족합니다.<br />
+                <span>200 P가 필요하지만 현재 {walletBalance.toLocaleString()} P를 보유 중입니다.</span>
+              </div>
+            )}
             <div className={styles.payModalActions}>
               <button
                 className={styles.payModalCancel}
-                onClick={() => setPayTarget(null)}
+                onClick={() => { setPayTarget(null); setShowInsufficientAlert(false); }}
               >
                 취소
               </button>
-              <button className={styles.payModalConfirm} onClick={handlePay}>
-                결제하기
-              </button>
+              {showInsufficientAlert ? (
+                <button
+                  className={styles.payModalChargeBtn}
+                  onClick={() => { setPayTarget(null); setShowInsufficientAlert(false); navigate("/mypage/points"); }}
+                >
+                  충전하러 가기
+                </button>
+              ) : (
+                <button className={styles.payModalConfirm} onClick={handlePay}>
+                  결제하기
+                </button>
+              )}
             </div>
           </div>
         </div>
