@@ -153,18 +153,19 @@ export default function ContentDetailPage() {
 
   const handleEpisodeClick = (ep) => {
     if (ep.status === "BLINDED") return;
+    const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+    const isPaymentRequired = (ep.status === "APPROVED" || !ep.isFree) && !purchasedEps.includes(ep.episodeNumber);
 
-    if (ep.status === "APPROVED" && !purchasedEps.includes(ep.episodeNumber)) {
+    if (isPaymentRequired) {
+      if (!token) {
+        alert("로그인이 필요한 서비스입니다.");
+        navigate("/login");
+        return;
+      }
+      
       setPayTarget(ep);
       return;
     }
-
-    // 유료 회차 결제 확인
-    if (!ep.isFree && !purchasedEps.includes(ep.episodeNumber)) {
-      setPayTarget(ep);
-      return;
-    }
-
     navigateToViewer(ep.episodeId);
   };
 

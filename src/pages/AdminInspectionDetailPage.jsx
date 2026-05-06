@@ -4,7 +4,7 @@ import api from "../api/axios";
 import styles from "../styles/AdminInspectionDetailPage.module.css";
 
 export default function AdminInspectionDetailPage() {
-  const { episodeId: contentId } = useParams();
+  const { episodeId} = useParams();
   const navigate = useNavigate();
 
   const [data, setData] = useState(null);
@@ -17,7 +17,7 @@ export default function AdminInspectionDetailPage() {
   const loadInspectionDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/admin/inspections/contents/${contentId}`);
+      const response = await api.get(`/api/admin/inspections/episodes/${episodeId}`);
       setData(response.data);
     } catch (error) {
       console.error("상세 내용을 불러오는데 실패했습니다.", error);
@@ -26,17 +26,30 @@ export default function AdminInspectionDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [contentId, navigate]);
+  }, [episodeId, navigate]);
 
   useEffect(() => {
     loadInspectionDetail();
   }, [loadInspectionDetail]);
 
-  const handleApprove = async () => {
+const handleApprove = async () => {
     if (!window.confirm("이 작품을 승인하시겠습니까?")) return;
     setIsProcessing(true);
     try {
-      await api.post(`/api/admin/inspections/contents/${contentId}/approve`);
+      // 🌟 1. 현재 시간을 백엔드가 원하는 "yyyy-MM-dd HH:mm:ss" 포맷으로 만들기
+      const now = new Date();
+      const formattedDate = now.getFullYear() + "-" + 
+          String(now.getMonth() + 1).padStart(2, '0') + "-" + 
+          String(now.getDate()).padStart(2, '0') + " " + 
+          String(now.getHours()).padStart(2, '0') + ":" + 
+          String(now.getMinutes()).padStart(2, '0') + ":" + 
+          String(now.getSeconds()).padStart(2, '0');
+
+      // 🌟 2. 주소를 episodes로 고치고, scheduledAt을 상자에 담아 보냅니다!
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/approve`, {
+        scheduledAt: formattedDate
+      });
+
       alert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.");
       navigate("/admin/inspections");
     } catch (error) {
@@ -54,7 +67,12 @@ export default function AdminInspectionDetailPage() {
     setIsProcessing(true);
     try {
       const finalReason = rejectReason === "기타 (직접 작성)" ? customRejectReason : rejectReason;
-      await api.post(`/api/admin/inspections/contents/${contentId}/reject`, { rejectReason: finalReason });
+      
+      // 🌟 주소를 episodes로 고칩니다!
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/reject`, { 
+        rejectReason: finalReason 
+      });
+
       alert("반려 처리가 완료되었습니다.");
       navigate("/admin/inspections");
     } catch (error) {
@@ -115,6 +133,38 @@ export default function AdminInspectionDetailPage() {
                 <span className={styles.value}>{data.createdAt?.substring(0, 10) || "-"}</span>
               </div>
             </div>
+          </div>
+        </section>
+
+        <section className={styles.sectionCard}>
+          <div className={styles.episodeHeader}>
+            <div className={styles.episodeTitle}>
+              회차 원고 ({data.episodeNumber}화)
+            </div>
+          </div>
+          
+          <div className={styles.manuscriptArea}>
+            {data.type === "웹소설" || data.type === "NOVEL" ? (
+              <div className={styles.novelText}>
+                {data.episodeText || "등록된 텍스트 원고가 없습니다."}
+              </div>
+            ) : (
+              <div className={styles.webtoonImages}>
+                {data.imageUrls && data.imageUrls.length > 0 ? (
+                  data.imageUrls.map((url, idx) => (
+                    <img 
+                      key={idx} 
+                      src={url} 
+                      alt={`${idx + 1}컷`} 
+                    />
+                  ))
+                ) : (
+                  <div className={styles.noThumbnail} style={{ width: "100%" }}>
+                    등록된 웹툰 이미지가 없습니다.
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
         <div className={styles.actionBar}>
