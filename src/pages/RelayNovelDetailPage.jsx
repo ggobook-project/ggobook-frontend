@@ -475,7 +475,14 @@ export default function RelayNovelDetailPage() {
             </div>
             <div className={styles.entryBody}>
               <div className={styles.entryHeader} style={{ position: 'relative' }}>
-                <div className={styles.avatar} />
+                <div 
+                  className={styles.avatar} 
+                  style={entry.profileImageUrl ? {
+                    backgroundImage: `url(${entry.profileImageUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center"
+                  } : undefined}
+                />
                 <span className={styles.entryUser}>{entry.nickname}</span>
                 <span className={styles.entryMeta}>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ""}</span>
                 

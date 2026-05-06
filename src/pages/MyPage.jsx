@@ -83,7 +83,14 @@ export default function MyPage() {
     <div className={styles.pageWrapper}>
       <div className={styles.inner}>
         <div className={styles.profile}>
-          <div className={styles.avatar} />
+          <div 
+            className={styles.avatar} 
+            style={userInfo?.profile?.profileImageUrl ? {
+              backgroundImage: `url(${userInfo.profile.profileImageUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center"
+            } : undefined}
+          />
           <div>
             <div className={styles.name}>{userInfo?.profile?.name || "알 수 없음"}</div>
             <div className={styles.email}>{userInfo?.profile?.email || "이메일 없음"}</div>

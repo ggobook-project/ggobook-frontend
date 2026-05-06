@@ -62,6 +62,20 @@ export default function SignupPage() {
 
   const checkDuplicate = async (type, value, statusKey) => {
     if (!value) return alert("값을 입력해주세요!");
+
+    // 🌟 1. API 쏘기 전에 프론트엔드 방어막 먼저 가동!
+    if (type === "id") {
+      const idRegex = /^[a-z0-9]{4,20}$/;
+      if (!idRegex.test(value)) {
+        return alert("아이디는 영문 소문자와 숫자만 사용하여 4~20자리로 입력해주세요.");
+      }
+    } else if (type === "nickname") {
+      if (value.length < 2 || value.length > 10) {
+        return alert("닉네임은 2자 이상, 10자 이하로 입력해주세요.");
+      }
+    }
+
+    // 🌟 2. 방어막을 무사히 통과한 데이터만 백엔드로 중복 확인!
     try {
       const paramName = type === "id" ? "userId" : type;
       const res = await api.get(`/api/auth/check-${type}?${paramName}=${value}`);
@@ -69,6 +83,7 @@ export default function SignupPage() {
         alert("❌ 이미 사용 중입니다.");
         setStatus(prev => ({ ...prev, [statusKey]: false }));
       } else {
+        alert(`✅ 사용 가능한 ${type === "id" ? "아이디" : "닉네임"}입니다.`);
         setStatus(prev => ({ ...prev, [statusKey]: true }));
       }
     } catch { alert("검증 실패. 서버를 확인해주세요."); }
@@ -93,10 +108,15 @@ export default function SignupPage() {
   };
 
   const handleSignup = async () => {
+    const idRegex = /^[a-z0-9]{4,20}$/; // 소문자+숫자 4~20자
+    const pwRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[a-zA-Z\d!@#$%^&*]{8,16}$/; // 영문+숫자+특수문자 8~16자
+
     const validationRules = [
       { condition: !userId, message: "아이디를 입력해주세요.", ref: userIdRef },
+      { condition: !idRegex.test(userId), message: "아이디는 영문 소문자와 숫자만 4~20자리로 입력해주세요.", ref: userIdRef },
       { condition: !isIdChecked, message: "아이디 중복확인을 해주세요." },
       { condition: !password, message: "비밀번호를 입력해주세요.", ref: passwordRef },
+      { condition: !pwRegex.test(password), message: "비밀번호는 영문, 숫자, 특수문자를 모두 포함하여 8~16자리로 입력해주세요.", ref: passwordRef },
       { condition: password !== passwordConfirm, message: "비밀번호가 일치하지 않습니다.", ref: passwordConfirmRef },
       { condition: !name, message: "이름(실명)을 입력해주세요.", ref: nameRef },
       { condition: !nickname, message: "닉네임을 입력해주세요.", ref: nicknameRef },
