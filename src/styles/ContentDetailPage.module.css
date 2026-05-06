@@ -390,6 +390,40 @@
 
 .payModalConfirm:hover { background: #1565C0; }
 
+.payModalInsufficientMsg {
+  background: #FFF3F3;
+  border: 1px solid #FFCDD2;
+  border-radius: 8px;
+  color: #E53935;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  line-height: 1.7;
+  text-align: left;
+}
+
+.payModalInsufficientMsg span {
+  font-size: 12px;
+  color: #EF9A9A;
+  font-weight: 400;
+}
+
+.payModalChargeBtn {
+  flex: 2;
+  padding: 12px 0;
+  background: #FF7043;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.payModalChargeBtn:hover { background: #E64A19; }
+
 /* 포인트 사용 토스트 */
 .toast {
   position: fixed;
