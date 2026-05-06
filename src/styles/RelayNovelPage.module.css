@@ -127,9 +127,10 @@
   color: #4A6FA5;
   line-height: 1.6;
   padding: 10px 14px;
-  background: #E8F4FD;
-  border-radius: 6px;
-  border: 1px solid #BBDEFB;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
 }
 
 .observer {

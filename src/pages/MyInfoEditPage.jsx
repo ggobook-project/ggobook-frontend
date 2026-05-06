@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
 import { getMyPageMainData, checkNicknameDuplicate, updateMyInfo } from "../api/mypageApi"
+import api from "../api/axios"
 import styles from "../styles/MyInfoEditPage.module.css"
 
 export default function MyInfoEditPage() {
@@ -47,6 +48,19 @@ export default function MyInfoEditPage() {
       }
     } catch {
       alert("중복 확인에 실패했습니다.")
+    }
+  }
+
+  const handleWithdraw = async () => {
+    if (!window.confirm("정말 탈퇴하시겠습니까? 탈퇴 후 계정 복구는 불가능합니다.")) return
+    try {
+      await api.post("/api/mypage/withdraw")
+      alert("그동안 이용해 주셔서 감사합니다. 탈퇴 처리가 완료되었습니다.")
+      localStorage.removeItem("accessToken")
+      sessionStorage.removeItem("accessToken")
+      navigate("/", { replace: true })
+    } catch {
+      alert("탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.")
     }
   }
 
@@ -178,8 +192,8 @@ export default function MyInfoEditPage() {
           </div>
 
           <div className={styles.btnGroup}>
-            <button className={styles.cancelBtn} onClick={() => navigate("/mypage")}>취소</button>
             <button className={styles.submitBtn} onClick={handleSubmit}>저장하기</button>
+            <button className={styles.withdrawBtn} onClick={handleWithdraw}>탈퇴하기</button>
           </div>
         </div>
       </div>

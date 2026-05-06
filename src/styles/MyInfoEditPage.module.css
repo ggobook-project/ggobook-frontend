@@ -242,28 +242,12 @@
 .btnGroup {
   display: flex;
   gap: 10px;
-}
-
-.cancelBtn {
-  flex: 1;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid #BBDEFB;
-  border-radius: 10px;
-  color: #4A6FA5;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-}
-
-.cancelBtn:hover {
-  background: #E3F2FD;
-  border-color: #90CAF9;
+  margin-top: 8px;
 }
 
 .submitBtn {
   flex: 2;
-  padding: 12px;
+  padding: 13px;
   background: #2196F3;
   border: none;
   border-radius: 10px;
@@ -276,5 +260,23 @@
 
 .submitBtn:hover {
   background: #1565C0;
+  transform: translateY(-1px);
+}
+
+.withdrawBtn {
+  flex: 1;
+  padding: 13px;
+  background: #EF5350;
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.withdrawBtn:hover {
+  background: #C62828;
   transform: translateY(-1px);
 }

@@ -272,3 +272,5 @@
 .guideExample { border-top: 1px solid #BBDEFB; padding-top: 10px; }
 .guideExampleTitle { font-size: 11px; color: #90A4C8; margin-bottom: 6px; font-weight: 600; }
 .guideExampleCode { background: #EBF5FF; border-radius: 8px; padding: 10px 12px; font-size: 12px; color: #0D1B2A; line-height: 1.8; margin: 0; font-family: 'Noto Sans KR', sans-serif; white-space: pre-wrap; }
+.charCountWrap { font-size: 13px; font-weight: 500; }
+.charCountSep { color: #90A4C8; }

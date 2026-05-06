@@ -107,7 +107,7 @@ export default function AdminNoticePage() {
         <div className={styles.contentHeader}>
           {!showForm && (
             <button className={styles.registerBtn} onClick={handleCreateClick}>
-              + 공지 등록
+              공지 등록
             </button>
           )}
         </div>
@@ -116,7 +116,7 @@ export default function AdminNoticePage() {
         {showForm && (
           <div className={styles.form}>
             <div className={styles.formHeader}>
-              <h3>{editMode ? "📝 공지사항 수정" : "✨ 새 공지사항 작성"}</h3>
+              <h3>{editMode ? "공지사항 수정" : "새 공지사항 작성"}</h3>
             </div>
             
             <div className={styles.formGroup}>
@@ -147,7 +147,7 @@ export default function AdminNoticePage() {
                   checked={formData.isPinned}
                   onChange={(e) => setFormData({...formData, isPinned: e.target.checked})}
                 />
-                📌 중요 공지로 상단에 고정하기
+                중요 공지로 상단에 고정하기
               </label>
             </div>
 
@@ -161,11 +161,11 @@ export default function AdminNoticePage() {
         )}
 
         {/* 🌟 공지사항 리스트 */}
-        <div className={styles.noticeList}>
-          {notices.length === 0 && !showForm && (
+        {!showForm && <div className={styles.noticeList}>
+          {notices.length === 0 && (
             <div style={{ textAlign: "center", padding: "40px", color: "#666" }}>등록된 공지가 없습니다.</div>
           )}
-          
+
           {notices.map(n => {
             // 🌟 백엔드 데이터 방어 로직: isPinned 또는 pinned 둘 중 하나라도 true면 고정으로 판단
             const isNoticePinned = n.isPinned === true || n.pinned === true;
@@ -179,7 +179,7 @@ export default function AdminNoticePage() {
                 <div className={styles.noticeCardTop}>
                   <div className={styles.noticeInfo}>
                     {/* 🌟 방어 로직 변수로 체크 */}
-                    {isNoticePinned && <span className={styles.pinBadge}>📢 필독 공지</span>}
+                    {isNoticePinned && <span className={styles.pinBadge}>필독 공지</span>}
                     
                     <div className={isNoticePinned ? styles.pinnedTitle : styles.noticeTitle}>
                       {n.title}
@@ -202,10 +202,10 @@ export default function AdminNoticePage() {
               </div>
             );
           })}
-        </div>
+        </div>}
 
         {/* 페이징 */}
-        {totalPages > 1 && (
+        {!showForm && totalPages > 1 && (
           <div className={styles.pagination}>
             <button className={styles.pageBtn} onClick={() => loadNotices(currentPage - 1)} disabled={currentPage === 0}>◀ 이전</button>
             <span className={styles.pageInfo}>{currentPage + 1} / {totalPages}</span>

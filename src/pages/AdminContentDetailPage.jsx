@@ -59,21 +59,18 @@ export default function AdminContentDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate("/admin/content")}>
-          ➔ 목록으로
-        </button>
         <div className={styles.headerTitle}>작품 상세 관리</div>
         {/* 🌟 수정된 헤더 자막 */}
         <div className={styles.headerSubtitle}>
-          {contentInfo ? `"${contentInfo.title}" 작품의 회차 목록입니다.` : "로딩 중..."}
+          {contentInfo ? `"${contentInfo.title}" 작품의 회차 목록입니다.` : ""}
         </div>
       </div>
 
       <div className={styles.content}>
   {loading ? (
-    <div style={{ textAlign: "center", padding: "40px" }}>데이터 로딩 중...</div>
+    <div />
   ) : episodes.length === 0 ? (
-    <div style={{ textAlign: "center", padding: "40px" }}>등록된 회차가 없습니다.</div>
+    <div style={{ textAlign: "center", padding: "40px", color: "#90A4C8" }}>등록된 회차가 없습니다.</div>
   ) : (
     episodes.map((ep) => (
   <div 

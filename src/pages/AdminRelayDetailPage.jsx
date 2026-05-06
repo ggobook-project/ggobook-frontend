@@ -45,8 +45,7 @@ export default function AdminRelayDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <button onClick={() => navigate(-1)} className={styles.backBtn}>➔ 목록으로 돌아가기</button>
-        <div className={styles.headerTitle}>소설 상세 및 이어쓰기 검열</div>
+<div className={styles.headerTitle}>소설 상세 및 이어쓰기 검열</div>
         <div className={styles.headerSubtitle}>
           [{displayTitle}] 소설의 각 회차를 꼼꼼히 확인하세요.
         </div>
@@ -72,7 +71,7 @@ export default function AdminRelayDetailPage() {
                 <div className={styles.blindedBox}>
                   🚨 <strong>[가이드라인 위반으로 블라인드 처리된 회차입니다.]</strong> <br/><br/>
                   <span style={{ color: "#555", fontSize: "14px" }}>
-                    <strong>🤖 AI 자동 요약본: </strong> {entry.adminMessage || entry.blindMessage}
+                    <strong>AI 자동 요약본: </strong> {entry.adminMessage || entry.blindMessage}
                   </span>
                 </div>
               ) : (
@@ -91,7 +90,7 @@ export default function AdminRelayDetailPage() {
                     }}
                   >
                     {/* 🌟 로딩 중일 때는 텍스트를 바꿔줍니다. */}
-                    {blindingId === (entry.entryId || entry.entry_id) ? "🤖 AI 요약 중..." : "이 회차 블라인드 (AI 자동 요약)"}
+                    {blindingId === (entry.entryId || entry.entry_id) ? "AI 요약 중..." : "이 회차 블라인드 (AI 자동 요약)"}
                   </button>
                 </div>
               )}

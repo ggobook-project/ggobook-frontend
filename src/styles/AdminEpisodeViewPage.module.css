@@ -1,11 +1,23 @@
 .viewerWrapper { padding: 40px; max-width: 900px; margin: 0 auto; }
-.toonImg { display: block; width: 100%; margin-bottom: 4px; }
-.novelText { 
-    white-space: pre-wrap; 
-    line-height: 1.8; 
-    font-size: 16px; 
-    padding: 20px;
-    background: #f9f9f9; 
+.toonImg { display: block; width: 100%; margin: 0; padding: 0; }
+.novelWrapper {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+.paragraph {
+  font-size: 16px;
+  color: #0D1B2A;
+  line-height: 2.0;
+  margin-bottom: 28px;
+}
+
+.emptyMsg {
+  text-align: center;
+  color: #90A4C8;
+  font-size: 14px;
+  padding: 40px 0;
 }
 .backBtn { margin-bottom: 20px; cursor: pointer; }
 

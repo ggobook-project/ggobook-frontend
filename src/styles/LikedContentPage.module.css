@@ -95,33 +95,38 @@
   overflow: hidden; 
 }
 
+.cardTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
 .heartBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  background: rgba(255, 255, 255, 0.85); 
-  border: 1px solid #BBDEFB;
-  border-radius: 8px;
+  background: none;
+  border: none;
+  padding: 2px;
   cursor: pointer;
-  transition: transform 0.15s, background 0.2s;
+  flex-shrink: 0;
+  transition: transform 0.15s;
 }
 
 .heartBtn:hover {
-  background: #FFF0F0;
-  border-color: #E53935;
-  transform: scale(1.05); 
+  transform: scale(1.15);
 }
 
 .cardTitle {
   font-size: 13px;
   font-weight: 600;
   color: #0D1B2A;
-  margin-bottom: 2px;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cardAuthor {

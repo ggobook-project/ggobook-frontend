@@ -28,7 +28,7 @@ export default function NoticeDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate("/notices")}>← 목록</button>
+
         <div className={styles.headerTitle}>{notice.title}</div>
         <div className={styles.headerMeta}>
           {/* 🌟 수정: 상세 페이지 헤더에 조회수 추가 */}

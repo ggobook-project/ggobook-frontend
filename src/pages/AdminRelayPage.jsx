@@ -151,15 +151,6 @@ export default function AdminRelayPage() {
         {r.status === 'PRIVATE' ? '공개로 전환' : '비공개 전환'}
       </button>
 
-      <button 
-        className={styles.relayCardBtn} 
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`);
-        }}
-      >
-        상세 보기 ➔
-      </button>
     </div>
   </div>
 ))}

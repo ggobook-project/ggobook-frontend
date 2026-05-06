@@ -154,19 +154,24 @@ export default function MyCommentPage() {
           </div>
         ) : (
           filteredComments.map(cm => (
-            <div key={cm.id} className={styles.card}>
+            <div
+              key={cm.id}
+              className={`${styles.card} ${editingId === cm.id ? styles.cardEditing : ""}`}
+              onClick={() => editingId !== cm.id && goViewerAndFocus(cm)}
+              style={{ cursor: editingId === cm.id ? "default" : "pointer" }}
+            >
               <div className={styles.cardTop}>
-                <span className={styles.cardLink} onClick={() => goViewerAndFocus(cm)}>
+                <span className={styles.cardLink}>
                   {cm.contentTitle} · {cm.episode}
                 </span>
                 <span className={styles.cardDate}>{cm.date}</span>
               </div>
-              
+
               {/* 수정 모드 UI */}
               {editingId === cm.id ? (
-                <div className={styles.editContainer}>
-                  <textarea 
-                    value={editText} 
+                <div className={styles.editContainer} onClick={e => e.stopPropagation()}>
+                  <textarea
+                    value={editText}
                     onChange={e => setEditText(e.target.value)}
                     className={styles.editInput}
                   />
@@ -179,8 +184,7 @@ export default function MyCommentPage() {
                 /* 기본 댓글 UI */
                 <>
                   <div className={styles.cardText}>{cm.content}</div>
-                  <div className={styles.cardActions}>
-                    {/* 🌟 수정완료: 삭제 버튼과 디자인이 통일된 수정 버튼 */}
+                  <div className={styles.cardActions} onClick={e => e.stopPropagation()}>
                     <button onClick={() => handleEditStart(cm)} className={styles.editBtn}>
                       수정
                     </button>

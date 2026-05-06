@@ -15,10 +15,13 @@ const FAQ_LIST = [
   "TTS 기능은 어떻게 사용하나요?",
 ];
 
+const stripEmoji = (str) =>
+  str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1F900}-\u{1F9FF}]/gu, "").trim();
+
 const INITIAL_MESSAGES = [
   {
     role: "assistant",
-    content: "안녕하세요! 꼬북이에요 🐢\n무엇을 도와드릴까요?",
+    content: "안녕하세요! 꼬북이에요\n무엇을 도와드릴까요?",
   },
 ];
 
@@ -28,7 +31,6 @@ export default function FloatingChatbot() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [faqVisible, setFaqVisible] = useState(true);
-  const [faqPanelOpen, setFaqPanelOpen] = useState(false);
   const [retryText, setRetryText] = useState(null);
   const messagesEndRef = useRef(null);
 
@@ -46,7 +48,6 @@ export default function FloatingChatbot() {
   const sendMessage = async (text) => {
     if (!text || loading) return;
     setFaqVisible(false);
-    setFaqPanelOpen(false);
     const newMessages = [...messages, { role: "user", content: text }];
     setMessages(newMessages);
     setInput("");
@@ -100,7 +101,6 @@ export default function FloatingChatbot() {
   const handleReset = () => {
     setMessages(INITIAL_MESSAGES);
     setFaqVisible(true);
-    setFaqPanelOpen(false);
     setRetryText(null);
     setInput("");
   };
@@ -121,7 +121,7 @@ export default function FloatingChatbot() {
           <div className={styles.header}>
             <div className={styles.headerLeft}>
               <img
-                src="/assets/mascot.png"
+                src="/assets/꼬북이.png"
                 alt="꼬북이"
                 className={styles.headerAvatar}
               />
@@ -136,7 +136,10 @@ export default function FloatingChatbot() {
                 onClick={handleReset}
                 title="대화 초기화"
               >
-                🔄
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <polyline points="3 3 3 8 8 8" />
+                </svg>
               </button>
               <button
                 className={styles.closeBtn}
@@ -157,7 +160,7 @@ export default function FloatingChatbot() {
                 >
                   {msg.role === "assistant" && (
                     <img
-                      src="/assets/mascot.png"
+                      src="/assets/꼬북이.png"
                       alt="꼬북이"
                       className={styles.botAvatar}
                     />
@@ -167,10 +170,10 @@ export default function FloatingChatbot() {
                       msg.role === "user" ? styles.userBubble : styles.botBubble
                     }
                   >
-                    {msg.content}
+                    {stripEmoji(msg.content)}
                     {msg.isError && !loading && (
                       <button className={styles.retryBtn} onClick={handleRetry}>
-                        🔄 다시 시도
+                        다시 시도
                       </button>
                     )}
                   </div>
@@ -193,7 +196,7 @@ export default function FloatingChatbot() {
             {loading && (
               <div className={styles.botRow}>
                 <img
-                  src="/assets/mascot.png"
+                  src="/assets/꼬북이.png"
                   alt="꼬북이"
                   className={styles.botAvatar}
                 />
@@ -209,35 +212,7 @@ export default function FloatingChatbot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {faqPanelOpen && (
-            <div className={styles.faqPanel}>
-              {FAQ_LIST.map((q, qi) => (
-                <button
-                  key={qi}
-                  className={styles.faqBtn}
-                  onClick={() => handleFaqClick(q)}
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          )}
-
           <div className={styles.inputRow}>
-            <button
-              className={`${styles.faqToggleBtn} ${faqPanelOpen ? styles.faqToggleBtnActive : ""}`}
-              onClick={() => setFaqPanelOpen((v) => !v)}
-              title="자주 묻는 질문"
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z" />
-              </svg>
-            </button>
             <textarea
               className={styles.input}
               value={input}

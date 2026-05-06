@@ -117,16 +117,6 @@ export default function MyPage() {
           ))}
         </div>
 
-        <div className={styles.logoutWrap}>
-          {/* 🌟 수정: 로그아웃 버튼을 회원 탈퇴 버튼으로 교체 */}
-          <button 
-            className={styles.logoutBtn} 
-            style={{ backgroundColor: "#FAFAFA", color: "#E53935", border: "1px solid #E53935" }} // 위험한 버튼 느낌 주기
-            onClick={handleWithdraw}
-          >
-            회원 탈퇴
-          </button>
-        </div>
       </div>
     </div>
   )

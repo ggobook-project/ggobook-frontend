@@ -20,13 +20,12 @@ export default function AdminMemberPage() {
   // 🚨 불필요해진 getAuthHeader() 함수는 완전히 삭제했습니다! 🚨
 
   // 🌟 데이터 불러오기 (토큰과 도메인이 자동으로 붙습니다)
-  const loadMembers = async (page = 0, searchFlag = isSearching, currentKeyword = keyword) => {
+  const loadMembers = async (page = 0, searchFlag = isSearching, currentKeyword = keyword, currentType = searchType) => {
     try {
-      // 🌟 2. http://localhost:8080 생략 가능!
       let url = `/api/admin/members?page=${page}&size=10`;
-      
+
       if (searchFlag && currentKeyword.trim() !== "") {
-        url = `/api/admin/members/search?type=${searchType}&keyword=${currentKeyword}&page=${page}&size=10`;
+        url = `/api/admin/members/search?type=${currentType}&keyword=${currentKeyword}&page=${page}&size=10`;
       }
 
       // 🌟 3. 토큰 헤더 없이 그냥 api.get()만 호출하면 인터셉터가 알아서 토큰을 붙여서 쏩니다!
@@ -58,7 +57,13 @@ export default function AdminMemberPage() {
 
   const handleSearch = () => {
     setIsSearching(true);
-    loadMembers(0, true, keyword);
+    loadMembers(0, true, keyword, searchType);
+  };
+
+  const handleTypeChange = (type) => {
+    setSearchType(type);
+    setIsSearching(!!keyword.trim());
+    loadMembers(0, !!keyword.trim(), keyword, type);
   };
 
   const handlePageChange = (newPage) => {
@@ -104,20 +109,23 @@ export default function AdminMemberPage() {
         <div className={styles.headerSubtitle}>일반 회원 정보를 조회하고 정지/관리할 수 있습니다.</div>
         
         <div className={styles.searchWrap}>
+          <div className={styles.searchTypeGroup}>
+            {[["ALL", "전체"], ["NICKNAME", "닉네임"], ["ID", "아이디"]].map(([val, label]) => (
+              <button
+                key={val}
+                className={`${styles.searchTypeBtn} ${searchType === val ? styles.searchTypeBtnActive : ""}`}
+                onClick={() => handleTypeChange(val)}
+              >{label}</button>
+            ))}
+          </div>
           <div className={styles.searchBox}>
-            <select className={styles.searchSelect} value={searchType} onChange={(e) => setSearchType(e.target.value)}>
-              <option value="ALL">전체</option>
-              <option value="NICKNAME">닉네임</option>
-              <option value="ID">아이디</option>
-            </select>
             <input
               className={styles.searchInput}
-              placeholder="검색어를 입력하세요..."
+              placeholder="검색어를 입력하세요"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
-            <button className={styles.searchBtn} onClick={handleSearch}>검색</button>
           </div>
         </div>
       </div>
@@ -147,11 +155,7 @@ export default function AdminMemberPage() {
                     setSuspendData({ duration: "DAYS_3", reason: "SPAM", customReason: "" });
                   }}>정지 처리</button>
                 ) : (
-                  <button 
-                    className={styles.actionBtn} 
-                    style={{ borderColor: "#10B981", color: "#10B981" }} 
-                    onClick={() => handleRelease(m)}
-                  >
+                  <button className={styles.actionBtnRelease} onClick={() => handleRelease(m)}>
                     정지 해제
                   </button>
                 )}

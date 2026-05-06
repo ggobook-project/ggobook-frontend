@@ -64,7 +64,7 @@ export default function AdminReportPage() {
 
     // 2. 소설 속 회차(RELAY_ENTRY)를 신고한 경우
     if (targetType === "RELAY_ENTRY") {
-      if (!targetParentId) return alert("부모 소설 정보가 없습니다.");
+      if (!targetParentId) return alert("소설 정보가 없습니다.");
       navigate(`/relay/${targetParentId}?targetId=${targetId}&type=${targetType}`);
       return;
     }
@@ -143,7 +143,7 @@ export default function AdminReportPage() {
         {loading ? (
           <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>로딩 중...</div>
         ) : filteredReports.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>대기 중인 신고가 없습니다. 🎉</div>
+          <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>대기 중인 신고가 없습니다.</div>
         ) : (
           filteredReports.map(r => (
             <div 
@@ -213,7 +213,7 @@ export default function AdminReportPage() {
         <div className={styles.modalOverlay} onClick={() => setSelectedReport(null)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              {modalType === "APPROVE" ? "🚨 정지 처분" : modalType === "RESOLVE" ? "✅ 완료 처리" : "🛡️ 신고 기각"}
+              {modalType === "APPROVE" ? "정지 처분" : modalType === "RESOLVE" ? "완료 처리" : "신고 기각"}
             </div>
             
             {modalType === "APPROVE" && (

@@ -169,19 +169,21 @@
 /* 가이드라인 전용 스타일 */
 .guideContainer {
   padding: 30px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
   margin-top: 20px;
-  background-color: #fff;
 }
 
 .guideViewContent {
   white-space: pre-wrap;
   line-height: 1.6;
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
+  background: transparent;
+  padding: 4px 0;
   min-height: 100px;
+  color: #4A6FA5;
+  font-size: 13px;
 }
 
 .guideActions {
@@ -405,17 +407,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 24px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(187, 222, 251, 0.6);
+  border-radius: 10px;
   margin-bottom: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
 }
 
 .relayCard:hover {
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .relayCardInfo {
@@ -481,18 +485,19 @@
 
 .statusToggleBtn {
   padding: 10px 16px;
-  background-color: #f8fafc;
-  border: 1px solid #cbd5e1;
+  background: none;
+  border: 1px solid #E53935;
   border-radius: 8px;
-  color: #475569;
+  color: #E53935;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
   white-space: nowrap;
 }
 
 .statusToggleBtn:hover {
-  background-color: #e2e8f0;
-  border-color: #94a3b8;
+  background: #E53935;
+  color: #fff;
+  transform: translateY(-1px);
 }

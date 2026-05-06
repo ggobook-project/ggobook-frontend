@@ -102,22 +102,23 @@ export default function LikedContentPage() {
                   className={styles.card} 
                   onClick={() => navigate(`/contents/${item.contentId}`)}
                 >
-                  <div 
+                  <div
                     className={styles.thumbnail}
                     style={{
                       backgroundImage: item.thumbnailUrl ? `url(${item.thumbnailUrl})` : 'none',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }}
-                  >
+                  />
+
+                  <div className={styles.cardTitleRow}>
+                    <span className={styles.cardTitle}>{item.title}</span>
                     <button className={styles.heartBtn} onClick={(e) => handleUnlike(e, item.contentId)} title="찜 취소">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#E53935" stroke="#E53935" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="#E53935" stroke="#E53935" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                       </svg>
                     </button>
                   </div>
-                  
-                  <div className={styles.cardTitle}>{item.title}</div>
                   <div className={styles.cardAuthor}>{item.author}</div>
                   <div className={styles.badges}>
                     <span className={styles.badge}>{typeMap[item.type] || item.type}</span>
