@@ -1,0 +1,108 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: #fff;
+  border-radius: 24px;
+  padding: 40px 32px 28px;
+  width: 360px;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.13), 0 4px 16px rgba(33, 150, 243, 0.07);
+  animation: slideUp 0.22s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.iconCircle {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 22px;
+  flex-shrink: 0;
+}
+
+.iconCircle[data-type="success"] { background: #4CAF50; }
+.iconCircle[data-type="error"]   { background: #E53935; }
+.iconCircle[data-type="warning"] { background: #FFA000; }
+.iconCircle[data-type="confirm"] { background: #2196F3; }
+.iconCircle[data-type="info"]    { background: #2196F3; }
+
+.title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0D1B2A;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.message {
+  width: 100%;
+  font-size: 14px;
+  color: #4A6FA5;
+  text-align: center;
+  line-height: 1.7;
+  margin-bottom: 28px;
+  word-break: break-word;
+  white-space: pre-wrap;
+  padding: 0 4px;
+}
+
+.btnRow {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.confirmBtn {
+  flex: 1;
+  padding: 13px;
+  background: #2196F3;
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.confirmBtn:hover  { background: #1565C0; }
+.confirmBtn:active { transform: scale(0.97); }
+
+.cancelBtn {
+  flex: 1;
+  padding: 13px;
+  background: #F0F6FF;
+  border: none;
+  border-radius: 12px;
+  color: #4A6FA5;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cancelBtn:hover { background: #E3F2FD; color: #1565C0; }

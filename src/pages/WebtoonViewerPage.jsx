@@ -9,12 +9,14 @@ import {
 import ReportModal from "../components/ReportModal";
 import api from "../api/axios";
 import styles from "../styles/WebtoonViewerPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function WebtoonViewerPage() {
   // ==========================================
   // 1. 라우터 및 기본 설정
   // ==========================================
   const navigate = useNavigate();
+  const { showAlert, showConfirm } = useAlert();
   const [searchParams] = useSearchParams();
   const contentId = searchParams.get("contentId");
   const focusCommentId = searchParams.get("focusComment");
@@ -428,7 +430,7 @@ export default function WebtoonViewerPage() {
         // 🌟 [수정] 가짜 평균 계산식 삭제하고 서버에서 진짜 평균 다시 불러오기!
         loadAverageRating();
       } else {
-        alert("별점 저장에 실패했습니다.");
+        await showAlert("별점 저장에 실패했습니다.", "error");
       }
     } catch (error) {
       console.error("별점 저장 실패:", error);
@@ -450,17 +452,18 @@ export default function WebtoonViewerPage() {
       setComment("");
       loadComments();
     } catch (error) {
-      alert("댓글 등록 실패");
+      await showAlert("댓글 등록 실패", "error");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("댓글을 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/comments/${id}`);
       loadComments();
     } catch (error) {
-      alert("댓글 삭제 실패");
+      await showAlert("댓글 삭제 실패", "error");
     }
   };
 
@@ -477,7 +480,7 @@ export default function WebtoonViewerPage() {
       setEditText("");
       loadComments();
     } catch (error) {
-      alert("댓글 수정 실패");
+      await showAlert("댓글 수정 실패", "error");
     }
   };
 
@@ -494,17 +497,18 @@ export default function WebtoonViewerPage() {
       setExpandedReplies((prev) => ({ ...prev, [commentId]: true }));
       loadComments();
     } catch (error) {
-      alert("답글 등록 실패");
+      await showAlert("답글 등록 실패", "error");
     }
   };
 
   const handleReplyDelete = async (commentId, replyId) => {
-    if (!window.confirm("답글을 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("답글을 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/replies/${replyId}`);
       loadComments();
     } catch (error) {
-      alert("답글 삭제 실패");
+      await showAlert("답글 삭제 실패", "error");
     }
   };
 
@@ -521,7 +525,7 @@ export default function WebtoonViewerPage() {
       setEditReplyText("");
       loadComments();
     } catch (error) {
-      alert("답글 수정 실패");
+      await showAlert("답글 수정 실패", "error");
     }
   };
 
@@ -802,7 +806,7 @@ export default function WebtoonViewerPage() {
             className={styles.actionItem}
             onClick={async () => {
               await navigator.clipboard.writeText(window.location.href);
-              alert("URL이 복사되었습니다.");
+              await showAlert("URL이 복사되었습니다.");
             }}
           >
             <svg

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import wave from "../assets/wave.png";
 import api from "../api/axios";
 import "../styles/Auth.css";
+import { useAlert } from "../context/AlertContext";
 
 const KakaoIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="#3C1E1E">
@@ -30,26 +31,13 @@ export default function LoginPage() {
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
-
-  // 🌟 커스텀 모달 상태 관리 (alert 대체)
-  const [modalData, setModalData] = useState({
-    isOpen: false,
-    title: "",
-    message: "",
-    icon: ""
-  });
-
-  const closeModal = () => setModalData({ ...modalData, isOpen: false });
+  const { showAlert } = useAlert();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!userId || !password) {
-      return setModalData({
-        isOpen: true,
-        title: "입력 오류",
-        message: "아이디와 비밀번호를 모두 입력해주세요.",
-        icon: "⚠️"
-      });
+      await showAlert("아이디와 비밀번호를 모두 입력해주세요.", "warning", "입력 오류");
+      return;
     }
 
     try {
@@ -63,30 +51,15 @@ export default function LoginPage() {
           sessionStorage.setItem("accessToken", cleanToken);
         }
       }
-      
-      // 로그인 성공 시 바로 메인 화면으로 이동
       navigate("/");
     } catch (err) {
-      // 백엔드가 던진 에러 메시지 낚아채기
       const errorMsg = err.response?.data || "아이디 또는 비밀번호가 일치하지 않습니다.";
 
-      // 🌟 핵심: 백엔드가 보낸 에러 메시지가 'SUSPENDED'로 시작하면 정지 안내창 띄우기
       if (typeof errorMsg === "string" && errorMsg.startsWith("SUSPENDED")) {
         const [_, reason, date] = errorMsg.split("|");
-        setModalData({
-          isOpen: true,
-          title: "로그인 제한 안내",
-          message: `해당 계정은 정지 상태입니다.\n\n🚨 사유 : ${reason}\n📅 해제일 : ${date}`,
-          icon: "⛔"
-        });
+        await showAlert(`해당 계정은 정지 상태입니다.\n\n사유 : ${reason}\n해제일 : ${date}`, "error", "로그인 제한 안내");
       } else {
-        // 비밀번호 틀림 등 일반 에러 처리
-        setModalData({
-          isOpen: true,
-          title: "로그인 실패",
-          message: errorMsg,
-          icon: "❌"
-        });
+        await showAlert(errorMsg, "error", "로그인 실패");
       }
     }
   };
@@ -172,17 +145,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* 🌟 커스텀 모달 UI (이전 대화에서 드린 Auth.css와 찰떡으로 맞습니다) */}
-      {modalData.isOpen && (
-        <div className="auth-modal-overlay" onClick={closeModal}>
-          <div className="auth-modal-box" onClick={(e) => e.stopPropagation()}>
-            <div className="auth-modal-icon">{modalData.icon}</div>
-            <div className="auth-modal-title">{modalData.title}</div>
-            <div className="auth-modal-message">{modalData.message}</div>
-            <button className="auth-modal-btn" onClick={closeModal}>확인</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

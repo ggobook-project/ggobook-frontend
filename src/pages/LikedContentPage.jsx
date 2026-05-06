@@ -3,13 +3,15 @@ import { useState, useEffect } from "react"
 
 //  변경 1: 동네 퀵서비스(axios) 해고! 우리 전용 요원(api)을 고용합니다.
 // (경로는 팀장님이 만드신 파일 위치에 맞게 ../api/axios 가 맞는지 확인해 주세요)
-import api from "../api/axios" 
+import api from "../api/axios"
 
 import { getMyLikedContents } from "../api/mypageApi"
 import styles from "../styles/LikedContentPage.module.css"
+import { useAlert } from "../context/AlertContext"
 
 export default function LikedContentPage() {
   const navigate = useNavigate()
+  const { showAlert, showConfirm } = useAlert()
 
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -30,9 +32,10 @@ export default function LikedContentPage() {
   }, [])
 
   const handleUnlike = async (e, contentId) => {
-    e.stopPropagation(); 
-    
-    if (!window.confirm("찜 목록에서 삭제하시겠습니까?")) return;
+    e.stopPropagation();
+
+    const ok = await showConfirm("찜 목록에서 삭제하시겠습니까?");
+    if (!ok) return;
 
     try {
       //  변경 2: 지갑에서 토큰 꺼내던 코드 (localStorage.getItem...) 삭제!
@@ -47,7 +50,7 @@ export default function LikedContentPage() {
       }
     } catch (error) {
       console.error("찜 취소 에러:", error);
-      alert("찜 취소에 실패했습니다.");
+      await showAlert("찜 취소에 실패했습니다.", "error");
     }
   }
 

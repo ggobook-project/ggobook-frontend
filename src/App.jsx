@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+import { AlertProvider } from "./context/AlertContext"
 import Header from "./components/Header"
 import Footer from "./components/Footer"
 import wave from "./assets/wave.png"
@@ -51,6 +52,7 @@ import NotFoundPage from "./pages/NotFoundPage"
 import { useLocation } from "react-router-dom"
 import OAuth2RedirectHandler from "./pages/OAuth2RedirectHandler"
 import FloatingChatbot from "./components/FloatingChatbot"
+import AlertPreviewPage from "./pages/AlertPreviewPage"
 
 const hideHeader = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password"]
 const hideFooter = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password", "/ai/chatbot"]
@@ -143,6 +145,7 @@ function Layout() {
           <Route path="/admin/relays" element={<AdminRelayPage />} />
           <Route path="/admin/relay/detail/:novelId" element={<AdminRelayDetailPage />} />
           <Route path="/admin/tts" element={<AdminTTSPage />} />
+          <Route path="/alert-preview" element={<AlertPreviewPage />} />
           <Route path="*" element={<NotFoundPage />} />
           <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
         </Routes>
@@ -159,8 +162,10 @@ function Layout() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Layout />
-    </BrowserRouter>
+    <AlertProvider>
+      <BrowserRouter>
+        <Layout />
+      </BrowserRouter>
+    </AlertProvider>
   )
 }

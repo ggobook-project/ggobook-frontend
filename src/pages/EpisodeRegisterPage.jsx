@@ -5,6 +5,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { ko } from "date-fns/locale";
 import api from "../api/axios"; // 🌟 1. 전담 요원(axios) 임포트!
 import styles from "../styles/EpisodeRegisterPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 const mockEpisodes = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
@@ -17,6 +18,7 @@ const mockEpisodes = Array.from({ length: 20 }, (_, i) => ({
 export default function EpisodeRegisterPage() {
   const navigate = useNavigate();
   const { contentId, episodeId } = useParams();
+  const { showAlert } = useAlert();
   const [searchParams] = useSearchParams();
   const isEdit = !!episodeId;
   const editEpisode = isEdit
@@ -38,7 +40,7 @@ export default function EpisodeRegisterPage() {
 
   const handleFormatDialogue = async () => {
     if (!novelText.trim()) {
-      alert("원고 내용을 먼저 입력해주세요.");
+      await showAlert("원고 내용을 먼저 입력해주세요.");
       return;
     }
     try {
@@ -55,7 +57,7 @@ export default function EpisodeRegisterPage() {
       const data = await res.json();
       setNovelText(data.formatted_text);
     } catch {
-      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.");
+      await showAlert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.", "error");
     } finally {
       setFormatLoading(false);
     }
@@ -63,15 +65,15 @@ export default function EpisodeRegisterPage() {
 
   const handleSubmit = async () => {
     if (!episodeTitle) {
-      alert("회차 제목은 필수입니다.");
+      await showAlert("회차 제목은 필수입니다.");
       return;
     }
     if (isNovel && !novelText.trim()) {
-      alert("원고 내용은 필수입니다.");
+      await showAlert("원고 내용은 필수입니다.");
       return;
     }
     if (!isEdit && !isNovel && comicFiles.length === 0) {
-      alert("웹툰 이미지를 1장 이상 업로드해주세요.");
+      await showAlert("웹툰 이미지를 1장 이상 업로드해주세요.");
       return;
     }
 
@@ -113,12 +115,12 @@ export default function EpisodeRegisterPage() {
 
       // axios는 성공 시 2xx 코드를 반환하므로 response.ok 대신 status 확인
       if (response.status === 200 || response.status === 201) {
-        alert(isEdit ? "회차 수정 성공" : "회차 등록 성공");
+        await showAlert(isEdit ? "회차 수정 성공" : "회차 등록 성공", "success");
         navigate(`/author/contents/${contentId}`);
       }
     } catch (error) {
       console.error("에러 발생 : ", error);
-      alert(isEdit ? "회차 수정 실패" : "회차 등록 실패");
+      await showAlert(isEdit ? "회차 수정 실패" : "회차 등록 실패", "error");
     }
   };
 

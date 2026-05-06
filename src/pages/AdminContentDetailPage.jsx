@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import styles from "../styles/AdminContentDetailPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function AdminContentDetailPage() {
   const navigate = useNavigate();
-  const { contentId } = useParams(); 
+  const { contentId } = useParams();
+  const { showAlert, showConfirm } = useAlert(); 
   const [episodes, setEpisodes] = useState([]);
   const [contentInfo, setContentInfo] = useState(null); // 🌟 작품 정보 저장용 상태
   const [loading, setLoading] = useState(true);
@@ -42,17 +44,18 @@ export default function AdminContentDetailPage() {
 
   // 블라인드 처리 로직
   const handleToggle = async (episodeId) => {
-    if (!window.confirm("이 회차의 공개 상태를 변경하시겠습니까?")) return;
+    const ok = await showConfirm("이 회차의 공개 상태를 변경하시겠습니까?");
+    if (!ok) return;
 
     try {
       await api.put(`/api/admin/content/episodes/${episodeId}/blind`);
-      setEpisodes(prev => prev.map(ep => 
-        ep.episodeId === episodeId 
-          ? { ...ep, status: ep.status === "PUBLISHED" ? "BLINDED" : "PUBLISHED" } 
+      setEpisodes(prev => prev.map(ep =>
+        ep.episodeId === episodeId
+          ? { ...ep, status: ep.status === "PUBLISHED" ? "BLINDED" : "PUBLISHED" }
           : ep
       ));
     } catch (error) {
-      alert("상태 변경에 실패했습니다.");
+      await showAlert("상태 변경에 실패했습니다.", "error");
     }
   };
 

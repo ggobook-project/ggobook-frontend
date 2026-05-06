@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 // 🌟 1. 공통 api 인스턴스 임포트
-import api from "../api/axios"; 
+import api from "../api/axios";
 import styles from "../styles/AdminNoticePage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function AdminNoticePage() {
+  const { showAlert, showConfirm } = useAlert();
   const [notices, setNotices] = useState([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -55,7 +57,7 @@ export default function AdminNoticePage() {
   // 2. 작성 및 수정 완료 (axios -> api 변경)
   const handleSubmit = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
-      alert("제목과 내용을 모두 입력해주세요.");
+      await showAlert("제목과 내용을 모두 입력해주세요.");
       return;
     }
 
@@ -68,27 +70,28 @@ export default function AdminNoticePage() {
 
       if (editMode) {
         await api.put(`/api/admin/notices/${formData.noticeId}`, payload);
-        alert("공지사항이 수정되었습니다.");
+        await showAlert("공지사항이 수정되었습니다.", "success");
       } else {
         await api.post("/api/admin/notices", payload);
-        alert("공지사항이 등록되었습니다.");
+        await showAlert("공지사항이 등록되었습니다.", "success");
       }
       resetForm();
       loadNotices(currentPage);
     } catch (err) {
-      alert("저장 중 오류가 발생했습니다.");
+      await showAlert("저장 중 오류가 발생했습니다.", "error");
     }
   };
 
   // 3. 삭제 처리 (axios -> api 변경)
   const handleDelete = async (noticeId) => {
-    if (!window.confirm("정말 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("정말 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/admin/notices/${noticeId}`);
-      alert("삭제되었습니다.");
+      await showAlert("삭제되었습니다.", "success");
       loadNotices(currentPage);
     } catch (err) {
-      alert("삭제 실패");
+      await showAlert("삭제 실패", "error");
     }
   };
 

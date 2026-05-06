@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import api from "../api/axios";
 import styles from "../styles/RelayNovelDetailPage.module.css";
 import ReportModal from "../components/ReportModal";
+import { useAlert } from "../context/AlertContext";
 
 const MAX_CHARS = 500;
 const MIN_CHARS = 50;
@@ -12,6 +13,7 @@ export default function RelayNovelDetailPage() {
   const navigate = useNavigate();
   const { relayNovelId } = useParams();
   const location = useLocation();
+  const { showAlert } = useAlert();
   
   const [myText, setMyText] = useState("")
   const [novel, setNovel] = useState(null)
@@ -48,7 +50,7 @@ export default function RelayNovelDetailPage() {
         if (prevTime <= 1) {
           clearInterval(countdownInterval);
           // 시간 초과 시 강제 종료
-          alert("최대 작성 허용 시간(30분)이 초과되어 강제 종료됩니다. 😢\n작성 중인 내용은 저장되지 않습니다.");
+          showAlert("최대 작성 허용 시간(30분)이 초과되어 강제 종료됩니다.\n작성 중인 내용은 저장되지 않습니다.");
           setIsWriting(false);
           setMyText("");
           api.post(`/api/relay-novels/${relayNovelId}/cancel`).catch(() => {});
@@ -65,7 +67,7 @@ export default function RelayNovelDetailPage() {
           console.error("락 연장 실패:", err);
           clearInterval(heartbeatInterval);
           clearInterval(countdownInterval);
-          alert("서버 통신 문제 또는 권한 만료로 강제 종료됩니다.");
+          showAlert("서버 통신 문제 또는 권한 만료로 강제 종료됩니다.", "error");
           setIsWriting(false);
           setMyText("");
         });
@@ -320,7 +322,7 @@ export default function RelayNovelDetailPage() {
       setShowSettings(false);
       playingRef.current = true;
     } catch (e) {
-      alert("TTS 생성에 실패했습니다.");
+      await showAlert("TTS 생성에 실패했습니다.", "error");
     } finally {
       setIsGenerating(false);
     }
@@ -328,7 +330,7 @@ export default function RelayNovelDetailPage() {
 
   const handleGenerateMultiVoiceTts = async () => {
     const { voice1Id, voice2Id, narratorVoiceId } = pendingMultiVoice;
-    if (!voice1Id || !voice2Id || !narratorVoiceId) { alert("모든 목소리를 선택해주세요."); return; }
+    if (!voice1Id || !voice2Id || !narratorVoiceId) { await showAlert("모든 목소리를 선택해주세요."); return; }
     try {
       setIsGenerating(true);
       const infoRes = await api.get(`/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk-info?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`);
@@ -349,7 +351,7 @@ export default function RelayNovelDetailPage() {
       setShowSettings(false);
       playingRef.current = true;
     } catch (e) {
-      alert("멀티보이스 생성에 실패했습니다.");
+      await showAlert("멀티보이스 생성에 실패했습니다.", "error");
     } finally {
       setIsGenerating(false);
     }
@@ -383,7 +385,7 @@ export default function RelayNovelDetailPage() {
   };
 
   const handleFormatDialogue = async () => {
-    if (!myText.trim()) { alert("내용을 먼저 입력해주세요."); return }
+    if (!myText.trim()) { await showAlert("내용을 먼저 입력해주세요."); return }
     try {
       setFormatLoading(true)
       const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
@@ -395,7 +397,7 @@ export default function RelayNovelDetailPage() {
       const data = await res.json()
       setMyText(data.formatted_text)
     } catch {
-      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.")
+      await showAlert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.", "error")
     } finally {
       setFormatLoading(false)
     }
@@ -407,19 +409,19 @@ export default function RelayNovelDetailPage() {
     try {
       setIsSubmitting(true);
       await api.post(`/api/relay-novels/${relayNovelId}/submit`, { entryText: myText });
-      alert("이어쓰기가 등록되었습니다!");
+      await showAlert("이어쓰기가 등록되었습니다!", "success");
       setMyText(""); setIsWriting(false); loadDetail();
-    } catch { alert("등록에 실패했습니다."); } finally { setIsSubmitting(false); }
+    } catch { await showAlert("등록에 실패했습니다.", "error"); } finally { setIsSubmitting(false); }
   };
 
   const handleStartWriting = async () => {
     if (!isLoggedIn) { navigate("/login"); return; }
     try {
       await api.post(`/api/relay-novels/${relayNovelId}/start`);
-      setIsWriting(true); 
+      setIsWriting(true);
     } catch (error) {
-      if (error.response?.status === 409) alert("현재 다른 작가님이 집필 중입니다. 🚫");
-      else alert("서버 통신 중 오류가 발생했습니다.");
+      if (error.response?.status === 409) await showAlert("현재 다른 작가님이 집필 중입니다.");
+      else await showAlert("서버 통신 중 오류가 발생했습니다.", "error");
     }
   };
 

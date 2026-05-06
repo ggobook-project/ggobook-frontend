@@ -2,10 +2,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 import styles from "../styles/ContentDetailPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function ContentDetailPage() {
   const navigate = useNavigate();
   const { contentId } = useParams();
+  const { showAlert } = useAlert();
 
   const [liked, setLiked] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -111,7 +113,7 @@ export default function ContentDetailPage() {
       localStorage.getItem("accessToken") ||
       sessionStorage.getItem("accessToken");
     if (!token) {
-      alert("로그인이 필요합니다.");
+      await showAlert("로그인이 필요합니다.");
       return;
     }
     try {
@@ -122,7 +124,7 @@ export default function ContentDetailPage() {
       }
     } catch (error) {
       console.error("찜 실패 : ", error);
-      alert("찜 처리에 실패했습니다.");
+      await showAlert("찜 처리에 실패했습니다.", "error");
     }
   };
 
@@ -138,14 +140,15 @@ export default function ContentDetailPage() {
     return "기타";
   };
 
-  const navigateToViewer = (episodeId) => {
+  const navigateToViewer = async (episodeId) => {
     if (content.type === "웹툰") {
       navigate(`/webtoon/viewer/${episodeId}?contentId=${contentId}`);
     } else if (content.type === "웹소설") {
       navigate(`/novel/viewer/${episodeId}?contentId=${contentId}`);
     } else {
-      alert(
+      await showAlert(
         `[오류] 알 수 없는 작품 타입입니다.\n현재 DB 저장값: "${content.type}"`,
+        "error",
       );
     }
   };
@@ -184,11 +187,11 @@ export default function ContentDetailPage() {
       }, 1500);
     } catch (error) {
       if (error.response?.data?.includes("포인트가 부족")) {
-        alert("포인트가 부족합니다. 충전 후 이용해주세요.");
+        await showAlert("포인트가 부족합니다. 충전 후 이용해주세요.", "error");
       } else if (error.response?.data?.includes("이미 구매")) {
-        alert("이미 구매한 회차입니다.");
+        await showAlert("이미 구매한 회차입니다.");
       } else {
-        alert("구매에 실패했습니다.");
+        await showAlert("구매에 실패했습니다.", "error");
       }
       console.error("구매 실패 : ", error);
     }
@@ -200,7 +203,7 @@ export default function ContentDetailPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      alert("URL 복사에 실패했습니다.");
+      await showAlert("URL 복사에 실패했습니다.", "error");
     }
   };
 

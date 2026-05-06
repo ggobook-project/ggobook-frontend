@@ -3,9 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import wave from "../assets/wave.png";
 import api from "../api/axios";
 import "../styles/Auth.css"; // 🌟 깨진 AuthStyles 삭제, 순수 CSS만 임포트
+import { useAlert } from "../context/AlertContext";
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
 
   const [inputs, setInputs] = useState({
     userId: "", password: "", passwordConfirm: "", name: "",
@@ -61,35 +63,35 @@ export default function SignupPage() {
   const formatTimer = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const checkDuplicate = async (type, value, statusKey) => {
-    if (!value) return alert("값을 입력해주세요!");
+    if (!value) { await showAlert("값을 입력해주세요!"); return; }
     try {
       const paramName = type === "id" ? "userId" : type;
       const res = await api.get(`/api/auth/check-${type}?${paramName}=${value}`);
       if (res.data) {
-        alert("❌ 이미 사용 중입니다.");
+        await showAlert("❌ 이미 사용 중입니다.");
         setStatus(prev => ({ ...prev, [statusKey]: false }));
       } else {
         setStatus(prev => ({ ...prev, [statusKey]: true }));
       }
-    } catch { alert("검증 실패. 서버를 확인해주세요."); }
+    } catch { await showAlert("검증 실패. 서버를 확인해주세요.", "error"); }
   };
 
   const handleSendEmail = async () => {
-    if (!email) return alert("이메일을 입력해주세요.");
+    if (!email) { await showAlert("이메일을 입력해주세요."); return; }
     try {
       await api.post(`/api/auth/email/send?email=${email}`);
       setStatus(prev => ({ ...prev, isEmailSent: true, isVerified: false }));
       setTimer(179); setTimerActive(true);
-    } catch { alert("❌ 메일 발송 실패."); }
+    } catch { await showAlert("❌ 메일 발송 실패.", "error"); }
   };
 
   const handleVerify = async () => {
-    if (authCode.length !== 6) return alert("인증번호 6자리를 입력해주세요.");
+    if (authCode.length !== 6) { await showAlert("인증번호 6자리를 입력해주세요."); return; }
     try {
       await api.post(`/api/auth/email/verify?email=${email}&code=${authCode}`);
       setStatus(prev => ({ ...prev, isVerified: true }));
       setTimerActive(false);
-    } catch { alert("❌ 인증번호가 틀렸거나 만료되었습니다."); }
+    } catch { await showAlert("❌ 인증번호가 틀렸거나 만료되었습니다.", "error"); }
   };
 
   const handleSignup = async () => {
@@ -108,7 +110,7 @@ export default function SignupPage() {
 
     for (const rule of validationRules) {
       if (rule.condition) {
-        alert(rule.message);
+        await showAlert(rule.message);
         if (rule.ref?.current) rule.ref.current.focus();
         return;
       }
@@ -116,9 +118,10 @@ export default function SignupPage() {
 
     try {
       await api.post("/api/auth/signup", { userId, password, name, nickname, email, gender });
-      alert("🎉 회원가입 성공!"); navigate("/login");
+      await showAlert("🎉 회원가입 성공!", "success");
+      navigate("/login");
     } catch (error) {
-      alert(`가입 실패: ${error.response?.data || "오류 발생"}`);
+      await showAlert(`가입 실패: ${error.response?.data || "오류 발생"}`, "error");
     }
   };
 

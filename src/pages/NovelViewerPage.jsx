@@ -10,12 +10,14 @@ import ReportModal from "../components/ReportModal";
 import api from "../api/axios";
 import llmApi from "../api/llmAxios";
 import styles from "../styles/NovelViewerPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function NovelViewerPage() {
   // ==========================================
   // 1. 라우터 및 기본 설정
   // ==========================================
   const navigate = useNavigate();
+  const { showAlert, showConfirm } = useAlert();
   const [searchParams] = useSearchParams();
   const contentId = searchParams.get("contentId");
   const { episodeId } = useParams();
@@ -577,7 +579,7 @@ export default function NovelViewerPage() {
       setShowSettings(false);
       playingRef.current = true;
     } catch {
-      alert("TTS 생성에 실패했습니다.");
+      await showAlert("TTS 생성에 실패했습니다.", "error");
     } finally {
       setIsGenerating(false);
     }
@@ -586,7 +588,7 @@ export default function NovelViewerPage() {
   const handleGenerateMultiVoiceTts = async () => {
     const { voice1Id, voice2Id, narratorVoiceId } = pendingMultiVoice;
     if (!voice1Id || !voice2Id || !narratorVoiceId) {
-      alert("화자1, 화자2, 서술자 목소리를 모두 선택해주세요.");
+      await showAlert("화자1, 화자2, 서술자 목소리를 모두 선택해주세요.");
       return;
     }
     try {
@@ -618,7 +620,7 @@ export default function NovelViewerPage() {
       setShowSettings(false);
       playingRef.current = true;
     } catch {
-      alert("멀티보이스 TTS 생성에 실패했습니다.");
+      await showAlert("멀티보이스 TTS 생성에 실패했습니다.", "error");
     } finally {
       setIsGenerating(false);
     }
@@ -693,7 +695,7 @@ export default function NovelViewerPage() {
         // 🌟 [수정] 가짜 평균 계산식 삭제하고 서버에서 진짜 평균 다시 불러오기!
         loadAverageRating();
       } else {
-        alert("별점 저장에 실패했습니다.");
+        await showAlert("별점 저장에 실패했습니다.", "error");
       }
     } catch (error) {
       console.error("별점 저장 실패 : ", error);
@@ -715,17 +717,18 @@ export default function NovelViewerPage() {
       setComment("");
       loadComments();
     } catch (error) {
-      alert("댓글 등록 실패");
+      await showAlert("댓글 등록 실패", "error");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("댓글을 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/comments/${id}`);
       loadComments();
     } catch (error) {
-      alert("댓글 삭제 실패");
+      await showAlert("댓글 삭제 실패", "error");
     }
   };
 
@@ -742,7 +745,7 @@ export default function NovelViewerPage() {
       setEditText("");
       loadComments();
     } catch (error) {
-      alert("댓글 수정 실패");
+      await showAlert("댓글 수정 실패", "error");
     }
   };
 
@@ -759,17 +762,18 @@ export default function NovelViewerPage() {
       setExpandedReplies((prev) => ({ ...prev, [commentId]: true }));
       loadComments();
     } catch (error) {
-      alert("답글 등록 실패");
+      await showAlert("답글 등록 실패", "error");
     }
   };
 
   const handleReplyDelete = async (commentId, replyId) => {
-    if (!window.confirm("답글을 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("답글을 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/replies/${replyId}`);
       loadComments();
     } catch (error) {
-      alert("답글 삭제 실패");
+      await showAlert("답글 삭제 실패", "error");
     }
   };
 
@@ -786,7 +790,7 @@ export default function NovelViewerPage() {
       setEditReplyText("");
       loadComments();
     } catch (error) {
-      alert("답글 수정 실패");
+      await showAlert("답글 수정 실패", "error");
     }
   };
 
@@ -908,7 +912,7 @@ export default function NovelViewerPage() {
   // 평행우주 함수
   const handleParallelUniverse = async () => {
     if (!whatIf.trim()) {
-      alert("만약에...? 내용을 입력해주세요.");
+      await showAlert("만약에...? 내용을 입력해주세요.");
       return;
     }
     setParallelLoading(true);
@@ -921,7 +925,7 @@ export default function NovelViewerPage() {
       });
       setParallelResult(response.data.parallel_universe_text);
     } catch {
-      alert("외전 생성에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.");
+      await showAlert("외전 생성에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.", "error");
     } finally {
       setParallelLoading(false);
     }
@@ -1336,7 +1340,7 @@ export default function NovelViewerPage() {
           className={styles.actionItem}
           onClick={async () => {
             await navigator.clipboard.writeText(window.location.href);
-            alert("URL이 복사되었습니다.");
+            await showAlert("URL이 복사되었습니다.");
           }}
         >
           <svg

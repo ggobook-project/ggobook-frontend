@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 // 🌟 1. 기본 axios 대신 팀원이 만든 커스텀 api 요원을 불러옵니다!
-import api from "../api/axios"; 
+import api from "../api/axios";
 import styles from "../styles/AdminMemberPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function AdminMemberPage() {
+  const { showAlert, showConfirm } = useAlert();
   const [members, setMembers] = useState([]);
   
   // 페이징 & 검색 상태
@@ -77,27 +79,28 @@ export default function AdminMemberPage() {
     try {
       // 🌟 api.post()를 사용하고 도메인과 헤더를 싹 날렸습니다!
       await api.post(`/api/admin/members/${selectedUser.id}/suspend`, suspendData);
-      
-      alert(`${selectedUser.nickname}님이 정지 처리되었습니다.`);
+
+      await showAlert(`${selectedUser.nickname}님이 정지 처리되었습니다.`, "success");
       setSelectedUser(null);
-      loadMembers(currentPage, isSearching, keyword); 
+      loadMembers(currentPage, isSearching, keyword);
     } catch (err) {
-      alert("정지 처리 실패: 권한이 없거나 서버 연결 상태를 확인해주세요.");
+      await showAlert("정지 처리 실패: 권한이 없거나 서버 연결 상태를 확인해주세요.", "error");
     }
   };
 
   // 🌟 정지 해제 함수
   const handleRelease = async (user) => {
-    if (!window.confirm(`${user.nickname}님의 정지를 해제하시겠습니까?`)) return;
+    const ok = await showConfirm(`${user.nickname}님의 정지를 해제하시겠습니까?`);
+    if (!ok) return;
 
     try {
       // 🌟 마찬가지로 매우 깔끔해진 post 요청
       await api.post(`/api/admin/members/${user.id}/release`, { reason: "관리자 직권 해제" });
-      
-      alert("정지가 해제되었습니다.");
-      loadMembers(currentPage, isSearching, keyword); 
+
+      await showAlert("정지가 해제되었습니다.", "success");
+      loadMembers(currentPage, isSearching, keyword);
     } catch (err) {
-      alert("정지 해제 실패: 권한이 없거나 서버를 확인해주세요.");
+      await showAlert("정지 해제 실패: 권한이 없거나 서버를 확인해주세요.", "error");
     }
   };
 

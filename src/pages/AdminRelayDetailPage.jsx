@@ -2,10 +2,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import api from "../api/axios"; // 🌟 공통 인스턴스
 import styles from "../styles/AdminRelayPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function AdminRelayDetailPage() {
   const { novelId } = useParams();
   const navigate = useNavigate();
+  const { showAlert, showConfirm } = useAlert();
   const [entries, setEntries] = useState([]);
   const [novelInfo, setNovelInfo] = useState({});
   const [errorStatus, setErrorStatus] = useState(null); 
@@ -26,15 +28,16 @@ export default function AdminRelayDetailPage() {
   useEffect(() => { loadEntries(); }, [loadEntries]);
 
   const handleBlindEntry = async (entryId) => {
-    if (!window.confirm("이 회차를 AI 요약 및 블라인드 처리하시겠습니까?")) return;
+    const ok = await showConfirm("이 회차를 AI 요약 및 블라인드 처리하시겠습니까?");
+    if (!ok) return;
     setBlindingId(entryId);
 
     try {
       await api.put(`/api/admin/relay-entries/${entryId}/blind`, { adminMessage: "" });
-      alert("블라인드 처리가 완료되었습니다.");
+      await showAlert("블라인드 처리가 완료되었습니다.", "success");
       loadEntries();
     } catch (error) {
-      alert("서버 오류가 발생했습니다.");
+      await showAlert("서버 오류가 발생했습니다.", "error");
     } finally {
       setBlindingId(null);
     }
