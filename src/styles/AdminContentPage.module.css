@@ -220,7 +220,81 @@
 }
 
 .dayTabBtnActive {
-  border-bottom: 2px solid #2196F3;
+  background: #2196F3; 
+  color: white;
+  border-color: #2196F3;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+}
+
+/* ==========================================
+   🌟 페이지네이션 & 뒤로가기 버튼 스타일 
+   ========================================== */
+
+/* 뒤로가기 버튼 */
+.backBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
   color: #1565C0;
+  font-size: 14px;
   font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.backBtn:hover {
+  color: #0D47A1;
+  transform: translateX(-2px);
+}
+
+/* 하단 페이지네이션 Wrapper */
+.paginationWrapper {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 40px;
+  padding-bottom: 40px;
+}
+
+/* 페이지네이션 기본 버튼 */
+.pageBtn {
+  padding: 6px 12px;
+  border: 1px solid #BBDEFB;
+  border-radius: 6px;
+  background: #fff;
+  color: #4A6FA5;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: #E3F2FD;
+  color: #1565C0;
+  border-color: #90CAF9;
+}
+
+/* 현재 선택된 페이지 */
+.pageBtnActive {
+  background: #2196F3;
+  color: #fff;
+  font-weight: bold;
+  border-color: #2196F3;
+}
+
+.pageBtnActive:hover {
+  background: #1565C0;
+  border-color: #1565C0;
+}
+
+/* 이전/다음 버튼 비활성화 시 */
+.pageBtn:disabled {
+  background: #F8FAFC;
+  color: #90A4C8;
+  cursor: default;
+  border-color: #E3F2FD;
 }

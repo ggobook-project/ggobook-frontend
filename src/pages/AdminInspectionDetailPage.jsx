@@ -39,8 +39,23 @@ export default function AdminInspectionDetailPage() {
     if (!ok) return;
     setIsProcessing(true);
     try {
-      await api.post(`/api/admin/inspections/episodes/${episodeId}/approve`);
-      await showAlert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.", "success");
+      // [수정 포인트 3] 백엔드가 요구하는 'scheduledAt' 데이터 형식 맞추기
+      // 백엔드에서 "yyyy-MM-dd HH:mm:ss" 포맷을 기대하므로, 현재 시간을 해당 포맷으로 변환합니다.
+      const now = new Date();
+      const formattedDate = 
+        now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+
+      // [수정 포인트 4] 승인 URL 변경 및 Body 데이터 추가
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/approve`, {
+          scheduledAt: formattedDate // 백엔드의 @RequestBody Map이 이 값을 꺼내어 씁니다.
+      });
+      
+      alert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.");
       navigate("/admin/inspections");
     } catch (error) {
       console.error("승인 실패", error);
