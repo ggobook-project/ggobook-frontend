@@ -4,7 +4,9 @@ import api from "../api/axios";
 import styles from "../styles/AdminInspectionDetailPage.module.css";
 
 export default function AdminInspectionDetailPage() {
-  const { episodeId: contentId } = useParams();
+  // [수정 포인트 1] 변수명 혼동 방지
+  // 기존에 episodeId를 contentId로 이름 지어 사용하던 것을, 백엔드 흐름에 맞춰 직관적인 episodeId로 통일합니다.
+  const { episodeId } = useParams(); 
   const navigate = useNavigate();
 
   const [data, setData] = useState(null);
@@ -17,7 +19,8 @@ export default function AdminInspectionDetailPage() {
   const loadInspectionDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/admin/inspections/contents/${contentId}`);
+      // [수정 포인트 2] 조회 URL 변경: /contents/ -> /episodes/
+      const response = await api.get(`/api/admin/inspections/episodes/${episodeId}`);
       setData(response.data);
     } catch (error) {
       console.error("상세 내용을 불러오는데 실패했습니다.", error);
@@ -26,7 +29,7 @@ export default function AdminInspectionDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [contentId, navigate]);
+  }, [episodeId, navigate]);
 
   useEffect(() => {
     loadInspectionDetail();
@@ -36,7 +39,22 @@ export default function AdminInspectionDetailPage() {
     if (!window.confirm("이 작품을 승인하시겠습니까?")) return;
     setIsProcessing(true);
     try {
-      await api.post(`/api/admin/inspections/contents/${contentId}/approve`);
+      // [수정 포인트 3] 백엔드가 요구하는 'scheduledAt' 데이터 형식 맞추기
+      // 백엔드에서 "yyyy-MM-dd HH:mm:ss" 포맷을 기대하므로, 현재 시간을 해당 포맷으로 변환합니다.
+      const now = new Date();
+      const formattedDate = 
+        now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+
+      // [수정 포인트 4] 승인 URL 변경 및 Body 데이터 추가
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/approve`, {
+          scheduledAt: formattedDate // 백엔드의 @RequestBody Map이 이 값을 꺼내어 씁니다.
+      });
+      
       alert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.");
       navigate("/admin/inspections");
     } catch (error) {
@@ -54,7 +72,12 @@ export default function AdminInspectionDetailPage() {
     setIsProcessing(true);
     try {
       const finalReason = rejectReason === "기타 (직접 작성)" ? customRejectReason : rejectReason;
-      await api.post(`/api/admin/inspections/contents/${contentId}/reject`, { rejectReason: finalReason });
+      
+      // [수정 포인트 5] 반려 URL 변경: /contents/ -> /episodes/
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/reject`, { 
+          rejectReason: finalReason 
+      });
+      
       alert("반려 처리가 완료되었습니다.");
       navigate("/admin/inspections");
     } catch (error) {
