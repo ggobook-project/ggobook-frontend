@@ -239,7 +239,7 @@
 }
 
 .sendBtn:hover:not(:disabled) { opacity: 0.88; transform: scale(1.05); }
-.sendBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+.sendBtn:disabled { opacity: 0.4; cursor: default; }
 
 /* FAQ 리스트 */
 .faqList {

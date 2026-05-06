@@ -196,30 +196,31 @@
 
 .dayTabGroup {
   display: flex;
-  gap: 8px;
+  gap: 0;
+  border-bottom: 1px solid #BBDEFB;
   margin-bottom: 24px;
-  flex-wrap: wrap; /* 🌟 모바일 대응을 위해 줄바꿈 허용 */
 }
 
 .dayTabBtn {
-  padding: 6px 14px;
-  font-size: 12px;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 400;
   cursor: pointer;
-  background: white;
-  border: 1px solid #BBDEFB;
-  border-radius: 20px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
   color: #4A6FA5;
-  transition: all 0.2s;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -1px;
 }
 
 .dayTabBtn:hover {
-  border-color: #2196F3;
   color: #2196F3;
+  border-bottom-color: #90CAF9;
 }
 
 .dayTabBtnActive {
-  background: #2196F3; 
-  color: white;
-  border-color: #2196F3;
-  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+  border-bottom: 2px solid #2196F3;
+  color: #1565C0;
+  font-weight: 600;
 }

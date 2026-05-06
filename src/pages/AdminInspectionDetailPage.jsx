@@ -2,10 +2,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
 import api from "../api/axios";
 import styles from "../styles/AdminInspectionDetailPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function AdminInspectionDetailPage() {
-  const { episodeId: contentId } = useParams();
+  const { episodeId } = useParams();
   const navigate = useNavigate();
+  const { showAlert, showConfirm } = useAlert();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -17,49 +19,50 @@ export default function AdminInspectionDetailPage() {
   const loadInspectionDetail = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/admin/inspections/contents/${contentId}`);
+      const response = await api.get(`/api/admin/inspections/episodes/${episodeId}`);
       setData(response.data);
     } catch (error) {
       console.error("상세 내용을 불러오는데 실패했습니다.", error);
-      alert("데이터를 불러올 수 없습니다.");
+      await showAlert("데이터를 불러올 수 없습니다.", "error");
       navigate("/admin/inspections");
     } finally {
       setLoading(false);
     }
-  }, [contentId, navigate]);
+  }, [episodeId, navigate]);
 
   useEffect(() => {
     loadInspectionDetail();
   }, [loadInspectionDetail]);
 
   const handleApprove = async () => {
-    if (!window.confirm("이 작품을 승인하시겠습니까?")) return;
+    const ok = await showConfirm("이 작품을 승인하시겠습니까?");
+    if (!ok) return;
     setIsProcessing(true);
     try {
-      await api.post(`/api/admin/inspections/contents/${contentId}/approve`);
-      alert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.");
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/approve`);
+      await showAlert("작품이 승인되었습니다. 작가가 회차를 등록하면 연재가 시작됩니다.", "success");
       navigate("/admin/inspections");
     } catch (error) {
       console.error("승인 실패", error);
-      alert("승인 처리 중 오류가 발생했습니다.");
+      await showAlert("승인 처리 중 오류가 발생했습니다.", "error");
       setIsProcessing(false);
     }
   };
 
   const handleReject = async () => {
-    if (!rejectReason) { alert("반려 사유를 선택해주세요."); return; }
+    if (!rejectReason) { await showAlert("반려 사유를 선택해주세요."); return; }
     if (rejectReason === "기타 (직접 작성)" && !customRejectReason.trim()) {
-      alert("상세 반려 사유를 작성해주세요."); return;
+      await showAlert("상세 반려 사유를 작성해주세요."); return;
     }
     setIsProcessing(true);
     try {
       const finalReason = rejectReason === "기타 (직접 작성)" ? customRejectReason : rejectReason;
-      await api.post(`/api/admin/inspections/contents/${contentId}/reject`, { rejectReason: finalReason });
-      alert("반려 처리가 완료되었습니다.");
+      await api.post(`/api/admin/inspections/episodes/${episodeId}/reject`, { rejectReason: finalReason });
+      await showAlert("반려 처리가 완료되었습니다.", "success");
       navigate("/admin/inspections");
     } catch (error) {
       console.error("반려 실패", error);
-      alert("반려 처리 중 오류가 발생했습니다.");
+      await showAlert("반려 처리 중 오류가 발생했습니다.", "error");
       setIsProcessing(false);
     }
   };

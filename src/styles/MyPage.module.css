@@ -129,6 +129,25 @@
   background: #1565C0;
 }
 
+.withdrawBtn {
+  background: none;
+  border: 1px solid rgba(187, 222, 251, 0.5);
+  border-radius: 999px;
+  color: #B0BEC5;
+  font-size: 12px;
+  font-weight: 400;
+  cursor: pointer;
+  padding: 6px 20px;
+  transition: background 0.25s, color 0.25s, border-color 0.25s, transform 0.2s;
+}
+
+.withdrawBtn:hover {
+  background: rgba(229, 57, 53, 0.06);
+  border-color: rgba(229, 57, 53, 0.3);
+  color: #E53935;
+  transform: translateY(-1px);
+}
+
 .roleAuthor {
   font-size: 12px;
   padding: 4px 12px;

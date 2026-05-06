@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import theme from "../styles/theme";
 import NotificationBell from "./NotificationBell";
-import api from "../api/axios"; 
+import api from "../api/axios";
+import { useAlert } from "../context/AlertContext";
 
 const { colors: c } = theme;
 
@@ -41,8 +42,11 @@ export default function Header() {
     }
   }, [currentPath]) 
 
+  const { showConfirm } = useAlert();
+
   const handleLogout = async () => {
-    if (!window.confirm("로그아웃 하시겠습니까?")) return;
+    const ok = await showConfirm("로그아웃 하시겠습니까?");
+    if (!ok) return;
 
     try {
       await api.post("/api/auth/logout");

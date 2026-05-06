@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 import styles from "../styles/AdminRelayPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function AdminRelayPage() {
   const navigate = useNavigate();
+  const { showAlert, showConfirm } = useAlert();
   const [tab, setTab] = useState("릴레이 목록");
   const [relays, setRelays] = useState([]);
   const [topics, setTopics] = useState([]);
@@ -59,29 +61,30 @@ export default function AdminRelayPage() {
 
   // 관리자 기능: 주제 등록
   const handleAddTopic = async () => {
-    if (!newTopicTitle.trim()) { alert("주제 제목을 입력해주세요."); return; }
+    if (!newTopicTitle.trim()) { await showAlert("주제 제목을 입력해주세요."); return; }
     try {
       await api.post("/api/admin/relay-topics", {
         title: newTopicTitle.trim(),
         description: newTopicDesc.trim() || "관리자가 등록한 공식 주제입니다.",
       });
-      alert("새 주제가 등록되었습니다.");
+      await showAlert("새 주제가 등록되었습니다.", "success");
       setNewTopicTitle("");
       setNewTopicDesc("");
       loadAdminTopics();
     } catch (error) {
-      alert("주제 등록 실패");
+      await showAlert("주제 등록 실패", "error");
     }
   };
 
   // 관리자 기능: 주제 삭제
   const handleDeleteTopic = async (topicId) => {
-    if (!window.confirm("정말 이 주제를 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("정말 이 주제를 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/admin/relay-topics/${topicId}`);
       loadAdminTopics();
     } catch (error) {
-      alert("삭제 실패");
+      await showAlert("삭제 실패", "error");
     }
   };
 
@@ -91,23 +94,24 @@ export default function AdminRelayPage() {
       await api.put("/api/admin/relay-guideline", { content: editGuideText.trim() });
       setGuideline(editGuideText);
       setIsEditingGuide(false);
-      alert("저장되었습니다.");
+      await showAlert("저장되었습니다.", "success");
     } catch (error) {
-      alert("저장 실패");
+      await showAlert("저장 실패", "error");
     }
   };
 
   // 관리자 기능: 소설 상태 변경 (비공개/공개 토글)
   const handleStatusToggle = async (novelId, currentStatus) => {
     const newStatus = currentStatus === 'PRIVATE' ? 'PUBLISHED' : 'PRIVATE';
-    if (!window.confirm(`이 소설을 ${newStatus === 'PRIVATE' ? '비공개' : '공개'} 상태로 변경하시겠습니까?`)) return;
+    const ok = await showConfirm(`이 소설을 ${newStatus === 'PRIVATE' ? '비공개' : '공개'} 상태로 변경하시겠습니까?`);
+    if (!ok) return;
 
     try {
       await api.post(`/api/admin/relay-novels/${novelId}/status`, { status: newStatus });
-      alert("상태가 변경되었습니다.");
+      await showAlert("상태가 변경되었습니다.", "success");
       loadRelayNovels();
     } catch (error) {
-      alert("상태 변경에 실패했습니다.");
+      await showAlert("상태 변경에 실패했습니다.", "error");
     }
   };
 
@@ -151,15 +155,6 @@ export default function AdminRelayPage() {
         {r.status === 'PRIVATE' ? '공개로 전환' : '비공개 전환'}
       </button>
 
-      <button 
-        className={styles.relayCardBtn} 
-        onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/admin/relay/detail/${r.relayNovelId || r.novelId || r.id}`);
-        }}
-      >
-        상세 보기 ➔
-      </button>
     </div>
   </div>
 ))}

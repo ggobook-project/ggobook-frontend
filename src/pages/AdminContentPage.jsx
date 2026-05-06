@@ -4,7 +4,7 @@ import api from "../api/axios"
 import styles from "../styles/AdminContentPage.module.css"
 
 const contentTypes = ["웹툰", "웹소설"]
-const days = ["전체", "월", "화", "수", "목", "금", "토", "일"];
+const days = ["전체", "월", "화", "수", "목", "금", "토", "일", "완결"];
 
 export default function AdminContentPage() {
   const navigate = useNavigate()

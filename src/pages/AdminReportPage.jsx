@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 import styles from "../styles/AdminReportPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 const REASON_MAP = {
   SPAM: "스팸 및 도배",
@@ -26,6 +27,7 @@ const TYPE_MAP = {
 
 export default function AdminReportPage() {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [filter, setFilter] = useState("전체");
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +55,7 @@ export default function AdminReportPage() {
   useEffect(() => { loadReports(); }, []);
 
   // 🌟 [동적 내비게이션] 도메인별 이동 경로 완벽 분기
-  const handleMoveToTarget = (report) => {
+  const handleMoveToTarget = async (report) => {
     const { targetType, targetId, targetParentId } = report;
 
     // 1. 소설 주제(RELAY_NOVEL) 자체를 신고한 경우
@@ -64,14 +66,14 @@ export default function AdminReportPage() {
 
     // 2. 소설 속 회차(RELAY_ENTRY)를 신고한 경우
     if (targetType === "RELAY_ENTRY") {
-      if (!targetParentId) return alert("부모 소설 정보가 없습니다.");
+      if (!targetParentId) { await showAlert("소설 정보가 없습니다."); return; }
       navigate(`/relay/${targetParentId}?targetId=${targetId}&type=${targetType}`);
       return;
     }
 
     // 3. 웹툰 댓글/답글 신고인 경우
     if (targetType === "WEBTOON_COMMENT" || targetType === "WEBTOON_REPLY") {
-      if (!targetParentId) return alert("웹툰 회차 정보가 없습니다.");
+      if (!targetParentId) { await showAlert("웹툰 회차 정보가 없습니다."); return; }
       // targetType을 쿼리로 같이 보내서 뷰어 쪽에서 댓글/답글 중 무엇을 찾을지 알게 합니다.
       navigate(`/webtoon/viewer/${targetParentId}?focusComment=${targetId}&targetType=${targetType}`);
       return;
@@ -79,27 +81,27 @@ export default function AdminReportPage() {
 
     // 4. 웹소설 댓글/답글 신고인 경우
     if (targetType === "NOVEL_COMMENT" || targetType === "NOVEL_REPLY") {
-      if (!targetParentId) return alert("웹소설 회차 정보가 없습니다.");
+      if (!targetParentId) { await showAlert("웹소설 회차 정보가 없습니다."); return; }
       navigate(`/novel/viewer/${targetParentId}?focusComment=${targetId}&targetType=${targetType}`);
       return;
     }
 
-    alert("이동 경로가 설정되지 않은 타입입니다.");
+    await showAlert("이동 경로가 설정되지 않은 타입입니다.");
   };
 
   const handleConfirm = async () => {
-    if (!processData.processReason.trim()) return alert("처리 사유를 입력하세요.");
+    if (!processData.processReason.trim()) { await showAlert("처리 사유를 입력하세요."); return; }
     try {
-      const endpoint = modalType.toLowerCase(); 
+      const endpoint = modalType.toLowerCase();
       await api.post(`/api/admin/reports/${selectedReport.reportId}/${endpoint}`, {
         duration: modalType === "APPROVE" ? processData.duration : null,
         processReason: processData.processReason,
       });
-      alert("처리가 완료되었습니다.");
+      await showAlert("처리가 완료되었습니다.", "success");
       setSelectedReport(null);
       loadReports();
     } catch (err) {
-      alert("처리 중 오류 발생");
+      await showAlert("처리 중 오류 발생", "error");
     }
   };
 
@@ -143,7 +145,7 @@ export default function AdminReportPage() {
         {loading ? (
           <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>로딩 중...</div>
         ) : filteredReports.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>대기 중인 신고가 없습니다. 🎉</div>
+          <div style={{ textAlign: "center", padding: "50px", color: "#90A4C8" }}>대기 중인 신고가 없습니다.</div>
         ) : (
           filteredReports.map(r => (
             <div 
@@ -213,7 +215,7 @@ export default function AdminReportPage() {
         <div className={styles.modalOverlay} onClick={() => setSelectedReport(null)}>
           <div className={styles.modal} onClick={e => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              {modalType === "APPROVE" ? "🚨 정지 처분" : modalType === "RESOLVE" ? "✅ 완료 처리" : "🛡️ 신고 기각"}
+              {modalType === "APPROVE" ? "정지 처분" : modalType === "RESOLVE" ? "완료 처리" : "신고 기각"}
             </div>
             
             {modalType === "APPROVE" && (

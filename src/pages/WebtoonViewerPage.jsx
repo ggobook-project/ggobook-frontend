@@ -9,12 +9,14 @@ import {
 import ReportModal from "../components/ReportModal";
 import api from "../api/axios";
 import styles from "../styles/WebtoonViewerPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function WebtoonViewerPage() {
   // ==========================================
   // 1. 라우터 및 기본 설정
   // ==========================================
   const navigate = useNavigate();
+  const { showAlert, showConfirm } = useAlert();
   const [searchParams] = useSearchParams();
   const contentId = searchParams.get("contentId");
   const focusCommentId = searchParams.get("focusComment");
@@ -337,6 +339,18 @@ export default function WebtoonViewerPage() {
     }
   }, [comicToons, comments, focusCommentId, savedProgress, searchParams]);
 
+  useEffect(() => {
+    if (allEpisodes.length === 0) return;
+    const idx = allEpisodes.findIndex(ep => ep.id === parseInt(episodeId));
+    if (idx !== -1) {
+      const centered = Math.min(
+        Math.max(0, idx - Math.floor(visibleCount / 2)),
+        Math.max(0, allEpisodes.length - visibleCount)
+      );
+      setEpOffset(centered);
+    }
+  }, [allEpisodes, episodeId]);
+
   // 🌟 [수정] episodeId가 바뀔 때마다 별점을 새로 불러오도록 변경!
   useEffect(() => {
     if (episodeId) {
@@ -416,7 +430,7 @@ export default function WebtoonViewerPage() {
         // 🌟 [수정] 가짜 평균 계산식 삭제하고 서버에서 진짜 평균 다시 불러오기!
         loadAverageRating();
       } else {
-        alert("별점 저장에 실패했습니다.");
+        await showAlert("별점 저장에 실패했습니다.", "error");
       }
     } catch (error) {
       console.error("별점 저장 실패:", error);
@@ -438,17 +452,18 @@ export default function WebtoonViewerPage() {
       setComment("");
       loadComments();
     } catch (error) {
-      alert("댓글 등록 실패");
+      await showAlert("댓글 등록 실패", "error");
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("댓글을 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("댓글을 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/comments/${id}`);
       loadComments();
     } catch (error) {
-      alert("댓글 삭제 실패");
+      await showAlert("댓글 삭제 실패", "error");
     }
   };
 
@@ -465,7 +480,7 @@ export default function WebtoonViewerPage() {
       setEditText("");
       loadComments();
     } catch (error) {
-      alert("댓글 수정 실패");
+      await showAlert("댓글 수정 실패", "error");
     }
   };
 
@@ -482,17 +497,18 @@ export default function WebtoonViewerPage() {
       setExpandedReplies((prev) => ({ ...prev, [commentId]: true }));
       loadComments();
     } catch (error) {
-      alert("답글 등록 실패");
+      await showAlert("답글 등록 실패", "error");
     }
   };
 
   const handleReplyDelete = async (commentId, replyId) => {
-    if (!window.confirm("답글을 삭제하시겠습니까?")) return;
+    const ok = await showConfirm("답글을 삭제하시겠습니까?");
+    if (!ok) return;
     try {
       await api.delete(`/api/replies/${replyId}`);
       loadComments();
     } catch (error) {
-      alert("답글 삭제 실패");
+      await showAlert("답글 삭제 실패", "error");
     }
   };
 
@@ -509,7 +525,7 @@ export default function WebtoonViewerPage() {
       setEditReplyText("");
       loadComments();
     } catch (error) {
-      alert("답글 수정 실패");
+      await showAlert("답글 수정 실패", "error");
     }
   };
 
@@ -690,93 +706,18 @@ export default function WebtoonViewerPage() {
           <div className={styles.emptyMsg}>이미지가 없습니다.</div>
         )}
 
-        {/* 이전화/다음화 버튼 추가 */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            padding: "12px 0",
-          }}
-        >
-          <button
-            onClick={() => {
-              const currentIndex = allEpisodes.findIndex(
-                (ep) => ep.id === parseInt(episodeId),
-              );
-              if (currentIndex > 0) {
-                navigate(
-                  `/webtoon/viewer/${allEpisodes[currentIndex - 1].id}?contentId=${contentId}`,
-                );
-              }
-            }}
-            disabled={
-              allEpisodes.findIndex((ep) => ep.id === parseInt(episodeId)) === 0
-            }
-            className={styles.epNavArrow}
-          >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-            이전화
-          </button>
-          <button
-            onClick={() => {
-              const currentIndex = allEpisodes.findIndex(
-                (ep) => ep.id === parseInt(episodeId),
-              );
-              if (currentIndex < allEpisodes.length - 1) {
-                navigate(
-                  `/webtoon/viewer/${allEpisodes[currentIndex + 1].id}?contentId=${contentId}`,
-                );
-              }
-            }}
-            disabled={
-              allEpisodes.findIndex((ep) => ep.id === parseInt(episodeId)) ===
-              allEpisodes.length - 1
-            }
-            className={styles.epNavArrow}
-          >
-            다음화
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
-        </div>
-
         <div className={styles.episodeNav}>
           <button
             className={styles.epNavArrow}
-            onClick={() => setEpOffset(Math.max(0, epOffset - 1))}
-            disabled={epOffset === 0}
+            onClick={() => {
+              const currentIndex = allEpisodes.findIndex(ep => ep.id === parseInt(episodeId));
+              if (currentIndex > 0) {
+                navigate(`/webtoon/viewer/${allEpisodes[currentIndex - 1].id}?contentId=${contentId}`);
+              }
+            }}
+            disabled={allEpisodes.findIndex(ep => ep.id === parseInt(episodeId)) === 0}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
@@ -807,19 +748,15 @@ export default function WebtoonViewerPage() {
           </div>
           <button
             className={styles.epNavArrow}
-            onClick={() => setEpOffset(Math.min(maxOffset, epOffset + 1))}
-            disabled={epOffset >= maxOffset}
+            onClick={() => {
+              const currentIndex = allEpisodes.findIndex(ep => ep.id === parseInt(episodeId));
+              if (currentIndex < allEpisodes.length - 1) {
+                navigate(`/webtoon/viewer/${allEpisodes[currentIndex + 1].id}?contentId=${contentId}`);
+              }
+            }}
+            disabled={allEpisodes.findIndex(ep => ep.id === parseInt(episodeId)) === allEpisodes.length - 1}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
@@ -869,7 +806,7 @@ export default function WebtoonViewerPage() {
             className={styles.actionItem}
             onClick={async () => {
               await navigator.clipboard.writeText(window.location.href);
-              alert("URL이 복사되었습니다.");
+              await showAlert("URL이 복사되었습니다.");
             }}
           >
             <svg
@@ -991,79 +928,50 @@ export default function WebtoonViewerPage() {
                     <span className={styles.commentDate}>{cm.date}</span>
                   </div>
 
-                  <div className={styles.moreMenuWrapper}>
-                    <button
-                      className={styles.moreBtn}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenMoreId(openMoreId === cm.id ? null : cm.id);
-                      }}
-                    >
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
+                  {cm.isMine && (
+                    <div className={styles.moreMenuWrapper}>
+                      <button
+                        className={styles.moreBtn}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMoreId(openMoreId === cm.id ? null : cm.id);
+                        }}
                       >
-                        <circle cx="12" cy="5" r="1.5" />
-                        <circle cx="12" cy="12" r="1.5" />
-                        <circle cx="12" cy="19" r="1.5" />
-                      </svg>
-                    </button>
-
-                    {openMoreId === cm.id && (
-                      <div className={styles.moreMenu}>
-                        {cm.isMine ? (
-                          <>
-                            <button
-                              className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`}
-                              onClick={() => {
-                                handleEditStart(cm);
-                                setOpenMoreId(null);
-                              }}
-                            >
-                              수정
-                            </button>
-                            <button
-                              className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`}
-                              onClick={() => {
-                                handleDelete(cm.id);
-                                setOpenMoreId(null);
-                              }}
-                            >
-                              삭제
-                            </button>
-                          </>
-                        ) : (
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <circle cx="12" cy="5" r="1.5" />
+                          <circle cx="12" cy="12" r="1.5" />
+                          <circle cx="12" cy="19" r="1.5" />
+                        </svg>
+                      </button>
+                      {openMoreId === cm.id && (
+                        <div className={styles.moreMenu}>
                           <button
-                            className={`${styles.moreMenuItem} ${styles.moreMenuItemReport}`}
+                            className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`}
                             onClick={() => {
-                              handleReportClick(cm, "WEBTOON_COMMENT");
+                              handleEditStart(cm);
                               setOpenMoreId(null);
                             }}
                           >
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M5 18h14" />
-                              <path d="M17 18v-5a5 5 0 0 0-10 0v5" />
-                              <path d="M2 13h2" />
-                              <path d="M20 13h2" />
-                              <path d="M12 2v2" />
-                            </svg>
-                            신고하기
+                            수정
                           </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                          <button
+                            className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`}
+                            onClick={() => {
+                              handleDelete(cm.id);
+                              setOpenMoreId(null);
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* 댓글 내용 */}
@@ -1111,20 +1019,9 @@ export default function WebtoonViewerPage() {
                           className={`${styles.reactionBtn} ${cm.myLike === "like" ? styles.reactionBtnActive : ""}`}
                           onClick={() => handleCommentLike(cm.id, "like")}
                         >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill={cm.myLike === "like" ? "#2196F3" : "none"}
-                            stroke={
-                              cm.myLike === "like" ? "#2196F3" : "#90A4C8"
-                            }
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M7 10v12" />
-                            <path d="M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill={cm.myLike === "like" ? "#2196F3" : "none"} stroke={cm.myLike === "like" ? "#2196F3" : "currentColor"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+                            <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
                           </svg>
                           <span>{cm.likes}</span>
                         </button>
@@ -1132,23 +1029,29 @@ export default function WebtoonViewerPage() {
                           className={`${styles.reactionBtn} ${cm.myLike === "dislike" ? styles.reactionBtnDisactive : ""}`}
                           onClick={() => handleCommentLike(cm.id, "dislike")}
                         >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill={cm.myLike === "dislike" ? "#E53935" : "none"}
-                            stroke={
-                              cm.myLike === "dislike" ? "#E53935" : "#90A4C8"
-                            }
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M17 14V2" />
-                            <path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2-2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill={cm.myLike === "dislike" ? "#E53935" : "none"} stroke={cm.myLike === "dislike" ? "#E53935" : "currentColor"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
+                            <path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
                           </svg>
                           <span>{cm.dislikes}</span>
                         </button>
+                        {!cm.isMine && (
+                          <button
+                            className={styles.reportBtn}
+                            onClick={() => handleReportClick(cm, "WEBTOON_COMMENT")}
+                            title="신고하기"
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 18h14" />
+                              <path d="M17 18v-5a5 5 0 0 0-10 0v5" />
+                              <path d="M2 13h2" />
+                              <path d="M20 13h2" />
+                              <path d="M12 2v2" />
+                              <path d="m4.93 4.93 1.41 1.41" />
+                              <path d="m17.66 6.34 1.41-1.41" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1176,86 +1079,54 @@ export default function WebtoonViewerPage() {
                               </span>
                             </div>
 
-                            <div className={styles.moreMenuWrapper}>
-                              <button
-                                className={styles.moreBtn}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMoreReplyId(
-                                    openMoreReplyId === reply.id
-                                      ? null
-                                      : reply.id,
-                                  );
-                                }}
-                              >
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 24 24"
-                                  fill="currentColor"
+                            {reply.isMine && (
+                              <div className={styles.moreMenuWrapper}>
+                                <button
+                                  className={styles.moreBtn}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenMoreReplyId(
+                                      openMoreReplyId === reply.id
+                                        ? null
+                                        : reply.id,
+                                    );
+                                  }}
                                 >
-                                  <circle cx="12" cy="5" r="1.5" />
-                                  <circle cx="12" cy="12" r="1.5" />
-                                  <circle cx="12" cy="19" r="1.5" />
-                                </svg>
-                              </button>
-
-                              {openMoreReplyId === reply.id && (
-                                <div className={styles.moreMenu}>
-                                  {reply.isMine ? (
-                                    <>
-                                      <button
-                                        className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`}
-                                        onClick={() => {
-                                          handleReplyEditStart(cm.id, reply);
-                                          setOpenMoreReplyId(null);
-                                        }}
-                                      >
-                                        수정
-                                      </button>
-                                      <button
-                                        className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`}
-                                        onClick={() => {
-                                          handleReplyDelete(cm.id, reply.id);
-                                          setOpenMoreReplyId(null);
-                                        }}
-                                      >
-                                        삭제
-                                      </button>
-                                    </>
-                                  ) : (
+                                  <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                  >
+                                    <circle cx="12" cy="5" r="1.5" />
+                                    <circle cx="12" cy="12" r="1.5" />
+                                    <circle cx="12" cy="19" r="1.5" />
+                                  </svg>
+                                </button>
+                                {openMoreReplyId === reply.id && (
+                                  <div className={styles.moreMenu}>
                                     <button
-                                      className={`${styles.moreMenuItem} ${styles.moreMenuItemReport}`}
+                                      className={`${styles.moreMenuItem} ${styles.moreMenuItemEdit}`}
                                       onClick={() => {
-                                        handleReportClick(
-                                          reply,
-                                          "WEBTOON_REPLY",
-                                        );
+                                        handleReplyEditStart(cm.id, reply);
                                         setOpenMoreReplyId(null);
                                       }}
                                     >
-                                      <svg
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                      >
-                                        <path d="M5 18h14" />
-                                        <path d="M17 18v-5a5 5 0 0 0-10 0v5" />
-                                        <path d="M2 13h2" />
-                                        <path d="M20 13h2" />
-                                        <path d="M12 2v2" />
-                                      </svg>
-                                      신고하기
+                                      수정
                                     </button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
+                                    <button
+                                      className={`${styles.moreMenuItem} ${styles.moreMenuItemDelete}`}
+                                      onClick={() => {
+                                        handleReplyDelete(cm.id, reply.id);
+                                        setOpenMoreReplyId(null);
+                                      }}
+                                    >
+                                      삭제
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                           {editingReply?.replyId === reply.id ? (
                             <div className={styles.editRow}>
@@ -1295,66 +1166,41 @@ export default function WebtoonViewerPage() {
                                 <div className={styles.commentReactions}>
                                   <button
                                     className={`${styles.reactionBtn} ${reply.myLike === "like" ? styles.reactionBtnActive : ""}`}
-                                    onClick={() =>
-                                      handleReplyLike(cm.id, reply.id, "like")
-                                    }
+                                    onClick={() => handleReplyLike(cm.id, reply.id, "like")}
                                   >
-                                    <svg
-                                      width="14"
-                                      height="14"
-                                      viewBox="0 0 24 24"
-                                      fill={
-                                        reply.myLike === "like"
-                                          ? "#2196F3"
-                                          : "none"
-                                      }
-                                      stroke={
-                                        reply.myLike === "like"
-                                          ? "#2196F3"
-                                          : "#90A4C8"
-                                      }
-                                      strokeWidth="1.8"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <path d="M7 10v12" />
-                                      <path d="M15 5.88L14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z" />
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill={reply.myLike === "like" ? "#2196F3" : "none"} stroke={reply.myLike === "like" ? "#2196F3" : "currentColor"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+                                      <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
                                     </svg>
                                     <span>{reply.likes}</span>
                                   </button>
                                   <button
                                     className={`${styles.reactionBtn} ${reply.myLike === "dislike" ? styles.reactionBtnDisactive : ""}`}
-                                    onClick={() =>
-                                      handleReplyLike(
-                                        cm.id,
-                                        reply.id,
-                                        "dislike",
-                                      )
-                                    }
+                                    onClick={() => handleReplyLike(cm.id, reply.id, "dislike")}
                                   >
-                                    <svg
-                                      width="14"
-                                      height="14"
-                                      viewBox="0 0 24 24"
-                                      fill={
-                                        reply.myLike === "dislike"
-                                          ? "#E53935"
-                                          : "none"
-                                      }
-                                      stroke={
-                                        reply.myLike === "dislike"
-                                          ? "#E53935"
-                                          : "#90A4C8"
-                                      }
-                                      strokeWidth="1.8"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    >
-                                      <path d="M17 14V2" />
-                                      <path d="M9 18.12L10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2-2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z" />
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill={reply.myLike === "dislike" ? "#E53935" : "none"} stroke={reply.myLike === "dislike" ? "#E53935" : "currentColor"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
+                                      <path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
                                     </svg>
                                     <span>{reply.dislikes}</span>
                                   </button>
+                                  {!reply.isMine && (
+                                    <button
+                                      className={styles.reportBtn}
+                                      onClick={() => handleReportClick(reply, "WEBTOON_REPLY")}
+                                      title="신고하기"
+                                    >
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M5 18h14" />
+                                        <path d="M17 18v-5a5 5 0 0 0-10 0v5" />
+                                        <path d="M2 13h2" />
+                                        <path d="M20 13h2" />
+                                        <path d="M12 2v2" />
+                                        <path d="m4.93 4.93 1.41 1.41" />
+                                        <path d="m17.66 6.34 1.41-1.41" />
+                                      </svg>
+                                    </button>
+                                  )}
                                 </div>
                               </div>
                             </div>

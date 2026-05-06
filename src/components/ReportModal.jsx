@@ -1,32 +1,31 @@
 import React, { useState } from 'react';
 import styles from './ReportModal.module.css';
 import api from '../api/axios';
+import { useAlert } from '../context/AlertContext';
 
 const ReportModal = ({ isOpen, onClose, targetInfo }) => {
     const [reason, setReason] = useState('SPAM');
+    const { showAlert } = useAlert();
+
     if (!isOpen || !targetInfo) return null;
 
     const handleSubmit = async (e) => {
-        e.stopPropagation(); 
-        
+        e.stopPropagation();
+
         const reportData = {
             targetType: targetInfo.targetType,
             targetId: targetInfo.targetId,
-            targetParentId: targetInfo.targetParentId, 
-            reportReason: reason, 
-            reportedUserId: targetInfo.reportedUserId 
+            targetParentId: targetInfo.targetParentId,
+            reportReason: reason,
+            reportedUserId: targetInfo.reportedUserId
         };
 
-        console.log("백엔드로 보낼 최종 데이터 확인:", reportData);
-
         try {
-            // 백엔드 ReportRequestDTO 구조와 1:1로 매칭시켜 전송합니다.
             await api.post('/api/reports', reportData);
-            
-            alert("신고가 정상적으로 접수되었습니다.");
+            await showAlert("신고가 정상적으로 접수되었습니다.", "success");
             onClose();
         } catch (error) {
-            alert(error.response?.data?.message || error.response?.data || "신고 처리 중 오류가 발생했습니다.");
+            await showAlert(error.response?.data?.message || error.response?.data || "신고 처리 중 오류가 발생했습니다.", "error");
         }
     };
 

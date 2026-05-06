@@ -74,6 +74,14 @@
   background: rgba(255, 255, 255, 0.92);
 }
 
+.cardEditing {
+  transform: none !important;
+  box-shadow: none !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-color: rgba(187, 222, 251, 0.6) !important;
+  cursor: default !important;
+}
+
 .cardTop {
   display: flex;
   justify-content: space-between;
@@ -153,13 +161,18 @@
 
 .editInput {
   width: 100%;
-  padding: 10px;
+  box-sizing: border-box;
+  padding: 10px 14px;
   border-radius: 8px;
   border: 1px solid #BBDEFB;
+  background: #E8F4FD;
+  color: #0D1B2A;
+  font-size: 14px;
   min-height: 60px;
   margin-bottom: 10px;
   resize: none;
   font-family: inherit;
+  outline: none;
 }
 
 .editActionRow {

@@ -2,9 +2,11 @@ import { useNavigate, useSearchParams } from "react-router-dom" //  useSearchPar
 import { useState } from "react"
 import api from "../api/axios" //  API 통신용 추가
 import styles from "../styles/ResetPasswordPage.module.css"
+import { useAlert } from "../context/AlertContext"
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate()
+  const { showAlert } = useAlert()
   const [searchParams] = useSearchParams() //  주소창에서 값을 뽑아내는 훅
   const token = searchParams.get("token")  //  ?token=... 의 값을 가져옵니다
 
@@ -14,22 +16,25 @@ export default function ResetPasswordPage() {
   // 🌟 실제 비밀번호 변경 요청 API 로직
   const handleResetPassword = async () => {
     if (!token) {
-      return alert("유효하지 않거나 만료된 링크입니다. 다시 메일을 요청해주세요.");
+      await showAlert("유효하지 않거나 만료된 링크입니다. 다시 메일을 요청해주세요.", "error");
+      return;
     }
     if (!pw || !pwConfirm) {
-      return alert("새 비밀번호를 입력해주세요.");
+      await showAlert("새 비밀번호를 입력해주세요.");
+      return;
     }
     if (pw !== pwConfirm) {
-      return alert("비밀번호가 서로 일치하지 않습니다.");
+      await showAlert("비밀번호가 서로 일치하지 않습니다.");
+      return;
     }
 
     try {
       // 🌟 팀원분이 만든 pw 변수를 백엔드가 요구하는 newPassword 파라미터에 매핑해서 전송
       await api.post(`/api/auth/password/reset?token=${token}&newPassword=${pw}`);
-      alert("비밀번호가 성공적으로 변경되었습니다! 새 비밀번호로 로그인해주세요.");
+      await showAlert("비밀번호가 성공적으로 변경되었습니다! 새 비밀번호로 로그인해주세요.", "success");
       navigate("/login");
     } catch (error) {
-      alert(error.response?.data || "토큰이 만료되었거나 오류가 발생했습니다.");
+      await showAlert(error.response?.data || "토큰이 만료되었거나 오류가 발생했습니다.", "error");
     }
   };
 

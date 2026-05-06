@@ -19,13 +19,12 @@ export default function AdminEpisodeViewPage() {
   }, [episodeId]);
 
   if (error) return <div style={{ color: 'red', textAlign: 'center' }}>{error}</div>;
-  if (!episode) return <div style={{ textAlign: 'center' }}>로딩 중...</div>;
+  if (!episode) return <div />;
 
   return (
     <div className={styles.viewerWrapper}>
       {/* 관리자용 상단 바 */}
       <div className={styles.viewerHeader}>
-        <button onClick={() => navigate(-1)} className={styles.backBtn}>➔ 뒤로가기</button>
         <h2>{episode.episodeNumber}화: {episode.title}</h2>
       </div>
       
@@ -38,7 +37,12 @@ export default function AdminEpisodeViewPage() {
           </div>
         ) : (
           <div className={styles.novelWrapper}>
-            <pre className={styles.novelText}>{episode.novelContent}</pre>
+            {episode.novelContent
+              ? episode.novelContent.split("\n").filter(p => p.trim() !== "").map((p, i) => (
+                  <p key={i} className={styles.paragraph}>{p}</p>
+                ))
+              : <div className={styles.emptyMsg}>내용이 없습니다.</div>
+            }
           </div>
         )}
       </main>

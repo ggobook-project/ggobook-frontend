@@ -44,8 +44,8 @@ function NavBtn({ direction, swiperRef }) {
       }
     >
       <svg
-        width="32"
-        height="32"
+        width="45"
+        height="45"
         viewBox="0 0 24 24"
         fill="none"
         stroke="#4A6FA5"
@@ -198,7 +198,7 @@ export default function NovelPage() {
             ))}
           </div>
           <div className={styles.heroInfo}>
-            <div className={styles.heroLabel}>📖 {currentHero.label}</div>
+            <div className={styles.heroLabel}>{currentHero.label}</div>
             {heroItem ? (
               <>
                 <div className={styles.heroTitle}>{heroItem.title}</div>
@@ -337,29 +337,24 @@ export default function NovelPage() {
           </div>
         ) : (
           <div>
-            <div className={styles.sectionTitle}>{activeDay}요일 웹소설</div>
-            {dayContents.map((n) => (
-              <div
-                key={n.contentId}
-                className={styles.genreCard}
-                onClick={() => navigate(`/contents/${n.contentId}`)}
-              >
-                <img
-                  src={n.thumbnailUrl}
-                  alt={n.title}
-                  className={styles.genreCardImg}
-                />
-                <div>
-                  <div className={styles.genreCardTitle}>{n.title}</div>
-                  <div className={styles.genreCardMeta}>
-                    {n.authorName || "작가명"} · {n.genre}
-                  </div>
-                  <div className={styles.genreCardBadges}>
-                    <span className={styles.badge}>{n.status || "연재중"}</span>
-                  </div>
+            <div className={styles.sectionTitle}>{activeDay === "완결" ? "완결 웹소설" : `${activeDay}요일 웹소설`}</div>
+            <div className={styles.dailyGrid}>
+              {dayContents.map((n) => (
+                <div
+                  key={n.contentId}
+                  onClick={() => navigate(`/contents/${n.contentId}`)}
+                  className={styles.cardItem}
+                >
+                  <img
+                    src={n.thumbnailUrl}
+                    alt={n.title}
+                    className={styles.cardImg}
+                  />
+                  <div className={styles.cardTitle}>{n.title}</div>
+                  <div className={styles.cardGenre}>{n.genre}</div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
             <div ref={observerRef} className={styles.observer}>
               {isLoading && (
                 <span className={styles.observerText}>

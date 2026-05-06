@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
-import api from "../api/axios" 
+import api from "../api/axios"
 import styles from "../styles/MyCommentPage.module.css"
+import { useAlert } from "../context/AlertContext"
 
-export default function MyCommentPage() { 
+export default function MyCommentPage() {
   const navigate = useNavigate()
-  
+  const { showAlert, showConfirm } = useAlert()
+
   const [comments, setComments] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   
@@ -59,15 +61,16 @@ export default function MyCommentPage() {
   // 3. 댓글 삭제 & 수정 로직
   // ==========================================
   const handleDelete = async (commentId) => {
-    if (!window.confirm("댓글을 삭제하시겠습니까? (답글은 유지됩니다)")) return;
+    const ok = await showConfirm("댓글을 삭제하시겠습니까? (답글은 유지됩니다)");
+    if (!ok) return;
 
     try {
       await api.delete(`/api/comments/${commentId}`)
       setComments(prev => prev.filter(cm => cm.id !== commentId))
-      alert("댓글이 삭제되었습니다.")
+      await showAlert("댓글이 삭제되었습니다.", "success")
     } catch (error) {
       console.error("댓글 삭제 실패:", error)
-      alert("삭제 중 오류가 발생했습니다.")
+      await showAlert("삭제 중 오류가 발생했습니다.", "error")
     }
   }
 
@@ -78,20 +81,20 @@ export default function MyCommentPage() {
 
   const handleEditSubmit = async (commentId) => {
     if (!editText.trim()) {
-      alert("내용을 입력해주세요.");
+      await showAlert("내용을 입력해주세요.");
       return;
     }
-    
+
     try {
       await api.put(`/api/comments/${commentId}`, { commentText: editText })
-      setComments(comments.map(cm => 
+      setComments(comments.map(cm =>
         cm.id === commentId ? { ...cm, content: editText } : cm
       ))
       setEditingId(null)
-      alert("댓글이 수정되었습니다.")
+      await showAlert("댓글이 수정되었습니다.", "success")
     } catch (error) {
       console.error("댓글 수정 실패:", error)
-      alert("수정 중 오류가 발생했습니다.")
+      await showAlert("수정 중 오류가 발생했습니다.", "error")
     }
   }
 
@@ -154,19 +157,24 @@ export default function MyCommentPage() {
           </div>
         ) : (
           filteredComments.map(cm => (
-            <div key={cm.id} className={styles.card}>
+            <div
+              key={cm.id}
+              className={`${styles.card} ${editingId === cm.id ? styles.cardEditing : ""}`}
+              onClick={() => editingId !== cm.id && goViewerAndFocus(cm)}
+              style={{ cursor: editingId === cm.id ? "default" : "pointer" }}
+            >
               <div className={styles.cardTop}>
-                <span className={styles.cardLink} onClick={() => goViewerAndFocus(cm)}>
+                <span className={styles.cardLink}>
                   {cm.contentTitle} · {cm.episode}
                 </span>
                 <span className={styles.cardDate}>{cm.date}</span>
               </div>
-              
+
               {/* 수정 모드 UI */}
               {editingId === cm.id ? (
-                <div className={styles.editContainer}>
-                  <textarea 
-                    value={editText} 
+                <div className={styles.editContainer} onClick={e => e.stopPropagation()}>
+                  <textarea
+                    value={editText}
                     onChange={e => setEditText(e.target.value)}
                     className={styles.editInput}
                   />
@@ -179,8 +187,7 @@ export default function MyCommentPage() {
                 /* 기본 댓글 UI */
                 <>
                   <div className={styles.cardText}>{cm.content}</div>
-                  <div className={styles.cardActions}>
-                    {/* 🌟 수정완료: 삭제 버튼과 디자인이 통일된 수정 버튼 */}
+                  <div className={styles.cardActions} onClick={e => e.stopPropagation()}>
                     <button onClick={() => handleEditStart(cm)} className={styles.editBtn}>
                       수정
                     </button>

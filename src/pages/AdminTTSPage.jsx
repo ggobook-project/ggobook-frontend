@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react"
 import api from "../api/axios"
 import styles from "../styles/AdminTTSPage.module.css"
+import { useAlert } from "../context/AlertContext"
 
 const EMPTY_FORM = { voiceName: "", voiceType: "FEMALE", voiceStyle: "", fileUrl: "", sampleUrl: "" }
 
 export default function AdminTTSPage() {
+  const { showAlert, showConfirm } = useAlert()
   const [voices, setVoices] = useState([])
   const [showAddModal, setShowAddModal] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
@@ -39,7 +41,7 @@ export default function AdminTTSPage() {
   }
 
   const handleSave = async () => {
-    if (!form.voiceName || !form.voiceStyle) { alert("목소리 ID와 표시 이름을 입력해주세요."); return }
+    if (!form.voiceName || !form.voiceStyle) { await showAlert("목소리 ID와 표시 이름을 입력해주세요."); return }
     try {
       if (editTarget) {
         await api.put(`/api/admin/tts/voices/${editTarget.voiceId}`, form)
@@ -48,15 +50,16 @@ export default function AdminTTSPage() {
       }
       setShowAddModal(false)
       loadVoices()
-    } catch { alert("저장에 실패했습니다.") }
+    } catch { await showAlert("저장에 실패했습니다.", "error") }
   }
 
   const handleDelete = async (voiceId) => {
-    if (!window.confirm("삭제하시겠습니까?")) return
+    const ok = await showConfirm("삭제하시겠습니까?")
+    if (!ok) return
     try {
       await api.delete(`/api/admin/tts/voices/${voiceId}`)
       loadVoices()
-    } catch { alert("삭제에 실패했습니다.") }
+    } catch { await showAlert("삭제에 실패했습니다.", "error") }
   }
 
   const handlePreview = async (v) => {
@@ -72,7 +75,7 @@ export default function AdminTTSPage() {
       await audio.play()
     } catch {
       setPreviewing(null)
-      alert("미리듣기 생성에 실패했습니다.")
+      await showAlert("미리듣기 생성에 실패했습니다.", "error")
     }
   }
 

@@ -2,13 +2,15 @@ import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
 import api from "../api/axios" // 🌟 인터셉터가 적용된 우리만의 전용 요원
 import styles from "../styles/RelayNovelRegisterPage.module.css"
+import { useAlert } from "../context/AlertContext"
 
 const MAX_CHARS = 500
 const MIN_CHARS = 50
 
 export default function RelayNovelRegisterPage() {
   const navigate = useNavigate()
-  
+  const { showAlert } = useAlert()
+
   // 상태 관리
   const [useAdminTopic, setUseAdminTopic] = useState(false)
   const [adminTopics, setAdminTopics] = useState([])
@@ -22,7 +24,7 @@ export default function RelayNovelRegisterPage() {
   const [showGuide, setShowGuide] = useState(false)
 
   const handleFormatDialogue = async () => {
-    if (!startText.trim()) { alert("내용을 먼저 입력해주세요."); return }
+    if (!startText.trim()) { await showAlert("내용을 먼저 입력해주세요."); return }
     try {
       setFormatLoading(true)
       const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
@@ -34,7 +36,7 @@ export default function RelayNovelRegisterPage() {
       const data = await res.json()
       setStartText(data.formatted_text)
     } catch {
-      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.")
+      await showAlert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.", "error")
     } finally {
       setFormatLoading(false)
     }
@@ -61,13 +63,13 @@ export default function RelayNovelRegisterPage() {
 
   // 2. 폼 제출 로직 (락 및 검증 포함)
   const handleSubmit = async () => {
-    if (useAdminTopic && !selectedTopic) { alert("주제를 선택해주세요."); return }
+    if (useAdminTopic && !selectedTopic) { await showAlert("주제를 선택해주세요."); return }
     // 글자 수 검증
     if (startText.length < MIN_CHARS || startText.length > MAX_CHARS) {
-      alert(`시작 내용은 ${MIN_CHARS}자 이상 ${MAX_CHARS}자 이하로 작성해주세요.`);
+      await showAlert(`시작 내용은 ${MIN_CHARS}자 이상 ${MAX_CHARS}자 이하로 작성해주세요.`);
       return;
     }
-    if (!title.trim() || !startText.trim()) { alert("모든 항목을 입력해주세요."); return }
+    if (!title.trim() || !startText.trim()) { await showAlert("모든 항목을 입력해주세요."); return }
 
     try {
       setIsSubmitting(true)
@@ -82,12 +84,12 @@ export default function RelayNovelRegisterPage() {
 
       // 🌟 헤더를 직접 넣지 않아도 인터셉터가 토큰을 자동 처리합니다.
       await api.post("/api/relay-novels", body)
-      
-      alert("릴레이 소설이 등록되었습니다!")
+
+      await showAlert("릴레이 소설이 등록되었습니다!", "success")
       navigate("/relay")
     } catch (error) {
       console.error("등록 실패:", error);
-      alert("등록에 실패했습니다.")
+      await showAlert("등록에 실패했습니다.", "error")
     } finally {
       setIsSubmitting(false)
     }

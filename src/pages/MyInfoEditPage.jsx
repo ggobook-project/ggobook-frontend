@@ -1,10 +1,13 @@
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
 import { getMyPageMainData, checkNicknameDuplicate, updateMyInfo } from "../api/mypageApi"
+import api from "../api/axios"
 import styles from "../styles/MyInfoEditPage.module.css"
+import { useAlert } from "../context/AlertContext"
 
 export default function MyInfoEditPage() {
   const navigate = useNavigate()
+  const { showAlert, showConfirm } = useAlert()
 
   const [nickname, setNickname] = useState("")
   const [originalNickname, setOriginalNickname] = useState("")
@@ -25,7 +28,7 @@ export default function MyInfoEditPage() {
         setOriginalNickname(data.profile.nickname)
         setEmail(data.profile.email)
       } catch {
-        alert("정보를 불러오지 못했습니다.")
+        await showAlert("정보를 불러오지 못했습니다.", "error")
       } finally {
         setIsLoading(false)
       }
@@ -34,33 +37,47 @@ export default function MyInfoEditPage() {
   }, [])
 
   const handleCheckNickname = async () => {
-    if (!nickname.trim()) return alert("닉네임을 입력해주세요.")
-    if (nickname === originalNickname) return alert("현재 사용 중인 닉네임입니다.")
+    if (!nickname.trim()) { await showAlert("닉네임을 입력해주세요."); return }
+    if (nickname === originalNickname) { await showAlert("현재 사용 중인 닉네임입니다."); return }
     try {
       const isDuplicated = await checkNicknameDuplicate(nickname)
       if (isDuplicated) {
-        alert("이미 사용 중인 닉네임입니다.")
+        await showAlert("이미 사용 중인 닉네임입니다.")
         setIsNicknameChecked(false)
       } else {
-        alert("사용 가능한 닉네임입니다.")
+        await showAlert("사용 가능한 닉네임입니다.", "success")
         setIsNicknameChecked(true)
       }
     } catch {
-      alert("중복 확인에 실패했습니다.")
+      await showAlert("중복 확인에 실패했습니다.", "error")
+    }
+  }
+
+  const handleWithdraw = async () => {
+    const ok = await showConfirm("정말 탈퇴하시겠습니까? 탈퇴 후 계정 복구는 불가능합니다.")
+    if (!ok) return
+    try {
+      await api.post("/api/mypage/withdraw")
+      await showAlert("그동안 이용해 주셔서 감사합니다. 탈퇴 처리가 완료되었습니다.", "success")
+      localStorage.removeItem("accessToken")
+      sessionStorage.removeItem("accessToken")
+      navigate("/", { replace: true })
+    } catch {
+      await showAlert("탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.", "error")
     }
   }
 
   const handleSubmit = async () => {
-    if (nickname !== originalNickname && !isNicknameChecked) return alert("닉네임 중복 확인을 해주세요.")
-    if (newPassword && newPassword !== newPasswordConfirm) return alert("새 비밀번호가 일치하지 않습니다.")
-    if (newPassword && !currentPassword) return alert("비밀번호를 변경하려면 현재 비밀번호를 입력해야 합니다.")
+    if (nickname !== originalNickname && !isNicknameChecked) { await showAlert("닉네임 중복 확인을 해주세요."); return }
+    if (newPassword && newPassword !== newPasswordConfirm) { await showAlert("새 비밀번호가 일치하지 않습니다."); return }
+    if (newPassword && !currentPassword) { await showAlert("비밀번호를 변경하려면 현재 비밀번호를 입력해야 합니다."); return }
     try {
       const updateData = { nickname, ...(newPassword && { currentPassword, newPassword }) }
       await updateMyInfo(updateData)
-      alert("정보가 성공적으로 수정되었습니다.")
+      await showAlert("정보가 성공적으로 수정되었습니다.", "success")
       navigate("/mypage")
     } catch (error) {
-      alert(error.response?.data?.message || "정보 수정에 실패했습니다.")
+      await showAlert(error.response?.data?.message || "정보 수정에 실패했습니다.", "error")
     }
   }
 
@@ -125,7 +142,7 @@ export default function MyInfoEditPage() {
             <div className={styles.formLabel}>이메일</div>
             <div className={styles.inputRow}>
               <input value={email} readOnly className={`${styles.input} ${styles.inputReadonly}`} />
-              <button className={styles.sideBtnMuted} onClick={() => alert("이메일은 변경할 수 없습니다.")}>
+              <button className={styles.sideBtnMuted} onClick={async () => { await showAlert("이메일은 변경할 수 없습니다."); }}>
                 인증완료
               </button>
             </div>
@@ -178,8 +195,8 @@ export default function MyInfoEditPage() {
           </div>
 
           <div className={styles.btnGroup}>
-            <button className={styles.cancelBtn} onClick={() => navigate("/mypage")}>취소</button>
             <button className={styles.submitBtn} onClick={handleSubmit}>저장하기</button>
+            <button className={styles.withdrawBtn} onClick={handleWithdraw}>탈퇴하기</button>
           </div>
         </div>
       </div>

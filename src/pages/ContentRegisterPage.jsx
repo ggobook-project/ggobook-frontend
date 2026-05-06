@@ -2,10 +2,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../api/axios";
 import styles from "../styles/ContentRegisterPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function ContentRegisterPage() {
   const navigate = useNavigate();
   const { contentId } = useParams();
+  const { showAlert } = useAlert();
   const isEdit = !!contentId;
 
   const [type, setType] = useState("웹툰");
@@ -64,7 +66,7 @@ export default function ContentRegisterPage() {
   const handleAddTag = async () => {
     if (!tagInput.trim()) return;
     if (tags.some((t) => t.tagName === tagInput.trim())) {
-      alert("이미 추가된 태그입니다.");
+      await showAlert("이미 추가된 태그입니다.");
       return;
     }
 
@@ -119,7 +121,7 @@ export default function ContentRegisterPage() {
 
   const handleSubmit = async () => {
     if (!title || !genre || serialDay.length === 0 || (!isEdit && !file)) {
-      alert(
+      await showAlert(
         isEdit
           ? "작품명, 장르, 연재 요일은 필수입니다."
           : "작품명, 장르, 연재 요일, 대표 이미지는 필수입니다.",
@@ -167,10 +169,10 @@ export default function ContentRegisterPage() {
 
         if (!isEdit) {
           saveToInspection();
-          alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.");
+          await showAlert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.", "success");
           navigate(`/author/contents/${newContentId}/episode/register`);
         } else {
-          alert("작품 수정 성공");
+          await showAlert("작품 수정 성공", "success");
           navigate("/author/contents");
         }
       }
@@ -178,10 +180,10 @@ export default function ContentRegisterPage() {
       console.error("통신 에러:", error);
       if (!isEdit) {
         saveToInspection();
-        alert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.");
+        await showAlert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.", "success");
         navigate("/author/contents");
       } else {
-        alert("수정 중 오류가 발생했습니다.");
+        await showAlert("수정 중 오류가 발생했습니다.", "error");
       }
     }
   };

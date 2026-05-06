@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import api from "../api/axios";
 import styles from "../styles/RelayNovelDetailPage.module.css";
 import ReportModal from "../components/ReportModal";
+import { useAlert } from "../context/AlertContext";
 
 const MAX_CHARS = 500;
 const MIN_CHARS = 50;
@@ -12,6 +13,7 @@ export default function RelayNovelDetailPage() {
   const navigate = useNavigate();
   const { relayNovelId } = useParams();
   const location = useLocation();
+  const { showAlert } = useAlert();
   
   const [myText, setMyText] = useState("")
   const [novel, setNovel] = useState(null)
@@ -48,7 +50,7 @@ export default function RelayNovelDetailPage() {
         if (prevTime <= 1) {
           clearInterval(countdownInterval);
           // 시간 초과 시 강제 종료
-          alert("최대 작성 허용 시간(30분)이 초과되어 강제 종료됩니다. 😢\n작성 중인 내용은 저장되지 않습니다.");
+          showAlert("최대 작성 허용 시간(30분)이 초과되어 강제 종료됩니다.\n작성 중인 내용은 저장되지 않습니다.");
           setIsWriting(false);
           setMyText("");
           api.post(`/api/relay-novels/${relayNovelId}/cancel`).catch(() => {});
@@ -65,7 +67,7 @@ export default function RelayNovelDetailPage() {
           console.error("락 연장 실패:", err);
           clearInterval(heartbeatInterval);
           clearInterval(countdownInterval);
-          alert("서버 통신 문제 또는 권한 만료로 강제 종료됩니다.");
+          showAlert("서버 통신 문제 또는 권한 만료로 강제 종료됩니다.", "error");
           setIsWriting(false);
           setMyText("");
         });
@@ -172,7 +174,9 @@ export default function RelayNovelDetailPage() {
     try {
       const response = await api.get("/api/relay-guideline"); 
       const text = typeof response.data === 'string' ? response.data : response.data?.content;
-      setGuideline(text || "등록된 공식 가이드라인이 없습니다.");
+      const DEFAULT_GUIDELINE = "• 앞 이야기의 흐름을 이어받아 자연스럽게 연결해 주세요.\n• 욕설, 혐오 표현, 성인 내용은 작성이 제한됩니다.\n• 한 명의 참여자가 연속으로 이어쓸 수 없습니다.\n• 등록 후 수정 및 삭제가 불가하니 신중하게 작성해 주세요.\n• 제한 시간 내에 작성하지 않으면 편집권이 자동으로 해제됩니다.";
+      const isEmpty = !text || text.includes("없습니다");
+      setGuideline(isEmpty ? DEFAULT_GUIDELINE : text);
     } catch {
       setGuideline("가이드라인을 불러오지 못했습니다.");
     }
@@ -318,7 +322,7 @@ export default function RelayNovelDetailPage() {
       setShowSettings(false);
       playingRef.current = true;
     } catch (e) {
-      alert("TTS 생성에 실패했습니다.");
+      await showAlert("TTS 생성에 실패했습니다.", "error");
     } finally {
       setIsGenerating(false);
     }
@@ -326,7 +330,7 @@ export default function RelayNovelDetailPage() {
 
   const handleGenerateMultiVoiceTts = async () => {
     const { voice1Id, voice2Id, narratorVoiceId } = pendingMultiVoice;
-    if (!voice1Id || !voice2Id || !narratorVoiceId) { alert("모든 목소리를 선택해주세요."); return; }
+    if (!voice1Id || !voice2Id || !narratorVoiceId) { await showAlert("모든 목소리를 선택해주세요."); return; }
     try {
       setIsGenerating(true);
       const infoRes = await api.get(`/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk-info?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`);
@@ -347,7 +351,7 @@ export default function RelayNovelDetailPage() {
       setShowSettings(false);
       playingRef.current = true;
     } catch (e) {
-      alert("멀티보이스 생성에 실패했습니다.");
+      await showAlert("멀티보이스 생성에 실패했습니다.", "error");
     } finally {
       setIsGenerating(false);
     }
@@ -381,7 +385,7 @@ export default function RelayNovelDetailPage() {
   };
 
   const handleFormatDialogue = async () => {
-    if (!myText.trim()) { alert("내용을 먼저 입력해주세요."); return }
+    if (!myText.trim()) { await showAlert("내용을 먼저 입력해주세요."); return }
     try {
       setFormatLoading(true)
       const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
@@ -393,7 +397,7 @@ export default function RelayNovelDetailPage() {
       const data = await res.json()
       setMyText(data.formatted_text)
     } catch {
-      alert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.")
+      await showAlert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.", "error")
     } finally {
       setFormatLoading(false)
     }
@@ -405,19 +409,19 @@ export default function RelayNovelDetailPage() {
     try {
       setIsSubmitting(true);
       await api.post(`/api/relay-novels/${relayNovelId}/submit`, { entryText: myText });
-      alert("이어쓰기가 등록되었습니다!");
+      await showAlert("이어쓰기가 등록되었습니다!", "success");
       setMyText(""); setIsWriting(false); loadDetail();
-    } catch { alert("등록에 실패했습니다."); } finally { setIsSubmitting(false); }
+    } catch { await showAlert("등록에 실패했습니다.", "error"); } finally { setIsSubmitting(false); }
   };
 
   const handleStartWriting = async () => {
     if (!isLoggedIn) { navigate("/login"); return; }
     try {
       await api.post(`/api/relay-novels/${relayNovelId}/start`);
-      setIsWriting(true); 
+      setIsWriting(true);
     } catch (error) {
-      if (error.response?.status === 409) alert("현재 다른 작가님이 집필 중입니다. 🚫");
-      else alert("서버 통신 중 오류가 발생했습니다.");
+      if (error.response?.status === 409) await showAlert("현재 다른 작가님이 집필 중입니다.");
+      else await showAlert("서버 통신 중 오류가 발생했습니다.", "error");
     }
   };
 
@@ -445,10 +449,6 @@ export default function RelayNovelDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate("/relay")}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
-          목록으로
-        </button>
         <div className={styles.headerTitle}>{novel?.title}</div>
         <div className={styles.headerMeta}>시작: {novel?.starterNickname} · 참여자 {novel?.uniqueParticipantCount}명 · 이어쓰기 {entries.length}개</div>
       </div>
@@ -459,8 +459,10 @@ export default function RelayNovelDetailPage() {
             <div className={styles.guidelineBannerTitle}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
               작성 가이드라인
-              <button onClick={() => setIsGuideOpen(!isGuideOpen)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: "11px", color: "#1565C0", marginLeft: "auto" }}>
-                {isGuideOpen ? "접기 ▲" : "펼치기 ▼"}
+              <button onClick={() => setIsGuideOpen(!isGuideOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "#90A4C8", marginLeft: "auto", display: "flex", alignItems: "center", padding: "2px" }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  {isGuideOpen ? <polyline points="18 15 12 9 6 15" /> : <polyline points="6 9 12 15 18 9" />}
+                </svg>
               </button>
             </div>
             {isGuideOpen && <div className={styles.guidelineContent} style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", fontSize: "12px", marginTop: "8px" }}>{guideline}</div>}
@@ -479,32 +481,27 @@ export default function RelayNovelDetailPage() {
                 <span className={styles.entryUser}>{entry.nickname}</span>
                 <span className={styles.entryMeta}>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ""}</span>
                 
-                <button 
-                  className={styles.menuBtn}
-                  onClick={() => setActiveMenu(activeMenu === idx ? null : idx)}
-                >⋮</button>
-
-                {activeMenu === idx && (
-                  <div className={styles.reportDropdown}>
-                    <button onClick={() => openEntryReport(entry)} className={styles.reportBtn}>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 18h14"></path>
-                        <path d="M17 18v-5a5 5 0 0 0-10 0v5"></path>
-                        <path d="M2 13h2"></path>
-                        <path d="M20 13h2"></path>
-                        <path d="M12 2v2"></path>
-                        <path d="m4.93 4.93 1.41 1.41"></path>
-                        <path d="m17.66 6.34 1.41-1.41"></path>
-                      </svg>신고하기
-                    </button>
-                  </div>
-                )}
+                <button
+                  className={styles.reportBtn}
+                  onClick={() => openEntryReport(entry)}
+                  title="신고하기"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 18h14"></path>
+                    <path d="M17 18v-5a5 5 0 0 0-10 0v5"></path>
+                    <path d="M2 13h2"></path>
+                    <path d="M20 13h2"></path>
+                    <path d="M12 2v2"></path>
+                    <path d="m4.93 4.93 1.41 1.41"></path>
+                    <path d="m17.66 6.34 1.41-1.41"></path>
+                  </svg>
+                </button>
               </div>
               
               {entry.status === "BLINDED" ? (
                 <div className={styles.blindBox}>
                   <div className={styles.blindTitle}>🚨 가이드라인 위반으로 블라인드 처리되었습니다.</div>
-                  <div className={styles.blindText}><strong>🤖 AI 요약:</strong> {entry.adminMessage || "부적절한 내용이 포함되어 있습니다."}</div>
+                  <div className={styles.blindText}><strong>AI 요약:</strong> {entry.adminMessage || "부적절한 내용이 포함되어 있습니다."}</div>
                 </div>
               ) : (
                 <div className={styles.entryText}>{entry.entryText}</div>
@@ -587,7 +584,7 @@ export default function RelayNovelDetailPage() {
 
         {/* 이어쓰기 하단 */}
         {!isWriting ? (
-          <button className={styles.writeOpenBtn} onClick={handleStartWriting}>이야기 이어 쓰기 ✍️</button>
+          <button className={styles.writeOpenBtn} onClick={handleStartWriting}>이야기 이어 쓰기</button>
         ) : (
           <div className={styles.writeCard}>
             <div className={styles.writeHeader}>
@@ -599,9 +596,9 @@ export default function RelayNovelDetailPage() {
                   fontWeight: "600", 
                   color: timeLeft <= 300 ? "#E53935" : "#4A6FA5" // 5분 이하면 빨간색 경고
                 }}>
-                  ⏳ 남은 시간: {formatTimer(timeLeft)}
+                  남은 시간: {formatTimer(timeLeft)}
                 </span>
-                <button className={styles.closeWriteBtn} onClick={handleCancelWriting}>✕ 취소</button> 
+                <button className={styles.closeWriteBtn} onClick={handleCancelWriting}>✕</button> 
               </div>
             </div>
             <div className={styles.textareaActions}>
@@ -636,7 +633,7 @@ export default function RelayNovelDetailPage() {
                 </div>
               </div>
             )}
-            <textarea value={myText} onChange={e => setMyText(e.target.value)} onFocus={() => !isLoggedIn && navigate("/login")} placeholder="이야기를 이어서 써주세요..." rows={6} className={styles.textarea} readOnly={!isLoggedIn} maxLength={MAX_CHARS + 50} />
+            <textarea value={myText} onChange={e => setMyText(e.target.value)} onFocus={() => !isLoggedIn && navigate("/login")} placeholder="" rows={6} className={styles.textarea} readOnly={!isLoggedIn} maxLength={MAX_CHARS + 50} />
             <div className={styles.writeFooter}>
               <div className={styles.charCountWrap}><span style={{ color: charColor() }}>{myText.length}</span> <span className={styles.charCountSep}>/</span> <span className={styles.charCountMax}>{MAX_CHARS}자</span></div>
               <button className={styles.submitBtn} onClick={handleSubmit} disabled={isSubmitting || myText.length < MIN_CHARS || myText.length > MAX_CHARS}>

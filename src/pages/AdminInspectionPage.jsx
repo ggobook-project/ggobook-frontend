@@ -59,17 +59,6 @@ export default function AdminInspectionPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        {/* 🌟 추가됨: 관리자 메인으로 돌아가는 뒤로가기 버튼 */}
-        <button 
-          className={styles.backBtn} 
-          onClick={() => navigate("/admin")} // 관리자 메인 경로. (필요시 navigate(-1)로 변경 가능)
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-          관리자 페이지로
-        </button>
-
         <div className={styles.headerTitle}>검수 관리</div>
         <div className={styles.headerSubtitle}>
           등록된 작품을 검토하고 승인/반려하세요

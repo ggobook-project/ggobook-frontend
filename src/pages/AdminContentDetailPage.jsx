@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import styles from "../styles/AdminContentDetailPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function AdminContentDetailPage() {
   const navigate = useNavigate();
-  const { contentId } = useParams(); 
+  const { contentId } = useParams();
+  const { showAlert, showConfirm } = useAlert(); 
   const [episodes, setEpisodes] = useState([]);
   const [contentInfo, setContentInfo] = useState(null); // 🌟 작품 정보 저장용 상태
   const [loading, setLoading] = useState(true);
@@ -42,38 +44,36 @@ export default function AdminContentDetailPage() {
 
   // 블라인드 처리 로직
   const handleToggle = async (episodeId) => {
-    if (!window.confirm("이 회차의 공개 상태를 변경하시겠습니까?")) return;
+    const ok = await showConfirm("이 회차의 공개 상태를 변경하시겠습니까?");
+    if (!ok) return;
 
     try {
       await api.put(`/api/admin/content/episodes/${episodeId}/blind`);
-      setEpisodes(prev => prev.map(ep => 
-        ep.episodeId === episodeId 
-          ? { ...ep, status: ep.status === "PUBLISHED" ? "BLINDED" : "PUBLISHED" } 
+      setEpisodes(prev => prev.map(ep =>
+        ep.episodeId === episodeId
+          ? { ...ep, status: ep.status === "PUBLISHED" ? "BLINDED" : "PUBLISHED" }
           : ep
       ));
     } catch (error) {
-      alert("상태 변경에 실패했습니다.");
+      await showAlert("상태 변경에 실패했습니다.", "error");
     }
   };
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <button className={styles.backBtn} onClick={() => navigate("/admin/content")}>
-          ➔ 목록으로
-        </button>
         <div className={styles.headerTitle}>작품 상세 관리</div>
         {/* 🌟 수정된 헤더 자막 */}
         <div className={styles.headerSubtitle}>
-          {contentInfo ? `"${contentInfo.title}" 작품의 회차 목록입니다.` : "로딩 중..."}
+          {contentInfo ? `"${contentInfo.title}" 작품의 회차 목록입니다.` : ""}
         </div>
       </div>
 
       <div className={styles.content}>
   {loading ? (
-    <div style={{ textAlign: "center", padding: "40px" }}>데이터 로딩 중...</div>
+    <div />
   ) : episodes.length === 0 ? (
-    <div style={{ textAlign: "center", padding: "40px" }}>등록된 회차가 없습니다.</div>
+    <div style={{ textAlign: "center", padding: "40px", color: "#90A4C8" }}>등록된 회차가 없습니다.</div>
   ) : (
     episodes.map((ep) => (
   <div 

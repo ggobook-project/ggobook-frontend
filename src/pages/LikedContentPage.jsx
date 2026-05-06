@@ -3,13 +3,15 @@ import { useState, useEffect } from "react"
 
 //  변경 1: 동네 퀵서비스(axios) 해고! 우리 전용 요원(api)을 고용합니다.
 // (경로는 팀장님이 만드신 파일 위치에 맞게 ../api/axios 가 맞는지 확인해 주세요)
-import api from "../api/axios" 
+import api from "../api/axios"
 
 import { getMyLikedContents } from "../api/mypageApi"
 import styles from "../styles/LikedContentPage.module.css"
+import { useAlert } from "../context/AlertContext"
 
 export default function LikedContentPage() {
   const navigate = useNavigate()
+  const { showAlert, showConfirm } = useAlert()
 
   const [items, setItems] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -30,9 +32,10 @@ export default function LikedContentPage() {
   }, [])
 
   const handleUnlike = async (e, contentId) => {
-    e.stopPropagation(); 
-    
-    if (!window.confirm("찜 목록에서 삭제하시겠습니까?")) return;
+    e.stopPropagation();
+
+    const ok = await showConfirm("찜 목록에서 삭제하시겠습니까?");
+    if (!ok) return;
 
     try {
       //  변경 2: 지갑에서 토큰 꺼내던 코드 (localStorage.getItem...) 삭제!
@@ -47,7 +50,7 @@ export default function LikedContentPage() {
       }
     } catch (error) {
       console.error("찜 취소 에러:", error);
-      alert("찜 취소에 실패했습니다.");
+      await showAlert("찜 취소에 실패했습니다.", "error");
     }
   }
 
@@ -102,22 +105,23 @@ export default function LikedContentPage() {
                   className={styles.card} 
                   onClick={() => navigate(`/contents/${item.contentId}`)}
                 >
-                  <div 
+                  <div
                     className={styles.thumbnail}
                     style={{
                       backgroundImage: item.thumbnailUrl ? `url(${item.thumbnailUrl})` : 'none',
                       backgroundSize: 'cover',
                       backgroundPosition: 'center'
                     }}
-                  >
+                  />
+
+                  <div className={styles.cardTitleRow}>
+                    <span className={styles.cardTitle}>{item.title}</span>
                     <button className={styles.heartBtn} onClick={(e) => handleUnlike(e, item.contentId)} title="찜 취소">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="#E53935" stroke="#E53935" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="#E53935" stroke="#E53935" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                       </svg>
                     </button>
                   </div>
-                  
-                  <div className={styles.cardTitle}>{item.title}</div>
                   <div className={styles.cardAuthor}>{item.author}</div>
                   <div className={styles.badges}>
                     <span className={styles.badge}>{typeMap[item.type] || item.type}</span>

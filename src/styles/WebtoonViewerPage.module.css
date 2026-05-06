@@ -242,6 +242,28 @@
 .moreMenuItemReport { color: #FF8A80; }
 .moreMenuItemReport:hover { background-color: #FFF5F5; color: #FF5252; }
 
+.reportBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #90A4C8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+.reportBtn:active { transform: scale(0.9); }
+.reportBtn:hover {
+  color: #FF1744;
+  animation: blink 0.8s infinite;
+}
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
 .commentBody { padding-left: 36px; }
 
 .commentText { font-size: 14px; color: #0D1B2A; line-height: 1.6; margin-bottom: 4px; }

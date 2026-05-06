@@ -84,12 +84,7 @@
   font-size: 12px;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
-}
-
-.statusBtn:hover {
-  opacity: 0.85;
-  transform: translateY(-1px);
+  transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 .statusPublic {
@@ -98,8 +93,19 @@
   border: 1px solid #BBDEFB;
 }
 
+.statusPublic:hover {
+  background: #BBDEFB;
+  transform: translateY(-1px);
+}
+
 .statusPrivate {
   background: none;
   color: #E53935;
   border: 1px solid #E53935;
+}
+
+.statusPrivate:hover {
+  background: #E53935;
+  color: #fff;
+  transform: translateY(-1px);
 }

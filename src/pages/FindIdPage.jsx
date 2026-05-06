@@ -2,26 +2,29 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import api from "../api/axios"; //  API 통신용 추가
 import styles from "../styles/FindIdPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function FindIdPage() {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
   //  아이디 찾기 API 호출 함수 
   const handleFindId = async () => {
     if (!name || !email) {
-      return alert("이름과 이메일을 모두 입력해주세요.");
+      await showAlert("이름과 이메일을 모두 입력해주세요.");
+      return;
     }
 
     try {
       const response = await api.get(`/api/auth/find-id?name=${name}&email=${email}`);
       //  알림창 문구 UX 개선
-      alert(`회원님의 아이디는 [ ${response.data} ] 입니다.\n전체 아이디는 가입하신 이메일로 안전하게 발송되었습니다.`);
-      navigate("/login"); 
+      await showAlert(`회원님의 아이디는 [ ${response.data} ] 입니다.\n전체 아이디는 가입하신 이메일로 안전하게 발송되었습니다.`, "success");
+      navigate("/login");
     } catch (error) {
       // 이제 백엔드 직원이 순수 문자열을 주니까 에러 메시지가 예쁘게 출력됩니다.
-      alert(error.response?.data || "일치하는 회원 정보가 없습니다.");
+      await showAlert(error.response?.data || "일치하는 회원 정보가 없습니다.", "error");
     }
   };
 

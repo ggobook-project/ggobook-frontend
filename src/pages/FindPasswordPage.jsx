@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import api from "../api/axios"; // 🌟 API 통신용 추가
 import styles from "../styles/FindPasswordPage.module.css";
+import { useAlert } from "../context/AlertContext";
 
 export default function FindPasswordPage() {
   const navigate = useNavigate();
+  const { showAlert } = useAlert();
   const [userId, setUserId] = useState(""); //  아이디 상태 추가
   const [name, setName] = useState("");     //  이름 상태 추가
   const [email, setEmail] = useState("");
@@ -12,15 +14,16 @@ export default function FindPasswordPage() {
   // 재설정 링크 메일 발송 API 호출 함수
   const handleSendResetLink = async () => {
     if (!userId || !name || !email) {
-      return alert("모든 정보를 정확히 입력해주세요.");
+      await showAlert("모든 정보를 정확히 입력해주세요.");
+      return;
     }
 
     try {
       await api.post(`/api/auth/password/reset-link?userId=${userId}&name=${name}&email=${email}`);
-      alert("입력하신 이메일로 비밀번호 재설정 링크가 발송되었습니다. (30분간 유효)");
+      await showAlert("입력하신 이메일로 비밀번호 재설정 링크가 발송되었습니다. (30분간 유효)", "success");
       navigate("/login");
     } catch (error) {
-      alert(error.response?.data || "일치하는 회원 정보가 없습니다.");
+      await showAlert(error.response?.data || "일치하는 회원 정보가 없습니다.", "error");
     }
   };
 
