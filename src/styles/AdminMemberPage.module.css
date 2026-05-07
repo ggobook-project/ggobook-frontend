@@ -122,23 +122,23 @@
 .memberMeta { font-size: 12px; color: #64748B; }
 
 .memberRight { display: flex; gap: 10px; align-items: center; }
-.statusBadge { font-size: 11px; padding: 4px 10px; border-radius: 6px; font-weight: 600;}
+.statusBadge { font-size: 12px; padding: 5px 13px; border-radius: 6px; font-weight: 600;}
 .statusActive { background: #E3F2FD; color: #1976D2; }
 .statusBanned { background: #FFEBEE; color: #D32F2F; }
 
 .actionBtn {
-  padding: 6px 14px; background: none; border: 1px solid #EF4444; border-radius: 6px;
+  padding: 5px 13px; background: none; border: 1px solid #EF4444; border-radius: 6px;
   color: #EF4444; font-size: 12px; font-weight: 600; cursor: pointer;
   transition: background 0.2s, color 0.2s, transform 0.15s;
 }
 .actionBtn:hover { background: #EF4444; color: #fff; transform: translateY(-1px); }
 
 .actionBtnRelease {
-  padding: 6px 14px; background: none; border: 1px solid #10B981; border-radius: 6px;
-  color: #10B981; font-size: 12px; font-weight: 600; cursor: pointer;
+  padding: 5px 13px; background: none; border: 1px solid #2196F3; border-radius: 6px;
+  color: #2196F3; font-size: 12px; font-weight: 600; cursor: pointer;
   transition: background 0.2s, color 0.2s, transform 0.15s;
 }
-.actionBtnRelease:hover { background: #10B981; color: #fff; transform: translateY(-1px); }
+.actionBtnRelease:hover { background: #2196F3; color: #fff; transform: translateY(-1px); }
 
 /* --- 페이징 (Pagination) --- */
 .pagination {

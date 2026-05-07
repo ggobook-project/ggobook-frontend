@@ -1,88 +1,79 @@
-/* ==========================================
-   상세 페이지 전용 스타일 (AdminInspectionDetailPage)
-   ========================================== */
-
-/* 상단 네비게이션 (뒤로가기 등) */
-.topNav {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 40px 24px;
+.pageWrapper {
+  background: transparent;
+  min-height: calc(100vh - 60px);
 }
 
-.btnBack {
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid #BBDEFB;
-  border-radius: 8px;
-  color: #1565C0;
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
+.header {
+  background: linear-gradient(180deg, #E3F2FD 0%, #F0F8FF 60%, transparent 100%);
+  padding: 28px 40px 32px;
 }
 
-.btnBack:hover {
-  background: #E3F2FD;
-  transform: translateX(-2px);
-}
-
-.navTitle {
-  font-size: 18px;
+.headerTitle {
+  font-size: 22px;
   font-weight: 700;
-  color: #0D1B2A;
+  color: #1565C0;
+  margin-bottom: 4px;
 }
 
-/* 메인 컨텐츠 영역 */
-.mainContent {
-  position: relative;
-  z-index: 1;
+.headerSubtitle {
+  font-size: 14px;
+  color: #4A6FA5;
+}
+
+.content {
   max-width: 900px;
   margin: 0 auto;
-  padding: 0 40px 100px; /* 하단 액션바 공간 확보 */
+  padding: 24px 40px 60px;
 }
 
-/* 개별 섹션 카드 (유리 효과 적용) */
+/* 섹션 카드 */
 .sectionCard {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(187, 222, 251, 0.8);
+  border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 12px;
   padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.05);
+  margin-bottom: 20px;
 }
 
 .sectionTitle {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #1565C0;
-  margin-bottom: 20px;
+  margin: 0 0 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid #E3F2FD;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* 작품 정보 영역 */
+.episodeBadge {
+  font-size: 12px;
+  font-weight: 600;
+  background: #E3F2FD;
+  color: #1565C0;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+/* 작품 정보 */
 .contentInfo {
   display: flex;
   gap: 24px;
 }
 
 .thumbnailArea img {
-  width: 140px;
-  height: 190px;
+  width: 130px;
+  height: 180px;
   object-fit: cover;
   border-radius: 8px;
-  border: 1px solid #BBDEFB;
+  border: 1px solid rgba(187, 222, 251, 0.8);
 }
 
 .noThumbnail {
-  width: 140px;
-  height: 190px;
+  width: 130px;
+  height: 180px;
   background: #F0F8FF;
   border: 1px dashed #90CAF9;
   border-radius: 8px;
@@ -97,11 +88,12 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .infoRow {
   display: flex;
+  gap: 12px;
   font-size: 14px;
 }
 
@@ -110,6 +102,8 @@
   color: #4A6FA5;
   width: 80px;
   flex-shrink: 0;
+  font-size: 12px;
+  padding-top: 1px;
 }
 
 .value {
@@ -117,144 +111,79 @@
   font-weight: 500;
 }
 
-.description {
-  margin-top: 8px;
-  padding: 16px;
-  background: #F0F8FF;
-  border-radius: 8px;
-  color: #4A6FA5;
-  line-height: 1.6;
-  font-size: 13px;
-  border: 1px solid #E3F2FD;
-}
 
-/* 회차 원고 영역 */
-.episodeHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.episodeTitle {
-  font-size: 15px;
-  font-weight: 600;
-  color: #0D1B2A;
-}
-
-.isFreeBadge {
-  padding: 4px 10px;
-  background: #E3F2FD;
-  color: #1565C0;
-  font-size: 11px;
-  font-weight: 700;
-  border-radius: 12px;
-}
-
+/* 소설 원고 */
 .manuscriptArea {
-  padding: 24px;
-  background: #ffffff;
-  border: 1px solid #BBDEFB;
-  border-radius: 8px;
-  max-height: 500px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(187, 222, 251, 0.5);
+  border-radius: 10px;
+  max-height: 560px;
   overflow-y: auto;
 }
 
 .novelText {
   font-size: 15px;
-  line-height: 1.8;
+  line-height: 1.9;
   color: #333;
   white-space: pre-wrap;
 }
 
-.webtoonImages img {
+/* 웹툰 뷰어 */
+.webtoonViewer {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.webtoonImg {
   width: 100%;
   height: auto;
   display: block;
 }
 
-/* 하단 고정 액션 바 (승인/반려) */
-.actionBar {
-  background: #ffffff;
-  border: 1px solid #BBDEFB;
-  border-radius: 12px;
-  padding: 24px 32px;
-  margin-top: 24px;
+.infoActions {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.05);
-}
-
-.actionInfo {
-  font-size: 14px;
-  color: #4A6FA5;
-  font-weight: 500;
-}
-
-.btnGroup {
-  display: flex;
-  gap: 16px; 
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 16px;
 }
 
 .btnReject {
-  padding: 12px 28px;
-  background: #ffffff;
+  padding: 6px 16px;
+  background: none;
   border: 1px solid #E53935;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #E53935;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
 }
 
-.btnReject:hover:not(:disabled) {
-  background: #FFF3F3;
-  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.15);
-}
-
-.btnReject:disabled {
-  border-color: #FFCDD2;
-  color: #EF9A9A;
-  cursor: not-allowed;
-}
+.btnReject:hover:not(:disabled) { background: #E53935; color: #fff; transform: translateY(-1px); }
+.btnReject:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .btnApprove {
-  padding: 12px 28px;
-  background: #2196F3;
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
+  padding: 6px 16px;
+  background: none;
+  border: 1px solid #2196F3;
+  border-radius: 6px;
+  color: #2196F3;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
 }
 
-.btnApprove:hover:not(:disabled) {
-  background: #1976D2;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.25);
-  transform: translateY(-1px);
-}
+.btnApprove:hover:not(:disabled) { background: #2196F3; color: #fff; transform: translateY(-1px); }
+.btnApprove:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.btnApprove:disabled {
-  background: #90CAF9;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* ==========================================
-   모달 (Modal) 전용 스타일
-   ========================================== */
+/* 반려 모달 */
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* 검은색 대신 팀장님 테마에 맞춰 짙은 네이비 반투명 사용 */
-  background: rgba(13, 27, 42, 0.5); 
+  inset: 0;
+  background: rgba(13, 27, 42, 0.45);
   backdrop-filter: blur(4px);
   display: flex;
   justify-content: center;
@@ -263,82 +192,93 @@
 }
 
 .modalContent {
-  background: #ffffff;
+  background: #fff;
   padding: 32px;
   border-radius: 16px;
   width: 100%;
-  max-width: 400px;
-  box-shadow: 0 10px 40px rgba(13, 27, 42, 0.2);
-  border: 1px solid #BBDEFB;
+  max-width: 420px;
+  box-shadow: 0 16px 48px rgba(13, 27, 42, 0.18);
+  border: 1px solid rgba(187, 222, 251, 0.6);
 }
 
 .modalContent h3 {
-  margin: 0 0 8px 0;
+  margin: 0 0 20px;
   color: #1565C0;
-  font-size: 18px;
-}
-
-.modalContent p {
-  color: #4A6FA5;
-  font-size: 13px;
-  margin-bottom: 24px;
+  font-size: 17px;
+  font-weight: 700;
 }
 
 .modalSelect {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #BBDEFB;
-  border-radius: 8px;
+  padding: 11px 14px;
+  border: 1.5px solid rgba(187, 222, 251, 0.8);
+  border-radius: 10px;
   font-size: 14px;
   color: #0D1B2A;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   outline: none;
+  background: rgba(255, 255, 255, 0.9);
   transition: border-color 0.2s;
 }
 
-.modalSelect:focus {
-  border-color: #2196F3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+.modalSelect:focus { border-color: #2196F3; }
+
+.modalTextarea {
+  width: 100%;
+  height: 100px;
+  padding: 12px 14px;
+  border: 1.5px solid rgba(187, 222, 251, 0.8);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #0D1B2A;
+  margin-bottom: 16px;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  background: #F0F8FF;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
 }
+
+.modalTextarea:focus { border-color: #2196F3; background: #fff; }
 
 .modalBtnGroup {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+  margin-top: 4px;
 }
 
 .btnCancel {
   padding: 10px 20px;
-  background: #F0F8FF;
+  background: #F0F6FF;
   color: #4A6FA5;
   border: none;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
   transition: background 0.2s;
 }
 
-.btnCancel:hover {
-  background: #E3F2FD;
-}
+.btnCancel:hover { background: #E3F2FD; color: #1565C0; }
 
 .btnConfirmReject {
   padding: 10px 20px;
   background: #E53935;
-  color: #ffffff;
+  color: #fff;
   border: none;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 13px;
   cursor: pointer;
   transition: background 0.2s, transform 0.15s;
 }
 
-.btnConfirmReject:hover {
-  background: #D32F2F;
-  transform: translateY(-1px);
-}
+.btnConfirmReject:hover { background: #D32F2F; transform: translateY(-1px); }
+.btnConfirmReject:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-/* 로딩 화면 */
+/* 로딩 */
 .loading {
   display: flex;
   justify-content: center;
@@ -347,74 +287,4 @@
   color: #2196F3;
   font-weight: 600;
   font-size: 16px;
-}
-
-/* 기타 사유 직접 입력창 */
-.modalTextarea {
-  width: 100%;
-  height: 100px;
-  padding: 12px;
-  border: 1px solid #BBDEFB;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #0D1B2A;
-  margin-bottom: 24px;
-  outline: none;
-  resize: none; /* 관리자가 임의로 크기 조절하는 것 방지 */
-  font-family: inherit;
-  transition: border-color 0.2s;
-  background: #F0F8FF;
-}
-
-.modalTextarea:focus {
-  border-color: #2196F3;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
-  background: #ffffff;
-}
-
-.btnReject {
-  padding: 12px 28px;
-  background: #ffffff;
-  border: 1px solid #E53935;
-  border-radius: 8px;
-  color: #E53935;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btnReject:hover:not(:disabled) {
-  background: #FFF3F3;
-  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.15);
-}
-
-.btnReject:disabled {
-  border-color: #FFCDD2;
-  color: #EF9A9A;
-  cursor: not-allowed;
-}
-
-.btnApprove {
-  padding: 12px 28px;
-  background: #2196F3;
-  border: none;
-  border-radius: 8px;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.btnApprove:hover:not(:disabled) {
-  background: #1976D2;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.25);
-  transform: translateY(-1px);
-}
-
-.btnApprove:disabled {
-  background: #90CAF9;
-  cursor: not-allowed;
-  transform: none;
 }

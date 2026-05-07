@@ -507,7 +507,12 @@ export default function RelayNovelDetailPage() {
               
               {entry.status === "BLINDED" ? (
                 <div className={styles.blindBox}>
-                  <div className={styles.blindTitle}>🚨 가이드라인 위반으로 블라인드 처리되었습니다.</div>
+                  <div className={styles.blindTitle}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 18h14"/><path d="M17 18v-5a5 5 0 0 0-10 0v5"/><path d="M2 13h2"/><path d="M20 13h2"/><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 6.34 1.41-1.41"/>
+                    </svg>
+                    가이드라인 위반으로 블라인드 처리되었습니다.
+                  </div>
                   <div className={styles.blindText}><strong>AI 요약:</strong> {entry.adminMessage || "부적절한 내용이 포함되어 있습니다."}</div>
                 </div>
               ) : (
@@ -559,13 +564,18 @@ export default function RelayNovelDetailPage() {
               ) : (
                 <div className={styles.settingsSection}>
                   <div className={styles.settingsSectionTitle}>멀티 보이스 설정</div>
-                  <div className={styles.voiceSubLabel}>참여자 1</div>
+                  <div className={styles.voiceSubLabel}>화자1</div>
                   <select className={styles.voiceSelect} onChange={e => setPendingMultiVoice(p => ({ ...p, voice1Id: Number(e.target.value) }))}>
                     <option value="">선택</option>
                     {voices.map(v => <option key={v.voiceId} value={v.voiceId}>{v.voiceStyle}</option>)}
                   </select>
-                  <div className={styles.voiceSubLabel}>참여자 2</div>
+                  <div className={styles.voiceSubLabel}>화자2</div>
                   <select className={styles.voiceSelect} onChange={e => setPendingMultiVoice(p => ({ ...p, voice2Id: Number(e.target.value) }))}>
+                    <option value="">선택</option>
+                    {voices.map(v => <option key={v.voiceId} value={v.voiceId}>{v.voiceStyle}</option>)}
+                  </select>
+                  <div className={styles.voiceSubLabel}>서술자</div>
+                  <select className={styles.voiceSelect} onChange={e => setPendingMultiVoice(p => ({ ...p, narratorVoiceId: Number(e.target.value) }))}>
                     <option value="">선택</option>
                     {voices.map(v => <option key={v.voiceId} value={v.voiceId}>{v.voiceStyle}</option>)}
                   </select>

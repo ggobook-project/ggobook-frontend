@@ -63,33 +63,29 @@ export default function SignupPage() {
   const formatTimer = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const checkDuplicate = async (type, value, statusKey) => {
-<<<<<<< HEAD
-    if (!value) { await showAlert("값을 입력해주세요!"); return; }
-=======
-    if (!value) return alert("값을 입력해주세요!");
+    if (!value) { await showAlert("값을 입력해주세요!", "warning"); return; }
 
-    // 🌟 1. API 쏘기 전에 프론트엔드 방어막 먼저 가동!
     if (type === "id") {
       const idRegex = /^[a-z0-9]{4,20}$/;
       if (!idRegex.test(value)) {
-        return alert("아이디는 영문 소문자와 숫자만 사용하여 4~20자리로 입력해주세요.");
+        await showAlert("아이디는 영문 소문자와 숫자만 사용하여 4~20자리로 입력해주세요.", "warning");
+        return;
       }
     } else if (type === "nickname") {
       if (value.length < 2 || value.length > 10) {
-        return alert("닉네임은 2자 이상, 10자 이하로 입력해주세요.");
+        await showAlert("닉네임은 2자 이상, 10자 이하로 입력해주세요.", "warning");
+        return;
       }
     }
 
-    // 🌟 2. 방어막을 무사히 통과한 데이터만 백엔드로 중복 확인!
->>>>>>> origin/feat/login/sh
     try {
       const paramName = type === "id" ? "userId" : type;
       const res = await api.get(`/api/auth/check-${type}?${paramName}=${value}`);
       if (res.data) {
-        await showAlert("❌ 이미 사용 중입니다.");
+        await showAlert("이미 사용 중입니다.", "error");
         setStatus(prev => ({ ...prev, [statusKey]: false }));
       } else {
-        alert(`✅ 사용 가능한 ${type === "id" ? "아이디" : "닉네임"}입니다.`);
+        await showAlert(`사용 가능한 ${type === "id" ? "아이디" : "닉네임"}입니다.`, "success");
         setStatus(prev => ({ ...prev, [statusKey]: true }));
       }
     } catch { await showAlert("검증 실패. 서버를 확인해주세요.", "error"); }

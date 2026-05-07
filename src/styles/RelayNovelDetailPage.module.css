@@ -291,6 +291,15 @@
   margin-bottom: 2px;
 }
 
+.voiceSubLabel {
+  font-size: 10px;
+  color: #4A6FA5;
+  margin: 6px 0 3px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
 .voiceSelect {
   width: 100%;
   padding: 10px 36px 10px 14px;
@@ -456,7 +465,7 @@
   width: 100%;
   box-sizing: border-box;
 }
-.blindTitle { font-size: 13px; font-weight: 600; color: #D32F2F; margin-bottom: 6px; }
+.blindTitle { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #D32F2F; margin-bottom: 6px; }
 .blindText { font-size: 13px; color: #D32F2F; line-height: 1.6; }
 
 .textareaActions { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 8px; }
