@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import wave from "../assets/wave.png";
 import api from "../api/axios";
 import "../styles/Auth.css";
@@ -28,10 +28,22 @@ const SOCIAL_PROVIDERS = [
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [keepLoggedIn, setKeepLoggedIn] = useState(false);
   const { showAlert } = useAlert();
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error === "SUSPENDED") {
+      const reason = searchParams.get("reason");
+      const date = searchParams.get("date");
+      showAlert(`해당 계정은 정지 상태입니다.\n\n사유 : ${reason}\n해제일 : ${date}`, "error", "로그인 제한 안내");
+    } else if (error === "WITHDRAWN") {
+      showAlert("탈퇴 처리된 계정입니다. 고객센터에 문의해주세요.", "error", "로그인 제한 안내");
+    }
+  }, [searchParams, showAlert]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -47,8 +59,10 @@ export default function LoginPage() {
         const cleanToken = accessToken.replace("Bearer ", "");
         if (keepLoggedIn) {
           localStorage.setItem("accessToken", cleanToken);
+          sessionStorage.removeItem("accessToken");
         } else {
           sessionStorage.setItem("accessToken", cleanToken);
+          localStorage.removeItem("accessToken");
         }
       }
       navigate("/");

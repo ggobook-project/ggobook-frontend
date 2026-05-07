@@ -4,12 +4,22 @@ import api from "../api/axios";
 import styles from "../styles/AdminContentDetailPage.module.css";
 import { useAlert } from "../context/AlertContext";
 
+const STATUS_MAP = {
+  "DRAFT": "임시 저장",
+  "PENDING": "검수 대기",
+  "APPROVED": "검수 완료",
+  "PUBLISHED": "공개 완료",
+  "REJECTED": "반려",
+  "BLINDED": "블라인드",
+  "PRIVATE": "비공개"
+};
+
 export default function AdminContentDetailPage() {
   const navigate = useNavigate();
   const { contentId } = useParams();
   const { showAlert, showConfirm } = useAlert(); 
   const [episodes, setEpisodes] = useState([]);
-  const [contentInfo, setContentInfo] = useState(null); // 🌟 작품 정보 저장용 상태
+  const [contentInfo, setContentInfo] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // 1. 회차 목록 로드
@@ -22,7 +32,7 @@ export default function AdminContentDetailPage() {
     }
   }, [contentId]);
 
-  // 2. 작품 기본 정보(제목 등) 로드
+  // 2. 작품 기본 정보 로드
   const loadContentInfo = useCallback(async () => {
     try {
       const response = await api.get(`/api/admin/content/${contentId}`);
@@ -36,7 +46,7 @@ export default function AdminContentDetailPage() {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      await Promise.all([loadEpisodes(), loadContentInfo()]); // 🌟 두 API를 동시에 호출
+      await Promise.all([loadEpisodes(), loadContentInfo()]);
       setLoading(false);
     };
     init();
@@ -51,7 +61,7 @@ export default function AdminContentDetailPage() {
       await api.put(`/api/admin/content/episodes/${episodeId}/blind`);
       setEpisodes(prev => prev.map(ep =>
         ep.episodeId === episodeId
-          ? { ...ep, status: ep.status === "PUBLISHED" ? "BLINDED" : "PUBLISHED" }
+          ? { ...ep, status: (ep.status === "APPROVED" || ep.status === "PUBLISHED") ? "BLINDED" : "APPROVED" }
           : ep
       ));
     } catch (error) {
@@ -63,54 +73,74 @@ export default function AdminContentDetailPage() {
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>작품 상세 관리</div>
-        {/* 🌟 수정된 헤더 자막 */}
         <div className={styles.headerSubtitle}>
           {contentInfo ? `"${contentInfo.title}" 작품의 회차 목록입니다.` : ""}
         </div>
       </div>
 
       <div className={styles.content}>
-  {loading ? (
-    <div />
-  ) : episodes.length === 0 ? (
-    <div style={{ textAlign: "center", padding: "40px", color: "#90A4C8" }}>등록된 회차가 없습니다.</div>
-  ) : (
-    episodes.map((ep) => (
-  <div 
-    key={ep.episodeId} 
-    className={styles.card}
-    // 🌟 수정 포인트: 카드 전체 영역을 클릭 가능하게 변경
-    onClick={() => navigate(`/admin/content/${contentId}/episode/${ep.episodeId}`)}
-    style={{ 
-        cursor: 'pointer', 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center' 
-    }}
-  >
-    <div className={styles.info}>
-      <div className={styles.cardTitle}>
-        {ep.episodeNumber}화 - {ep.title}
+        {loading ? (
+          <div />
+        ) : episodes.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "40px", color: "#90A4C8" }}>등록된 회차가 없습니다.</div>
+        ) : (
+          episodes.map((ep) => {
+            // 🌟 2. 버튼 상태와 클릭 가능 여부를 여기서 미리 계산합니다.
+            const isPublic = ep.status === "APPROVED" || ep.status === "PUBLISHED";
+            const isBlinded = ep.status === "BLINDED";
+            const canToggle = isPublic || isBlinded; // 토글 권한 확인
+
+            return (
+              <div 
+                key={ep.episodeId} 
+                className={styles.card}
+                onClick={() => navigate(`/admin/content/${contentId}/episode/${ep.episodeId}`)}
+                style={{ 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center' 
+                }}
+              >
+                <div className={styles.info}>
+                  <div className={styles.cardTitle}>
+                    {ep.episodeNumber}화 - {ep.title}
+                  </div>
+                  <div className={styles.cardMeta}>
+                    {ep.createdAt ? new Date(ep.createdAt).toLocaleDateString() : "날짜 없음"}
+                  </div>
+                </div>
+                
+                {/* 🌟 3. 완벽하게 수정된 버튼 구역 */}
+                <button
+                  className={`${styles.statusBtn} ${
+                    isPublic ? styles.statusPublic 
+                    : isBlinded ? styles.statusPrivate 
+                    : "" // 그 외(대기, 반려 등)는 기본 CSS 적용
+                  }`}
+                  style={{
+                    opacity: canToggle ? 1 : 0.6, // 변경 불가면 살짝 투명하게
+                    cursor: canToggle ? "pointer" : "not-allowed" // 마우스 커서도 금지 표시
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // 카드 클릭(이동) 방지
+                    
+                    // 권한이 있을 때만 서버로 요청 보냄
+                    if (canToggle) {
+                      handleToggle(ep.episodeId);
+                    } else {
+                      showAlert(`현재 [${STATUS_MAP[ep.status]}] 상태입니다.\n승인, 공개, 블라인드 상태일 때만 변경할 수 있습니다.`);
+                    }
+                  }}
+                >
+                  {/* 사전에 등록된 한글 상태명 출력 */}
+                  {STATUS_MAP[ep.status] || ep.status}
+                </button>
+              </div>
+            );
+          })
+        )}
       </div>
-      <div className={styles.cardMeta}>
-        {ep.createdAt ? new Date(ep.createdAt).toLocaleDateString() : "날짜 없음"}
-      </div>
-    </div>
-    
-    {/* 🌟 버튼은 그대로 유지 (e.stopPropagation()이 핵심!) */}
-    <button
-      className={`${styles.statusBtn} ${ep.status === "PUBLISHED" ? styles.statusPublic : styles.statusPrivate}`}
-      onClick={(e) => {
-        e.stopPropagation(); // 🌟 중요: 버튼 클릭 시 부모(카드) 클릭 이벤트 발동을 막음
-        handleToggle(ep.episodeId);
-      }}
-    >
-      {ep.status === "PUBLISHED" ? "공개 중" : "비공개 (블라인드)"}
-    </button>
-  </div>
-))
-  )}
-</div>
     </div>
   );
 }

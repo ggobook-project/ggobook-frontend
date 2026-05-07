@@ -86,6 +86,7 @@ export default function LikedContentPage() {
             {filteredItems.map(item => {
               
               const statusMap = {
+                "PENDING": "검수 대기",
                 "DRAFT": "연재 대기", 
                 "APPROVED": "연재 중",
                 "REJECTED": "승인 거절",

@@ -157,7 +157,8 @@ export default function ContentDetailPage() {
   const handleEpisodeClick = (ep) => {
     if (ep.status === "BLINDED") return;
     const token = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
-    const isPaymentRequired = (ep.status === "APPROVED" || !ep.isFree) && !purchasedEps.includes(ep.episodeNumber);
+    const isPurchased = purchasedEps.includes(ep.episodeNumber) || ep.isOwned;
+    const isPaymentRequired = (ep.status === "APPROVED" || !ep.isFree) && !isPurchased;
 
     if (isPaymentRequired) {
       if (!token) {
@@ -388,8 +389,8 @@ export default function ContentDetailPage() {
               const isBlinded = ep.status === "BLINDED";
               const isApproved = ep.status === "APPROVED";
               const isPaidEp = !ep.isFree;
-              const isPurchased = purchasedEps.includes(ep.episodeNumber);
-              const isRead = readEps.includes(ep.episodeId);
+              const isPurchased = purchasedEps.includes(ep.episodeNumber) || ep.isOwned;
+              const isRead = readEps.includes(ep.episodeId) || ep.isRead;
               return (
                 <div
                   key={ep.episodeId}

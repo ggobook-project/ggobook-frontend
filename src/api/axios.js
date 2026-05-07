@@ -42,11 +42,11 @@ api.interceptors.response.use(
           if (refreshResponse.status === 200) {
             const newAccessToken = refreshResponse.data;
             
-            // 🌟 핵심 2: 방금 받아온 새 토큰을 "원래 쓰던 보관함"에 맞춰서 다시 예쁘게 넣어줍니다!
-            if (localStorage.getItem('accessToken')) {
-              localStorage.setItem('accessToken', newAccessToken);
-            } else {
+            // 🌟 핵심 수술: 지금 'sessionStorage'를 쓰고 있다면 거기에, 아니면 'localStorage'에 넣기
+            if (sessionStorage.getItem('accessToken')) {
               sessionStorage.setItem('accessToken', newAccessToken);
+            } else {
+              localStorage.setItem('accessToken', newAccessToken);
             }
 
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
