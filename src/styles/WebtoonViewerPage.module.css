@@ -266,7 +266,7 @@
 
 .commentBody { padding-left: 36px; }
 
-.commentText { font-size: 14px; color: #0D1B2A; line-height: 1.6; margin-bottom: 4px; }
+.commentText { font-size: 14px; color: #0D1B2A; line-height: 1.6; margin-bottom: 4px; word-break: break-word; overflow-wrap: break-word; }
 
 .commentBottomRow {
   display: flex; justify-content: space-between;
@@ -325,7 +325,7 @@
 .replyItem:last-child { border-bottom: none; }
 
 .replyArrow { color: #90A4C8; font-size: 14px; flex-shrink: 0; padding-top: 2px; }
-.replyContent { flex: 1; }
+.replyContent { flex: 1; min-width: 0; word-break: break-word; overflow-wrap: break-word; }
 
 .replyAvatar {
   width: 24px; height: 24px; border-radius: 50%;

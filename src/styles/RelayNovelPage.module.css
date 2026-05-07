@@ -112,6 +112,9 @@
   font-weight: 600;
   color: #0D1B2A;
   margin-bottom: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .relayMeta {
@@ -131,6 +134,9 @@
   backdrop-filter: blur(8px);
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 10px;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  overflow: hidden;
 }
 
 .observer {

@@ -72,7 +72,12 @@ export default function AdminRelayDetailPage() {
               
               {entry.status === "BLINDED" ? (
                 <div className={styles.blindedBox}>
-                  🚨 <strong>[가이드라인 위반으로 블라인드 처리된 회차입니다.]</strong> <br/><br/>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 700, marginBottom: "10px" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D32F2F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 18h14"/><path d="M17 18v-5a5 5 0 0 0-10 0v5"/><path d="M2 13h2"/><path d="M20 13h2"/><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 6.34 1.41-1.41"/>
+                    </svg>
+                    [가이드라인 위반으로 블라인드 처리된 회차입니다.]
+                  </div>
                   <span style={{ color: "#555", fontSize: "14px" }}>
                     <strong>AI 자동 요약본: </strong> {entry.adminMessage || entry.blindMessage}
                   </span>

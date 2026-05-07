@@ -1012,7 +1012,7 @@ export default function NovelViewerPage() {
               boxShadow: "0 4px 12px rgba(33,150,243,0.3)",
             }}
           >
-            ✨ 만약에..?
+            만약에..?
           </button>
         </div>
       </div>
@@ -1130,174 +1130,131 @@ export default function NovelViewerPage() {
             </button>
           </div>
         </div>
-      </div>
 
-      {showSettings && (
-        <div ref={settingsPanelRef} className={styles.settingsPanel}>
-          {/* 모드 토글 */}
-          <div className={styles.settingsSection}>
-            <div className={styles.modeToggle}>
-              <button
-                className={`${styles.modeToggleBtn} ${!multiVoiceMode ? styles.modeToggleBtnActive : ""}`}
-                onClick={() => setMultiVoiceMode(false)}
-              >
-                단일 보이스
-              </button>
-              <button
-                className={`${styles.modeToggleBtn} ${multiVoiceMode ? styles.modeToggleBtnActive : ""}`}
-                onClick={() => setMultiVoiceMode(true)}
-              >
-                멀티 보이스
-              </button>
-            </div>
-          </div>
-
-          {!multiVoiceMode ? (
+        {showSettings && (
+          <div ref={settingsPanelRef} className={styles.settingsPanel}>
             <div className={styles.settingsSection}>
-              <div className={styles.settingsSectionTitle}>목소리</div>
-              <select
-                className={styles.voiceSelect}
-                value={pendingVoiceId ?? currentVoiceId ?? ""}
-                onChange={(e) => setPendingVoiceId(Number(e.target.value))}
-                disabled={isGenerating}
-              >
-                <option value="">선택하세요</option>
-                {voices.map((v) => (
-                  <option key={v.voiceId} value={v.voiceId}>
-                    {v.voiceStyle} ·{" "}
-                    {v.voiceType === "MALE"
-                      ? "남성"
-                      : v.voiceStyle === "귀여운"
-                        ? "아이"
-                        : "여성"}
-                  </option>
-                ))}
-              </select>
-              {pendingVoiceId && pendingVoiceId !== currentVoiceId && (
+              <div className={styles.modeToggle}>
                 <button
-                  className={styles.applyBtn}
-                  onClick={() => handleGenerateTts(pendingVoiceId)}
+                  className={`${styles.modeToggleBtn} ${!multiVoiceMode ? styles.modeToggleBtnActive : ""}`}
+                  onClick={() => setMultiVoiceMode(false)}
+                >
+                  단일 보이스
+                </button>
+                <button
+                  className={`${styles.modeToggleBtn} ${multiVoiceMode ? styles.modeToggleBtnActive : ""}`}
+                  onClick={() => setMultiVoiceMode(true)}
+                >
+                  멀티 보이스
+                </button>
+              </div>
+            </div>
+
+            {!multiVoiceMode ? (
+              <div className={styles.settingsSection}>
+                <div className={styles.settingsSectionTitle}>목소리 선택</div>
+                <select
+                  className={styles.voiceSelect}
+                  value={pendingVoiceId ?? currentVoiceId ?? ""}
+                  onChange={(e) => setPendingVoiceId(Number(e.target.value))}
                   disabled={isGenerating}
                 >
-                  {isGenerating ? "생성 중..." : "적용"}
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className={styles.settingsSection}>
-              <div className={styles.settingsSectionTitle}>
-                멀티 보이스 설정
+                  <option value="">목소리를 골라주세요</option>
+                  {voices.map((v) => (
+                    <option key={v.voiceId} value={v.voiceId}>
+                      {v.voiceStyle} ·{" "}
+                      {v.voiceType === "MALE" ? "남성" : v.voiceStyle === "귀여운" ? "아이" : "여성"}
+                    </option>
+                  ))}
+                </select>
+                {pendingVoiceId && pendingVoiceId !== currentVoiceId && (
+                  <button
+                    className={styles.applyBtn}
+                    onClick={() => handleGenerateTts(pendingVoiceId)}
+                    disabled={isGenerating}
+                  >
+                    {isGenerating ? "생성 중..." : "이 목소리로 생성"}
+                  </button>
+                )}
               </div>
-              <div className={styles.voiceSubLabel}>화자1 (첫 번째 대화)</div>
-              <select
-                className={styles.voiceSelect}
-                value={pendingMultiVoice.voice1Id ?? ""}
-                onChange={(e) =>
-                  setPendingMultiVoice((p) => ({
-                    ...p,
-                    voice1Id: Number(e.target.value),
-                  }))
-                }
-                disabled={isGenerating}
-              >
-                <option value="">선택하세요</option>
-                {voices.map((v) => (
-                  <option key={v.voiceId} value={v.voiceId}>
-                    {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
-                  </option>
-                ))}
-              </select>
-              <div className={styles.voiceSubLabel}>화자2 (두 번째 대화)</div>
-              <select
-                className={styles.voiceSelect}
-                value={pendingMultiVoice.voice2Id ?? ""}
-                onChange={(e) =>
-                  setPendingMultiVoice((p) => ({
-                    ...p,
-                    voice2Id: Number(e.target.value),
-                  }))
-                }
-                disabled={isGenerating}
-              >
-                <option value="">선택하세요</option>
-                {voices.map((v) => (
-                  <option key={v.voiceId} value={v.voiceId}>
-                    {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
-                  </option>
-                ))}
-              </select>
-              <div className={styles.voiceSubLabel}>서술자</div>
-              <select
-                className={styles.voiceSelect}
-                value={pendingMultiVoice.narratorVoiceId ?? ""}
-                onChange={(e) =>
-                  setPendingMultiVoice((p) => ({
-                    ...p,
-                    narratorVoiceId: Number(e.target.value),
-                  }))
-                }
-                disabled={isGenerating}
-              >
-                <option value="">선택하세요</option>
-                {voices.map((v) => (
-                  <option key={v.voiceId} value={v.voiceId}>
-                    {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
-                  </option>
-                ))}
-              </select>
-              <button
-                className={styles.applyBtn}
-                onClick={handleGenerateMultiVoiceTts}
-                disabled={
-                  isGenerating ||
-                  !pendingMultiVoice.voice1Id ||
-                  !pendingMultiVoice.voice2Id ||
-                  !pendingMultiVoice.narratorVoiceId
-                }
-              >
-                {isGenerating ? "생성 중..." : "적용"}
-              </button>
-            </div>
-          )}
-
-          {/* 배속 섹션 */}
-          <div className={styles.settingsSection}>
-            <div className={styles.settingsSectionTitle}>
-              배속 <span className={styles.speedValue}>{playbackRate}×</span>
-            </div>
-            <div
-              className={styles.speedBarWrapper}
-              ref={speedBarRef}
-              onMouseDown={handleSpeedMouseDown}
-            >
-              <div className={styles.speedBar}>
-                <div
-                  className={styles.speedFill}
-                  style={{ width: `${((playbackRate - 0.75) / 1.25) * 100}%` }}
-                />
-                <div
-                  className={styles.speedThumb}
-                  style={{ left: `${((playbackRate - 0.75) / 1.25) * 100}%` }}
-                />
-              </div>
-            </div>
-            <div className={styles.speedPresets}>
-              {SPEED_PRESETS.map((s) => (
-                <button
-                  key={s}
-                  className={`${styles.speedPreset} ${playbackRate === s ? styles.speedPresetActive : ""}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    applySpeed(s);
-                  }}
+            ) : (
+              <div className={styles.settingsSection}>
+                <div className={styles.settingsSectionTitle}>멀티 보이스 설정</div>
+                <div className={styles.voiceSubLabel}>화자1</div>
+                <select
+                  className={styles.voiceSelect}
+                  value={pendingMultiVoice.voice1Id ?? ""}
+                  onChange={(e) => setPendingMultiVoice((p) => ({ ...p, voice1Id: Number(e.target.value) }))}
+                  disabled={isGenerating}
                 >
-                  {s}
+                  <option value="">선택</option>
+                  {voices.map((v) => (
+                    <option key={v.voiceId} value={v.voiceId}>
+                      {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
+                    </option>
+                  ))}
+                </select>
+                <div className={styles.voiceSubLabel}>화자2</div>
+                <select
+                  className={styles.voiceSelect}
+                  value={pendingMultiVoice.voice2Id ?? ""}
+                  onChange={(e) => setPendingMultiVoice((p) => ({ ...p, voice2Id: Number(e.target.value) }))}
+                  disabled={isGenerating}
+                >
+                  <option value="">선택</option>
+                  {voices.map((v) => (
+                    <option key={v.voiceId} value={v.voiceId}>
+                      {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
+                    </option>
+                  ))}
+                </select>
+                <div className={styles.voiceSubLabel}>서술자</div>
+                <select
+                  className={styles.voiceSelect}
+                  value={pendingMultiVoice.narratorVoiceId ?? ""}
+                  onChange={(e) => setPendingMultiVoice((p) => ({ ...p, narratorVoiceId: Number(e.target.value) }))}
+                  disabled={isGenerating}
+                >
+                  <option value="">선택</option>
+                  {voices.map((v) => (
+                    <option key={v.voiceId} value={v.voiceId}>
+                      {v.voiceStyle} · {v.voiceType === "MALE" ? "남성" : "여성"}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className={styles.applyBtn}
+                  onClick={handleGenerateMultiVoiceTts}
+                  disabled={isGenerating || !pendingMultiVoice.voice1Id || !pendingMultiVoice.voice2Id || !pendingMultiVoice.narratorVoiceId}
+                >
+                  {isGenerating ? "생성 중..." : "멀티 보이스 생성"}
                 </button>
-              ))}
+              </div>
+            )}
+
+            <div className={styles.settingsSection}>
+              <div className={styles.settingsSectionTitle}>배속 조절</div>
+              <div className={styles.speedBarWrapper} ref={speedBarRef} onMouseDown={handleSpeedMouseDown}>
+                <div className={styles.speedBar}>
+                  <div className={styles.speedFill} style={{ width: `${((playbackRate - 0.75) / 1.25) * 100}%` }} />
+                  <div className={styles.speedThumb} style={{ left: `${((playbackRate - 0.75) / 1.25) * 100}%` }} />
+                </div>
+              </div>
+              <div className={styles.speedPresets}>
+                {SPEED_PRESETS.map((s) => (
+                  <button
+                    key={s}
+                    className={`${styles.speedPreset} ${playbackRate === s ? styles.speedPresetActive : ""}`}
+                    onClick={(e) => { e.stopPropagation(); applySpeed(s); }}
+                  >
+                    {s}x
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* 액션 바 */}
       <div className={styles.actionBar}>

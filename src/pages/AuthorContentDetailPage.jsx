@@ -75,7 +75,12 @@ export default function AuthorContentDetailPage() {
           episodes.map(ep => (
             <div key={ep.episodeId} className={styles.episodeCard}>
               <div className={styles.episodeLeft}>
-                <div className={styles.episodeNumber}>{ep.episodeNumber}화</div>
+                <div className={styles.thumbWrap}>
+                  {ep.thumbnailUrl
+                    ? <img src={ep.thumbnailUrl} alt={`${ep.episodeNumber}화`} className={styles.thumbImg} />
+                    : <div className={styles.thumbPlaceholder}>{ep.episodeNumber}화</div>
+                  }
+                </div>
                 <div>
                   <div className={styles.episodeTitle}>{ep.episodeTitle}</div>
                   <div className={styles.episodeMeta}>{ep.createdAt?.substring(0, 10)}</div>
