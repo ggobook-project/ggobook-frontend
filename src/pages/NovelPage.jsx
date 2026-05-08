@@ -285,7 +285,7 @@ export default function NovelPage() {
                 style={{ width: "100%", maxWidth: "100%" }}
               >
                 {popularContents.map((item) => (
-                  <SwiperSlide key="{item.contentId}">
+                  <SwiperSlide key={item.contentId}>
                     <div
                       onClick={() => navigate(`/contents/${item.contentId}`)}
                       className={styles.cardItem}
@@ -301,8 +301,8 @@ export default function NovelPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef="{popularSwiperRef}" />
-              <NavBtn direction="next" swiperRef="{popularSwiperRef}" />
+              <NavBtn direction="prev" swiperRef={popularSwiperRef} />
+              <NavBtn direction="next" swiperRef={popularSwiperRef} />
             </div>
 
             <div className={styles.sectionTitle}>신작 웹소설</div>
@@ -315,7 +315,7 @@ export default function NovelPage() {
                 style={{ width: "100%", maxWidth: "100%" }}
               >
                 {newContents.map((item) => (
-                  <SwiperSlide key="{item.contentId}">
+                  <SwiperSlide key={item.contentId}>
                     <div
                       onClick={() => navigate(`/contents/${item.contentId}`)}
                       className={styles.cardItem}
@@ -331,8 +331,8 @@ export default function NovelPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef="{newSwiperRef}" />
-              <NavBtn direction="next" swiperRef="{newSwiperRef}" />
+              <NavBtn direction="prev" swiperRef={newSwiperRef} />
+              <NavBtn direction="next" swiperRef={newSwiperRef} />
             </div>
           </div>
         ) : (
