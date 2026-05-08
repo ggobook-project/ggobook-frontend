@@ -14,12 +14,26 @@ export default function AdminInspectionPage() {
   useEffect(() => {
     const loadInspectionList = async () => {
       try {
-        const response = await api.get("/api/admin/inspections");
-        let dataList = Array.isArray(response.data) ? response.data : (response.data.content || response.data.data || []);
+        // 🌟 두 개의 분리된 API를 동시에 호출하여 기존 DTO를 받아옵니다.
+        const [contentRes, episodeRes] = await Promise.all([
+          api.get("/api/admin/inspections/contents/pending"),
+          api.get("/api/admin/inspections/episodes/pending")
+        ]);
+
+        // 🌟 받아온 DTO에 프론트엔드 라우팅용 딱지(inspectionType)만 살짝 붙여서 합칩니다.
+        const contents = (contentRes.data || []).map(c => ({
+          ...c, inspectionType: "CONTENT", id: c.contentId, author: c.authorNickname
+        }));
         
-        // 시간순 정렬 (오래된 것부터 검수해야 하므로 오름차순)
-        dataList.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-        setItems(dataList);
+        const episodes = (episodeRes.data || []).map(e => ({
+          ...e, inspectionType: "EPISODE", id: e.episodeId, author: e.authorNickname, type: e.contentType
+        }));
+
+        const mergedList = [...contents, ...episodes];
+        
+        // 날짜순 정렬
+        mergedList.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        setItems(mergedList);
       } catch (error) {
         console.error("목록을 불러오는데 실패했습니다.", error);
       }
