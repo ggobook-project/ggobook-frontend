@@ -5,7 +5,6 @@ import styles from "../styles/AdminInspectionDetailPage.module.css";
 import { useAlert } from "../context/AlertContext";
 
 export default function AdminInspectionDetailPage() {
-  // 🌟 URL에서 type(CONTENT/EPISODE)과 id를 함께 받습니다.
   const { type, id } = useParams(); 
   const navigate = useNavigate();
   const { showAlert, showConfirm } = useAlert();
@@ -17,17 +16,15 @@ export default function AdminInspectionDetailPage() {
   const [rejectReason, setRejectReason] = useState("");
   const [customRejectReason, setCustomRejectReason] = useState("");
 
-  const isContent = type === "CONTENT"; // 현재 작품 검수 모드인지 확인
+  const isContent = type === "CONTENT";
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
-        // 🌟 타입에 따라 백엔드에 요청하는 URL을 스마트하게 분기!
         const fetchUrl = isContent 
           ? `/api/admin/inspections/contents/${id}`
           : `/api/admin/inspections/episodes/${id}`;
-          
         const response = await api.get(fetchUrl);
         setData(response.data);
       } catch {
@@ -46,13 +43,13 @@ export default function AdminInspectionDetailPage() {
     setIsProcessing(true);
     try {
       if (isContent) {
-        // 작품 승인은 예약 시간 없이 바로 승인 API 호출
         await api.post(`/api/admin/inspections/contents/${id}/approve`);
       } else {
-        // 회차 승인은 예약 시간(현재는 즉시로 세팅) 포함하여 호출
-        const now = new Date();
-        const formattedDate = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0") + " " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0") + ":" + String(now.getSeconds()).padStart(2, "0");
-        await api.post(`/api/admin/inspections/episodes/${id}/approve`, { scheduledAt: formattedDate });
+        // 🌟 핵심 수정: new Date()로 덮어쓰지 않고, 작가가 설정한 data.scheduledAt을 그대로 서버에 돌려줍니다.
+        // 만약 예약 시간이 비어있다면(즉시 공개 요청 등) 그때만 현재 시간을 보냅니다.
+        const finalDate = data.scheduledAt || new Date().toISOString().replace('T', ' ').substring(0, 19);
+        
+        await api.post(`/api/admin/inspections/episodes/${id}/approve`, { scheduledAt: finalDate });
       }
       await showAlert("승인되었습니다.", "success", "승인 완료");
       navigate("/admin/inspections");
@@ -102,9 +99,8 @@ export default function AdminInspectionDetailPage() {
             </div>
             <div className={styles.textInfo}>
               <div className={styles.infoRow}><span className={styles.label}>{isContent ? "작품 제목" : "회차 제목"}</span><span className={styles.value}>{data.title || data.episodeTitle}</span></div>
-              <div className={styles.infoRow}><span className={styles.label}>작가</span><span className={styles.value}>{data.author?.nickname ? `${data.author.nickname} (ID: ${data.author.id})` : data.author?.id || data.author || "미상"}</span></div>
-              <div className={styles.infoRow}><span className={styles.label}>장르 / 타입</span><span className={styles.value}>{data.genre || "-"} / {data.type}</span></div>
-              <div className={styles.infoRow}><span className={styles.label}>등록일</span><span className={styles.value}>{data.createdAt?.substring(0, 10) || "-"}</span></div>
+              <div className={styles.infoRow}><span className={styles.label}>작가</span><span className={styles.value}>{data.authorNickname || data.author?.nickname || "미상"}</span></div>
+              <div className={styles.infoRow}><span className={styles.label}>예약 업로드일</span><span className={styles.value} style={{color: '#2196F3', fontWeight: 'bold'}}>{data.scheduledAt ? new Date(data.scheduledAt).toLocaleString() : "즉시 공개"}</span></div>
               <div className={styles.infoRow}><span className={styles.label}>줄거리</span><span className={styles.value}>{data.summary || data.description || "없음"}</span></div>
               <div className={styles.infoActions}>
                 <button onClick={() => setIsRejectModalOpen(true)} className={styles.btnReject} disabled={isProcessing}>반려하기</button>
@@ -114,13 +110,12 @@ export default function AdminInspectionDetailPage() {
           </div>
         </section>
 
-        {/* 🌟 핵심 수술 2: 작품 검수 모드일 때는 이 아래 회차 원고 렌더링 구역을 아예 숨깁니다! */}
         {!isContent && (
           <section className={styles.sectionCard}>
             <h2 className={styles.sectionTitle}>회차 원고 <span className={styles.episodeBadge}>{data.episodeNumber}화</span></h2>
             {data.type === "웹소설" || data.type === "NOVEL" ? (
               <div className={styles.manuscriptArea}>
-                <div className={styles.novelText}>{data.episodeText || "등록된 텍스트 원고가 없습니다."}</div>
+                <div className={styles.novelText}>{data.episodeText || data.novelContent || "등록된 텍스트 원고가 없습니다."}</div>
               </div>
             ) : (
               <div className={styles.webtoonViewer}>

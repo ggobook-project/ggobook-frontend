@@ -72,7 +72,21 @@ export default function AdminContentDetailPage() {
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
-        <div className={styles.headerTitle}>작품 상세 관리</div>
+        <div className={styles.headerTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          작품 상세 관리
+          <button 
+            onClick={async () => {
+              if(await showConfirm("이 작품 전체와 소속된 모든 회차를 블라인드 처리하시겠습니까?")) {
+                await api.put(`/api/admin/content/${contentId}/blind-all`);
+                showAlert("작품 전체가 블라인드 처리되었습니다.", "success");
+                window.location.reload();
+              }
+            }}
+            style={{ padding: '8px 16px', backgroundColor: '#E53935', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+          >
+            작품 전체 블라인드 (강제)
+          </button>
+        </div>
         <div className={styles.headerSubtitle}>
           {contentInfo ? `"${contentInfo.title}" 작품의 회차 목록입니다.` : ""}
         </div>
