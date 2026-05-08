@@ -1,48 +1,40 @@
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import api from "../api/axios"; 
+import api from "../api/axios";
 import styles from "../styles/AdminInspectionPage.module.css";
 
-const ITEMS_PER_PAGE = 10;
+const PAGE_SIZE = 10;
 
 export default function AdminInspectionPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState("전체");
   const [items, setItems] = useState([]);
-  
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
-    const loadInspectionList = async () => {
+    const load = async () => {
       try {
-        const response = await api.get("/api/admin/inspections");
-
-        let dataList = [];
-        if (Array.isArray(response.data)) {
-          dataList = response.data;
-        } else if (response.data && Array.isArray(response.data.content)) {
-          dataList = response.data.content;
-        } else if (response.data && Array.isArray(response.data.data)) {
-          dataList = response.data.data;
+        const res = await api.get(`/api/admin/inspections?page=${currentPage}&size=${PAGE_SIZE}`);
+        const data = res.data;
+        if (data && Array.isArray(data.content)) {
+          setItems(data.content);
+          setTotalPages(data.totalPages ?? 1);
+        } else if (Array.isArray(data)) {
+          setItems(data);
+          setTotalPages(1);
         }
-
-        dataList.sort((a, b) => {
-          const dateA = new Date(a.createdAt || a.createdDate || 0).getTime();
-          const dateB = new Date(b.createdAt || b.createdDate || 0).getTime();
-          return dateA - dateB; 
-        });
-
-        setItems(dataList);
       } catch (error) {
         console.error("목록을 불러오는데 실패했습니다.", error);
       }
     };
-    loadInspectionList();
-  }, []);
+    load();
+  }, [currentPage]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter]);
+  const handleFilterChange = (f) => {
+    setFilter(f);
+    setCurrentPage(0);
+  };
 
   const filteredItems = items.filter((item) => {
     if (filter === "전체") return true;
@@ -52,9 +44,14 @@ export default function AdminInspectionPage() {
     return false;
   });
 
-  const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedItems = filteredItems.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const getPageNumbers = () => {
+    const delta = 2;
+    const start = Math.max(0, currentPage - delta);
+    const end = Math.min(totalPages - 1, currentPage + delta);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
+
+  const paginatedItems = filteredItems;
 
   return (
     <div className={styles.pageWrapper}>
@@ -70,7 +67,7 @@ export default function AdminInspectionPage() {
           {["전체", "웹툰", "웹소설"].map((f) => (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => handleFilterChange(f)}
               className={`${styles.filterBtn} ${filter === f ? styles.filterBtnActive : ""}`}
             >
               {f}
@@ -150,26 +147,26 @@ export default function AdminInspectionPage() {
               <div className={styles.paginationWrapper}>
                 <button
                   className={styles.pageBtn}
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+                  disabled={currentPage === 0}
                 >
                   이전
                 </button>
-                
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+
+                {getPageNumbers().map((p) => (
                   <button
-                    key={pageNum}
-                    className={`${styles.pageBtn} ${currentPage === pageNum ? styles.pageBtnActive : ""}`}
-                    onClick={() => setCurrentPage(pageNum)}
+                    key={p}
+                    className={`${styles.pageBtn} ${currentPage === p ? styles.pageBtnActive : ""}`}
+                    onClick={() => setCurrentPage(p)}
                   >
-                    {pageNum}
+                    {p + 1}
                   </button>
                 ))}
 
                 <button
                   className={styles.pageBtn}
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))}
+                  disabled={currentPage === totalPages - 1}
                 >
                   다음
                 </button>
