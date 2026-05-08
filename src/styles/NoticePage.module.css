@@ -38,6 +38,7 @@
   margin-bottom: 8px;
   cursor: pointer;
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
+  overflow: hidden;
 }
 
 .noticeItem:hover {
@@ -56,6 +57,9 @@
   display: flex;
   gap: 10px;
   align-items: center;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .pinnedBadge {
@@ -65,12 +69,16 @@
   color: #fff;
   border-radius: 6px;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .noticeTitle {
   font-size: 14px;
   color: #0D1B2A;
   font-weight: 400;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .noticeTitlePinned {
@@ -80,4 +88,7 @@
 .noticeDate {
   font-size: 12px;
   color: #90A4C8;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin-left: 12px;
 }

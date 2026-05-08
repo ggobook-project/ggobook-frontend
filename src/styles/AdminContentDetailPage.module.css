@@ -66,25 +66,48 @@
   background: rgba(255, 255, 255, 0.92);
 }
 
+.info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
 .cardTitle {
   font-size: 14px;
   font-weight: 600;
   color: #0D1B2A;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cardMeta {
   font-size: 12px;
   color: #90A4C8;
+  white-space: nowrap;
 }
 
 .statusBtn {
   padding: 6px 16px;
   border-radius: 8px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
+  background: none;
+  border: 1px solid #90CAF9;
+  color: #1565C0;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.statusBtn:hover {
+  background: #E3F2FD;
+  border-color: #2196F3;
+  color: #1565C0;
+  transform: translateY(-1px);
 }
 
 .statusPublic {
@@ -108,4 +131,10 @@
   background: #E53935;
   color: #fff;
   transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+  .header { padding: 20px 16px 24px; }
+  .content { padding: 16px 16px; }
+  .card { padding: 12px 14px; }
 }
