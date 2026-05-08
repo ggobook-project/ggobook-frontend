@@ -27,7 +27,7 @@ export default function RelayNovelRegisterPage() {
     if (!startText.trim()) { await showAlert("내용을 먼저 입력해주세요."); return }
     try {
       setFormatLoading(true)
-      const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
+      const res = await fetch(`${import.meta.env.VITE_LLM_URL}/api/novel/format-dialogue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: startText }),

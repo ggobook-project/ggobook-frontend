@@ -46,7 +46,7 @@ export default function EpisodeRegisterPage() {
     try {
       setFormatLoading(true);
       const res = await fetch(
-        "http://localhost:8000/api/novel/format-dialogue",
+      `${import.meta.env.VITE_LLM_URL}/api/novel/format-dialogue`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

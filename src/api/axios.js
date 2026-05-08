@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
 // 1. 기본 API 인스턴스 (우리 회사 전용 요원) 생성
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: BASE_URL,
   withCredentials: true, 
 });
 
@@ -35,7 +37,7 @@ api.interceptors.response.use(
         originalRequest._retry = true;
 
         try {
-          const refreshResponse = await axios.post('http://localhost:8080/api/auth/refresh', {}, {
+          const refreshResponse = await axios.post(`${BASE_URL}/api/auth/refresh`,  {}, {
             withCredentials: true 
           });
 
@@ -53,7 +55,6 @@ api.interceptors.response.use(
             return api(originalRequest);
           }
         } catch (refreshError) {
-          // 🌟 핵심 3: 토큰이 완전 만료되어 쫓아낼 때는, 두 보관함을 모두 확실하게 탈탈 털어버립니다!
           console.error("토큰 완전 만료. 조용히 로그아웃 처리");
           localStorage.removeItem('accessToken');
           sessionStorage.removeItem('accessToken');

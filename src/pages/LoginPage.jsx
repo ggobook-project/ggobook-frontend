@@ -79,7 +79,7 @@ export default function LoginPage() {
   };
 
   const handleSocialLogin = (provider) => {
-    window.location.assign(`http://localhost:8080/oauth2/authorization/${provider}`);
+    window.location.assign(`${import.meta.env.VITE_API_URL}/oauth2/authorization/${provider}`);
   };
 
   return (
