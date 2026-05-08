@@ -40,16 +40,22 @@ export default function OwnedContentPage() {
         <div className={styles.headerSubtitle}>구매한 완결 작품 목록</div>
       </div>
       <div className={styles.content}>
-        {ownedContents.map(ownedContent => (
-          <div key={ownedContent.contentId} className={styles.card} onClick={() => handleContentClick(ownedContent.contentId)}>
-            <div className={styles.thumbnail} />
-            <div className={styles.info}>
-              <div className={styles.title}>{ownedContent.title}</div>
-              <div className={styles.meta}>{ownedContent.author} · {ownedContent.type} ·</div>
-            </div>
-            <span className={styles.badge}>완결</span>
-          </div>
-        ))}
+       {ownedContents.map(ownedContent => (
+  <div
+    key={ownedContent.contentId}
+    className={styles.card}
+    onClick={() => handleContentClick(ownedContent.contentId)}
+  >
+    <img className={styles.thumbnail} src={ownedContent.thumbnailUrl} alt={ownedContent.title} />
+    <div className={styles.info}>
+      <div className={styles.title}>{ownedContent.title}</div>
+      <div className={styles.meta}>
+        {ownedContent.author?.nickname} · {ownedContent.type}
+      </div>
+    </div>
+    <span className={styles.badge}>완결</span>
+  </div>
+))}
       </div>
     </div>
   )
