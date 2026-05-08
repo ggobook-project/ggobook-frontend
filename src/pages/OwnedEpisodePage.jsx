@@ -87,9 +87,9 @@ export default function OwnedEpisodePage() {
               className={styles.card}
               onClick={() => handleEpisodeClick(ep.episodeId)}
             >
-              <div className={styles.epNumBadge}>{ep.episodeNumber}화</div>
+              <img className={styles.thumbnail} src={ep.thumbnailUrl} alt={`${ep.episodeNumber}화`} />
               <div className={styles.info}>
-                <div className={styles.title}>{ep.episodeTitle}</div>
+                <div className={styles.title}>{ep.episodeNumber}화: {ep.episodeTitle}</div>
                 <div className={styles.date}>소장일: {formatDate(ep.ownedAt)}</div>
               </div>
               <span className={styles.badge}>소장</span>
