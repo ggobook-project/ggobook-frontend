@@ -488,7 +488,7 @@ export default function ContentDetailPage() {
           <div className={styles.payModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.payModalTitle}>유료 회차</div>
             <div className={styles.payModalEp}>
-              {payTarget.episodeTitle || `${payTarget.episodeNumber}화`}
+              {payTarget.episodeNumber}화
             </div>
             <div className={styles.payModalCost}>200 P</div>
             <div

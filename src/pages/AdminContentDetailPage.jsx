@@ -119,8 +119,8 @@ export default function AdminContentDetailPage() {
                     : "" // 그 외(대기, 반려 등)는 기본 CSS 적용
                   }`}
                   style={{
-                    opacity: canToggle ? 1 : 0.6, // 변경 불가면 살짝 투명하게
-                    cursor: canToggle ? "pointer" : "not-allowed" // 마우스 커서도 금지 표시
+                    opacity: canToggle ? 1 : 0.7,
+                    cursor: "pointer"
                   }}
                   onClick={(e) => {
                     e.stopPropagation(); // 카드 클릭(이동) 방지

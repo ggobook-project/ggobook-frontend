@@ -21,6 +21,7 @@ export default function MyPage() {
   
   const [userInfo, setUserInfo] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [isAuthorUser, setIsAuthorUser] = useState(false)
 
   useEffect(() => {
     if (role === "ADMIN") navigate("/admin")
@@ -35,8 +36,15 @@ export default function MyPage() {
       }
 
       try {
-        const data = await getMyPageMainData()
+        const [data, contentsRes] = await Promise.all([
+          getMyPageMainData(),
+          api.get("/api/contents/my").catch(() => ({ data: [] }))
+        ])
         setUserInfo(data)
+        const raw = contentsRes.data || []
+        const contents = Array.isArray(raw) ? raw : (raw.content ?? [])
+        const hasApproved = contents.some(c => c.status === "APPROVED" || c.status === "PUBLISHED")
+        setIsAuthorUser(hasApproved)
       } catch (error) {
         alert("정보를 불러오는데 실패했습니다.")
       } finally {
@@ -100,9 +108,10 @@ export default function MyPage() {
               </span>
               <span className={
                 role === "ADMIN" ? styles.roleAdmin :
-                role === "AUTHOR" ? styles.roleAuthor : styles.roleBadge
+                (role === "AUTHOR" || isAuthorUser) ? styles.roleAuthor : styles.roleBadge
               }>
-                {role === "ADMIN" ? "관리자" : role === "AUTHOR" ? "작가" : "일반 회원"}
+                {role === "ADMIN" ? "관리자" :
+                 (role === "AUTHOR" || isAuthorUser) ? "작가 회원" : "일반 회원"}
               </span>
             </div>
           </div>
