@@ -4,19 +4,13 @@ import api from "../api/axios"
 import styles from "../styles/AuthorContentDetailPage.module.css"
 
 const STATUS_LABEL = {
-  PENDING: "검수중",
-  APPROVED: "공개",
-  REJECTED: "반려됨",
-  DRAFT: "임시저장",
-  BLINDED: "블라인드",
+  DRAFT: "임시 저장", PENDING: "검수 대기", APPROVED: "검수 완료", 
+  PUBLISHED: "공개 완료", REJECTED: "반려", BLINDED: "블라인드", PRIVATE: "비공개",
 }
 
 const STATUS_STYLE = {
-  PENDING: "statusReview",
-  APPROVED: "statusPublic",
-  REJECTED: "statusReview",
-  DRAFT: "statusReview",
-  BLINDED: "statusReview",
+  PENDING: "statusReview", APPROVED: "statusPublic", PUBLISHED: "statusPublic",
+  REJECTED: "statusReview", DRAFT: "statusReview", BLINDED: "statusReview", PRIVATE: "statusReview",
 }
 
 export default function AuthorContentDetailPage() {
@@ -31,11 +25,11 @@ export default function AuthorContentDetailPage() {
       try {
         const [contentRes, episodeRes] = await Promise.all([
           api.get(`/api/contents/${contentId}`),
-          api.get(`/api/contents/${contentId}/episodes`, { params: { size: 100 } }),
+          api.get(`/api/author/contents/${contentId}/episodes`, { params: { size: 100 } }),
         ])
         setContent(contentRes.data)
         setEpisodes(episodeRes.data.content || episodeRes.data || [])
-      } catch {
+      } catch (error) {
         setContent(null)
       } finally {
         setLoading(false)
@@ -44,8 +38,14 @@ export default function AuthorContentDetailPage() {
     load()
   }, [contentId])
 
-  if (loading) return <div style={{ padding: 40, textAlign: "center", color: "#4A6FA5" }}>불러오는 중...</div>
-  if (!content) return <div style={{ padding: 40, textAlign: "center", color: "#4A6FA5" }}>작품을 찾을 수 없습니다.</div>
+  // 🌟 핵심 수술 1: 뷰어 이동 함수 (웹툰/웹소설 구분)
+  const goToViewer = (epId) => {
+    const isWebtoon = content.type === "WEBTOON" || content.type === "웹툰";
+    navigate(isWebtoon ? `/webtoon/viewer/${epId}?contentId=${contentId}` : `/novel/viewer/${epId}?contentId=${contentId}`);
+  };
+
+  if (loading) return <div style={{ padding: 40, textAlign: "center" }}>불러오는 중...</div>
+  if (!content) return <div style={{ padding: 40, textAlign: "center" }}>작품을 찾을 수 없습니다.</div>
 
   return (
     <div className={styles.pageWrapper}>
@@ -59,10 +59,7 @@ export default function AuthorContentDetailPage() {
           <span className={styles.listTitle}>
             회차 목록 <span className={styles.listCount}>{episodes.length}</span>
           </span>
-          <button
-            className={styles.registerBtn}
-            onClick={() => navigate(`/author/contents/${contentId}/episode/register`)}
-          >
+          <button className={styles.registerBtn} onClick={() => navigate(`/author/contents/${contentId}/episode/register`)}>
             회차 등록
           </button>
         </div>
@@ -73,29 +70,36 @@ export default function AuthorContentDetailPage() {
           </div>
         ) : (
           episodes.map(ep => (
-            <div key={ep.episodeId} className={styles.episodeCard}>
+            <div 
+              key={ep.episodeId} 
+              className={styles.episodeCard} 
+              onClick={() => goToViewer(ep.episodeId)} // 🌟 클릭 시 뷰어로 이동!
+              style={{ cursor: "pointer" }}
+            >
               <div className={styles.episodeLeft}>
                 <div className={styles.thumbWrap}>
-                  {ep.thumbnailUrl
-                    ? <img src={ep.thumbnailUrl} alt={`${ep.episodeNumber}화`} className={styles.thumbImg} />
-                    : <div className={styles.thumbPlaceholder}>{ep.episodeNumber}화</div>
-                  }
+                  {ep.thumbnailUrl ? <img src={ep.thumbnailUrl} alt="썸네일" className={styles.thumbImg} /> : <div className={styles.thumbPlaceholder}>{ep.episodeNumber}화</div>}
                 </div>
                 <div>
-                  <div className={styles.episodeTitle}>{ep.episodeTitle}</div>
-                  <div className={styles.episodeMeta}>{ep.createdAt?.substring(0, 10)}</div>
+                  <div className={styles.episodeTitle}>{ep.episodeTitle || ep.title}</div>
+                  <div className={styles.episodeMeta}>{ep.createdAt ? new Date(ep.createdAt).toLocaleDateString() : ""}</div>
                 </div>
               </div>
               <div className={styles.episodeRight}>
                 <span className={`${styles.epStatusBadge} ${styles[STATUS_STYLE[ep.status]] || styles.statusReview}`}>
                   {STATUS_LABEL[ep.status] || ep.status}
                 </span>
-                <button
-                  className={styles.editBtn}
-                  onClick={() => navigate(`/author/contents/${contentId}/episode/${ep.episodeId}/edit`)}
-                >
-                  수정
-                </button>
+                {ep.status !== "PENDING" && ep.status !== "BLINDED" && (
+                  <button
+                    className={styles.editBtn}
+                    onClick={(e) => {
+                      e.stopPropagation(); // 🌟 버튼 누를 때는 뷰어로 안 넘어가게 방어!
+                      navigate(`/author/contents/${contentId}/episode/${ep.episodeId}/edit`);
+                    }}
+                  >
+                    수정
+                  </button>
+                )}
               </div>
             </div>
           ))

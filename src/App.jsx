@@ -135,7 +135,7 @@ function Layout() {
           <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
           <Route path="/admin" element={<AdminMainPage />} />
           <Route path="/admin/inspections" element={<AdminInspectionPage />} />
-          <Route path="/admin/inspection/detail/:episodeId" element={<AdminInspectionDetailPage />} />
+          <Route path="/admin/inspection/detail/:type/:id" element={<AdminInspectionDetailPage />} />
           <Route path="/admin/content" element={<AdminContentPage />} />
           <Route path="/admin/content/:contentId" element={<AdminContentDetailPage />} />
           <Route path="/admin/content/:contentId/episode/:episodeId" element={<AdminEpisodeViewPage />} />

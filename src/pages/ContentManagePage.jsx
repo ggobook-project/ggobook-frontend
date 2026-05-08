@@ -3,20 +3,22 @@ import { useState, useEffect } from "react";
 import api from "../api/axios";
 import styles from "../styles/ContentManagePage.module.css";
 
+// 🌟 핵심 수술 1: 백엔드 상태(Enum) 7가지 완벽 대응 사전
 const STATUS_LABEL = {
-  PENDING: "검수중",
-  APPROVED: "연재중",
-  REJECTED: "반려됨",
-  DRAFT: "임시저장",
+  DRAFT: "임시 저장",
+  PENDING: "검수 대기",
+  APPROVED: "검수 완료",
+  PUBLISHED: "공개 완료",
+  REJECTED: "반려",
   BLINDED: "블라인드",
+  PRIVATE: "비공개",
 };
 
-const STATUS_STYLE = {
-  PENDING: "statusReview",
-  APPROVED: "statusActive",
-  REJECTED: "statusReject",
-  DRAFT: "statusReview",
-  BLINDED: "statusReject",
+// 🌟 핵심 수술 2: 상태별 색상 테마 분류
+const statusStyle = (status) => {
+  if (status === "APPROVED" || status === "PUBLISHED") return styles.statusActive;
+  if (status === "REJECTED" || status === "BLINDED") return styles.statusReject;
+  return styles.statusReview; // 대기/임시저장/비공개 등은 회색(Review) 처리
 };
 
 export default function ContentManagePage() {
@@ -40,32 +42,6 @@ export default function ContentManagePage() {
     loadMyContents();
   }, []);
 
-  const statusLabel = (status) => {
-    switch (status) {
-      case "DRAFT":
-        return "임시저장";
-      case "PENDING":
-        return "검수중";
-      case "APPROVED":
-        return "승인됨";
-      case "PUBLISHED":
-        return "게시중";
-      case "REJECTED":
-        return "반려됨";
-      case "BLINDED":
-        return "블라인드";
-      default:
-        return status;
-    }
-  };
-
-  const statusStyle = (status) => {
-    if (status === "PENDING") return styles.statusReview;
-    if (status === "REJECTED" || status === "BLINDED")
-      return styles.statusReject;
-    return styles.statusActive;
-  };
-
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
@@ -88,27 +64,12 @@ export default function ContentManagePage() {
         </div>
 
         {loading ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "48px 0",
-              color: "#90A4C8",
-              fontSize: 14,
-            }}
-          >
+          <div style={{ textAlign: "center", padding: "48px 0", color: "#90A4C8", fontSize: 14 }}>
             불러오는 중...
           </div>
         ) : myContents.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "48px 0",
-              color: "#90A4C8",
-              fontSize: 14,
-            }}
-          >
-            등록한 작품이 없습니다.
-            <br />
+          <div style={{ textAlign: "center", padding: "48px 0", color: "#90A4C8", fontSize: 14 }}>
+            등록한 작품이 없습니다.<br />
             작품을 등록하면 관리자 검수 후 게시됩니다.
           </div>
         ) : (
@@ -116,7 +77,6 @@ export default function ContentManagePage() {
             <div
               key={`content-${item.contentId}-${index}`}
               className={styles.itemCard}
-              // ✅ 클릭 시 회차 목록 페이지로 이동
               onClick={() => navigate(`/author/contents/${item.contentId}`)}
             >
               <div className={styles.itemLeft}>
@@ -125,11 +85,7 @@ export default function ContentManagePage() {
                     <img
                       src={item.thumbnailUrl}
                       alt="썸네일"
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                      }}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   )}
                 </div>
@@ -138,10 +94,9 @@ export default function ContentManagePage() {
                   <div className={styles.itemMeta}>
                     {item.type} · {item.genre}
                   </div>
-                  <span
-                    className={`${styles.statusBadge} ${statusStyle(item.status)}`}
-                  >
-                    {statusLabel(item.status)}
+                  {/* 🌟 번역 사전과 스타일 함수 적용 */}
+                  <span className={`${styles.statusBadge} ${statusStyle(item.status)}`}>
+                    {STATUS_LABEL[item.status] || item.status}
                   </span>
                 </div>
               </div>
