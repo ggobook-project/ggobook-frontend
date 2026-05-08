@@ -185,53 +185,47 @@
   font-weight: 500;
 }
 
-/* 3. 페이지네이션 (하단 번호 이동 영역) */
+/* 3. 페이지네이션 */
 .paginationWrapper {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-top: 32px;
+  align-items: center;
+  gap: 2px;
+  margin-top: 28px;
   padding-bottom: 40px;
 }
 
-/* 페이지네이션 기본 버튼 */
 .pageBtn {
-  padding: 6px 12px;
-  border: 1px solid #BBDEFB;
+  min-width: 32px;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
   border-radius: 6px;
-  background: #fff;
-  color: #4A6FA5;
+  background: transparent;
+  color: #90A4C8;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: color 0.15s, background 0.15s;
 }
 
-/* 마우스 올렸을 때 효과 (비활성화 상태 아닐 때만) */
 .pageBtn:hover:not(:disabled) {
-  background: #E3F2FD;
   color: #1565C0;
-  border-color: #90CAF9;
+  background: #EEF5FD;
 }
 
-/* 현재 보고 있는 페이지 (Active 상태) */
 .pageBtnActive {
-  background: #2196F3;
-  color: #fff;
-  font-weight: bold;
-  border-color: #2196F3;
+  background: #EEF5FD;
+  color: #1565C0;
+  font-weight: 600;
 }
 
 .pageBtnActive:hover {
-  background: #1565C0;
-  border-color: #1565C0;
+  background: #DAEAF8;
 }
 
-/* 비활성화 상태 (이전/다음 버튼 끝에 도달했을 때) */
 .pageBtn:disabled {
-  background: #F8FAFC;
-  color: #90A4C8;
+  color: #C8D8EA;
   cursor: default;
-  border-color: #E3F2FD;
 }
 
 /* ==========================================

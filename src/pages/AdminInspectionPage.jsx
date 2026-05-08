@@ -133,7 +133,7 @@ export default function AdminInspectionPage() {
                   onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                   disabled={currentPage === 1}
                 >
-                  이전
+                  ‹
                 </button>
 
                 {getPageNumbers().map((p) => (
@@ -151,7 +151,7 @@ export default function AdminInspectionPage() {
                   onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                   disabled={currentPage === totalPages}
                 >
-                  다음
+                  ›
                 </button>
               </div>
             )}
