@@ -1407,7 +1407,6 @@ export default function NovelViewerPage() {
             등록
           </button>
         </div>
-
         <div className={styles.commentList}>
           {visibleComments.map((cm) => (
             <div

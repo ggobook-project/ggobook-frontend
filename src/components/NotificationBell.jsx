@@ -32,7 +32,7 @@ export default function NotificationBell() {
   const fetchNotifications = async () => {
     try {
       const res = await api.get(`/api/notifications/me`);
-      setNotifications(res.data);
+      setNotifications(Array.isArray(res.data) ? res.data : res.data.data ?? []);
     } catch (e) {
       console.error("알림 로드 실패", e);
     }

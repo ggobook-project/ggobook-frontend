@@ -331,7 +331,9 @@ export default function WebtoonPage() {
           </div>
         ) : (
           <div>
-            <div className={styles.sectionTitle}>{activeDay === "완결" ? "완결 웹툰" : `${activeDay}요일 웹툰`}</div>
+            <div className={styles.sectionTitle}>
+              {activeDay === "완결" ? "완결 웹툰" : `${activeDay}요일 웹툰`}
+            </div>
             <div className={styles.dailyGrid}>
               {dailyContents.map((item) => (
                 <div

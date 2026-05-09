@@ -32,7 +32,6 @@ import AuthorContentDetailPage from "./pages/AuthorContentDetailPage"
 import RelayNovelPage from "./pages/RelayNovelPage"
 import RelayNovelRegisterPage from "./pages/RelayNovelRegisterPage"
 import RelayNovelDetailPage from "./pages/RelayNovelDetailPage"
-import ContentChatbotPage from "./pages/ContentChatbotPage"
 import ParallelUniversePage from "./pages/ParallelUniversePage"
 import NoticePage from "./pages/NoticePage"
 import NoticeDetailPage from "./pages/NoticeDetailPage"
@@ -55,7 +54,7 @@ import FloatingChatbot from "./components/FloatingChatbot"
 import AlertPreviewPage from "./pages/AlertPreviewPage"
 
 const hideHeader = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password"]
-const hideFooter = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password", "/ai/chatbot"]
+const hideFooter = ["/", "/login", "/signup", "/find-id", "/find-password", "/reset-password"]
 const showChatbotPaths = ["/webtoon", "/novel", "/relay", "/ranking", "/notices"]
 
 function Layout() {
@@ -129,7 +128,6 @@ function Layout() {
           <Route path="/relay" element={<RelayNovelPage />} />
           <Route path="/relay/register" element={<RelayNovelRegisterPage />} />
           <Route path="/relay/:relayNovelId" element={<RelayNovelDetailPage />} />
-          <Route path="/ai/chatbot/:contentId" element={<ContentChatbotPage />} />
           <Route path="/ai/parallel/:episodeId" element={<ParallelUniversePage />} />
           <Route path="/notices" element={<NoticePage />} />
           <Route path="/notices/:noticeId" element={<NoticeDetailPage />} />
