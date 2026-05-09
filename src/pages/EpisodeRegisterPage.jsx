@@ -40,39 +40,25 @@ export default function EpisodeRegisterPage() {
   const dragOverItem = useRef();
 
   const handleFormatDialogue = async () => {
-    if (!novelText.trim()) {
-      await showAlert("원고 내용을 먼저 입력해주세요.");
-      return;
-    }
-    try {
-      setFormatLoading(true);
-<<<<<<< HEAD
-      const res = await fetch(
-      `${import.meta.env.VITE_LLM_URL}/api/novel/format-dialogue`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: novelText }),
-        },
-      );
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setNovelText(data.formatted_text);
-=======
-      const res = await llmApi.post("/api/novel/format-dialogue", {
-        text: novelText,
-      });
-      setNovelText(res.data.formatted_text);
->>>>>>> develop
-    } catch {
-      await showAlert(
-        "AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.",
-        "error",
-      );
-    } finally {
-      setFormatLoading(false);
-    }
-  };
+  if (!novelText.trim()) {
+    await showAlert("원고 내용을 먼저 입력해주세요.");
+    return;
+  }
+  try {
+    setFormatLoading(true);
+    const res = await llmApi.post("/api/novel/format-dialogue", {
+      text: novelText,
+    });
+    setNovelText(res.data.formatted_text);
+  } catch {
+    await showAlert(
+      "AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.",
+      "error",
+    );
+  } finally {
+    setFormatLoading(false);
+  }
+};
 
   // 🌟 핵심 수술 2: KST 시간을 안전하게 문자열로 변환하는 함수 (9시간 깎이는 현상 방지)
   const getLocalIsoString = (date) => {
