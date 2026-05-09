@@ -132,3 +132,29 @@
 .sendBtn:hover {
   background: var(--primaryDark);
 }
+
+.sendBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0; }
+  40% { opacity: 1; }
+}
+
+.typing span,
+.typing::before,
+.typing::after {
+  content: "•";
+  animation: blink 1.4s infinite both;
+}
+
+.typing {
+  letter-spacing: 2px;
+  font-size: 16px;
+  color: var(--textSub);
+}
+
+.typing::after { animation-delay: 0.4s; }
+.typing::before { animation-delay: 0.2s; }

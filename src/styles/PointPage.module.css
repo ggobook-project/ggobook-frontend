@@ -125,12 +125,14 @@
   border: 1px solid rgba(187, 222, 251, 0.6);
   border-radius: 10px;
   margin-bottom: 8px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s, background 0.2s;
 }
 
 .historyItem:hover {
-  border-color: #2196F3;
-  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.1);
+  border-color: #90CAF9;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.12);
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.92);
 }
 
 .historyDesc {
@@ -156,4 +158,22 @@
 
 .amountMinus {
   color: #E53935;
+}
+
+.cancelBtn {
+  padding: 5px 13px;
+  background: none;
+  border: 1px solid #E53935;
+  border-radius: 6px;
+  color: #E53935;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.cancelBtn:hover {
+  background: #E53935;
+  color: #fff;
 }

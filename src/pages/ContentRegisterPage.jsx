@@ -15,9 +15,12 @@ export default function ContentRegisterPage() {
   const [genre, setGenre] = useState("");
   const [summary, setSummary] = useState("");
   const [description, setDescription] = useState("");
+  
+  // 🌟 핵심 수술 1: 새로 올린 파일과, 기존에 등록된 썸네일 주소를 분리해서 관리!
   const [file, setFile] = useState(null);
+  const [existingThumbnail, setExistingThumbnail] = useState(""); 
+  
   const [videoUrl, setVideoUrl] = useState("");
-
   const [serialDay, setSerialDay] = useState([]);
 
   const toggleDay = (day) => {
@@ -37,14 +40,16 @@ export default function ContentRegisterPage() {
       try {
         const response = await api.get(`/api/contents/${contentId}`);
         const data = response.data;
-        console.log("작품 데이터:", data);
-        setType(data.type === "WEBTOON" ? "웹툰" : "웹소설");
+        setType((data.type === "WEBTOON" || data.type === "웹툰") ? "웹툰" : "웹소설");
         setTitle(data.title || "");
         setGenre(data.genre || "");
         setSummary(data.summary || "");
         setDescription(data.description || "");
         setVideoUrl(data.videoUrl || "");
         setSerialDay(data.serialDay ? data.serialDay.split(",") : []);
+        
+        // 🌟 핵심 수술 2: 백엔드가 내려준 기존 썸네일 주소를 저장합니다.
+        setExistingThumbnail(data.thumbnailUrl || ""); 
       } catch (error) {
         console.error("작품 불러오기 실패 : ", error);
       }
@@ -61,7 +66,7 @@ export default function ContentRegisterPage() {
 
     loadContent();
     loadTags();
-  }, [contentId]);
+  }, [contentId, isEdit]);
 
   const handleAddTag = async () => {
     if (!tagInput.trim()) return;
@@ -72,9 +77,7 @@ export default function ContentRegisterPage() {
 
     if (isEdit) {
       try {
-        await api.post(
-          `/api/contents/${contentId}/tags/register?tagName=${tagInput.trim()}`,
-        );
+        await api.post(`/api/contents/${contentId}/tags/register?tagName=${tagInput.trim()}`);
         const response = await api.get(`/api/contents/${contentId}/tags`);
         setTags(response.data || []);
       } catch (error) {
@@ -99,32 +102,13 @@ export default function ContentRegisterPage() {
     }
   };
 
-  const saveToInspection = () => {
-    const newContent = {
-      id: Date.now(),
-      title,
-      type,
-      genre,
-      summary,
-      registeredAt: new Date().toLocaleDateString("ko-KR"),
-      status: "검수중",
-    };
-    const existing = JSON.parse(
-      localStorage.getItem("pendingContents") || "[]",
-    );
-    localStorage.setItem(
-      "pendingContents",
-      JSON.stringify([...existing, newContent]),
-    );
-    localStorage.setItem("userRole", "AUTHOR");
-  };
-
   const handleSubmit = async () => {
-    if (!title || !genre || serialDay.length === 0 || (!isEdit && !file)) {
+    // 🌟 수정 시 file이 없어도 기존 썸네일(existingThumbnail)이 있으면 통과되게 방어!
+    if (!title || !genre || serialDay.length === 0 || (!isEdit && !file && !existingThumbnail)) {
       await showAlert(
         isEdit
           ? "작품명, 장르, 연재 요일은 필수입니다."
-          : "작품명, 장르, 연재 요일, 대표 이미지는 필수입니다.",
+          : "작품명, 장르, 연재 요일, 대표 이미지는 필수입니다."
       );
       return;
     }
@@ -151,24 +135,20 @@ export default function ContentRegisterPage() {
         url: url,
         data: formData,
       });
-      console.log("작품 등록 응답:", response.data);
+      
       if (response.status === 200 || response.status === 201) {
         const data = response.data;
         const newContentId = data.contentId || data.id;
-        console.log("newContentId:", newContentId);
 
         if (!isEdit && tags.length > 0 && newContentId) {
           await Promise.all(
             tags.map((tag) =>
-              api.post(
-                `/api/contents/${newContentId}/tags/register?tagName=${tag.tagName}`,
-              ),
+              api.post(`/api/contents/${newContentId}/tags/register?tagName=${tag.tagName}`)
             ),
           );
         }
 
         if (!isEdit) {
-          saveToInspection();
           await showAlert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.", "success");
           navigate(`/author/contents/${newContentId}/episode/register`);
         } else {
@@ -178,13 +158,7 @@ export default function ContentRegisterPage() {
       }
     } catch (error) {
       console.error("통신 에러:", error);
-      if (!isEdit) {
-        saveToInspection();
-        await showAlert("검수 신청이 완료되었습니다.\n관리자 검수 후 게시됩니다.", "success");
-        navigate("/author/contents");
-      } else {
-        await showAlert("수정 중 오류가 발생했습니다.", "error");
-      }
+      await showAlert(isEdit ? "수정 중 오류가 발생했습니다." : "등록 중 오류가 발생했습니다.", "error");
     }
   };
 
@@ -300,36 +274,21 @@ export default function ContentRegisterPage() {
             </div>
             {tags.length > 0 && (
               <div
-                style={{
-                  display: "flex",
-                  flexWrap: "wrap",
-                  gap: 8,
-                  marginTop: 10,
-                }}
+                style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}
               >
                 {tags.map((tag) => (
                   <div
                     key={tag.tagId}
                     style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      background: "#E3F2FD",
-                      borderRadius: 20,
-                      padding: "4px 12px",
-                      fontSize: 13,
-                      color: "#1565C0",
+                      display: "flex", alignItems: "center", gap: 4,
+                      background: "#E3F2FD", borderRadius: 20,
+                      padding: "4px 12px", fontSize: 13, color: "#1565C0",
                     }}
                   >
                     #{tag.tagName}
                     <span
                       onClick={() => handleDeleteTag(tag)}
-                      style={{
-                        cursor: "pointer",
-                        fontSize: 12,
-                        color: "#90A4C8",
-                        marginLeft: 2,
-                      }}
+                      style={{ cursor: "pointer", fontSize: 12, color: "#90A4C8", marginLeft: 2 }}
                     >
                       ✕
                     </span>
@@ -342,20 +301,12 @@ export default function ContentRegisterPage() {
           <div className={styles.formGroup}>
             <div className={styles.formLabel}>
               대표 이미지{" "}
-              {isEdit && (
-                <span className={styles.optional}>(변경 시에만 업로드)</span>
-              )}
+              {isEdit && <span className={styles.optional}>(변경 시에만 업로드)</span>}
             </div>
             <label className={styles.fileBtn}>
               <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               >
                 <rect x="3" y="3" width="18" height="18" rx="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
@@ -363,21 +314,25 @@ export default function ContentRegisterPage() {
               </svg>
               {file ? file.name : "이미지 업로드"}
               <input
-                type="file"
-                accept="image/*"
+                type="file" accept="image/*"
                 onChange={(e) => setFile(e.target.files[0])}
               />
             </label>
-            {file && (
+            
+            {/* 🌟 핵심 수술 3: 새로 올린 파일이 있으면 그걸, 없으면 기존 이미지를 보여줍니다! */}
+            {(file || existingThumbnail) && (
               <div className={styles.previewBox}>
                 <img
-                  src={URL.createObjectURL(file)}
+                  src={file ? URL.createObjectURL(file) : existingThumbnail}
                   alt="대표 이미지 미리보기"
                   className={styles.previewImg}
                 />
                 <button
                   className={styles.previewRemove}
-                  onClick={() => setFile(null)}
+                  onClick={() => {
+                    setFile(null);
+                    setExistingThumbnail(""); // x 누르면 기존 썸네일도 싹 지움
+                  }}
                 >
                   ✕
                 </button>
@@ -398,19 +353,9 @@ export default function ContentRegisterPage() {
             {videoUrl && (
               <div className={styles.preview}>
                 {videoUrl.includes("giphy.com") ? (
-                  <img
-                    src={videoUrl}
-                    alt="미리보기"
-                    className={styles.previewMedia}
-                  />
+                  <img src={videoUrl} alt="미리보기" className={styles.previewMedia} />
                 ) : (
-                  <video
-                    src={videoUrl}
-                    autoPlay
-                    loop
-                    muted
-                    className={styles.previewMedia}
-                  />
+                  <video src={videoUrl} autoPlay loop muted className={styles.previewMedia} />
                 )}
                 <div className={styles.previewLabel}>미리보기</div>
               </div>
@@ -420,11 +365,7 @@ export default function ContentRegisterPage() {
           <div className={styles.btnGroup}>
             <button
               className={styles.cancelBtn}
-              onClick={() =>
-                navigate(
-                  isEdit ? `/author/contents/${contentId}` : "/author/contents",
-                )
-              }
+              onClick={() => navigate(isEdit ? `/author/contents/${contentId}` : "/author/contents")}
             >
               취소
             </button>

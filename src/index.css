@@ -3,4 +3,9 @@ body {
   padding: 0;
   background-color: #F0F8FF;
   min-height: 100vh;
+  min-width: 1024px;
+}
+
+a, button, [role="button"] {
+  cursor: pointer;
 }

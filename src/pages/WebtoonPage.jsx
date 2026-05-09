@@ -279,7 +279,7 @@ export default function WebtoonPage() {
                 style={{ width: "100%", maxWidth: "100%" }}
               >
                 {popularContents.map((item) => (
-                  <SwiperSlide key="{item.contentId}">
+                  <SwiperSlide key={item.contentId}>
                     <div
                       onClick={() => navigate(`/contents/${item.contentId}`)}
                       className={styles.cardItem}
@@ -295,8 +295,8 @@ export default function WebtoonPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef="{popularSwiperRef}" />
-              <NavBtn direction="next" swiperRef="{popularSwiperRef}" />
+              <NavBtn direction="prev" swiperRef={popularSwiperRef} />
+              <NavBtn direction="next" swiperRef={popularSwiperRef} />
             </div>
 
             <div className={styles.sectionTitle}>신작 웹툰</div>
@@ -309,7 +309,7 @@ export default function WebtoonPage() {
                 style={{ width: "100%", maxWidth: "100%" }}
               >
                 {newContents.map((item) => (
-                  <SwiperSlide key="{item.contentId}">
+                  <SwiperSlide key={item.contentId}>
                     <div
                       onClick={() => navigate(`/contents/${item.contentId}`)}
                       className={styles.cardItem}
@@ -325,13 +325,15 @@ export default function WebtoonPage() {
                   </SwiperSlide>
                 ))}
               </Swiper>
-              <NavBtn direction="prev" swiperRef="{newSwiperRef}" />
-              <NavBtn direction="next" swiperRef="{newSwiperRef}" />
+              <NavBtn direction="prev" swiperRef={newSwiperRef} />
+              <NavBtn direction="next" swiperRef={newSwiperRef} />
             </div>
           </div>
         ) : (
           <div>
-            <div className={styles.sectionTitle}>{activeDay === "완결" ? "완결 웹툰" : `${activeDay}요일 웹툰`}</div>
+            <div className={styles.sectionTitle}>
+              {activeDay === "완결" ? "완결 웹툰" : `${activeDay}요일 웹툰`}
+            </div>
             <div className={styles.dailyGrid}>
               {dailyContents.map((item) => (
                 <div

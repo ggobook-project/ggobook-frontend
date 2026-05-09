@@ -2,7 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import styles from "../styles/FloatingChatbot.module.css";
 import llmApi from "../api/llmAxios";
 
+const CONTENT_CHATBOT_FAQ = "지금 읽는 작품 내용 물어보기 (스포 없음)";
+
 const FAQ_LIST = [
+  CONTENT_CHATBOT_FAQ,
   "포인트는 어떻게 충전하나요?",
   "결제 취소 및 환불은 어떻게 하나요?",
   "유료 작품은 어떻게 구매하나요?",
@@ -14,6 +17,17 @@ const FAQ_LIST = [
   "릴레이 소설이 뭔가요?",
   "TTS 기능은 어떻게 사용하나요?",
 ];
+
+function getViewerInfo() {
+  const pathname = window.location.pathname;
+  const search = new URLSearchParams(window.location.search);
+  const match = pathname.match(/\/(?:novel|webtoon)\/viewer\/(\d+)/);
+  if (!match) return null;
+  const episodeId = Number(match[1]);
+  const contentId = Number(search.get("contentId"));
+  if (!episodeId || !contentId) return null;
+  return { episodeId, contentId };
+}
 
 const stripEmoji = (str) =>
   str.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}\u{1F900}-\u{1F9FF}]/gu, "").trim();
@@ -32,20 +46,35 @@ export default function FloatingChatbot() {
   const [loading, setLoading] = useState(false);
   const [faqVisible, setFaqVisible] = useState(true);
   const [retryText, setRetryText] = useState(null);
+  const [contentMode, setContentMode] = useState(null); // { episodeId, contentId }
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isOpen, loading]);
 
-  const callApi = async (msgs) => {
-    const response = await llmApi.post("/api/chatbot/chat", {
-      messages: msgs,
-    });
+  const callApi = async (msgs, mode = null) => {
+    if (mode) {
+      const token =
+        localStorage.getItem("accessToken") ||
+        sessionStorage.getItem("accessToken") ||
+        null;
+      const response = await llmApi.post("/api/content-chatbot/chat", {
+        messages: msgs.map((m) => ({
+          role: m.role === "user" ? "user" : "assistant",
+          content: m.content,
+        })),
+        contentId: mode.contentId,
+        currentEpisodeId: mode.episodeId,
+        token,
+      });
+      return response.data.reply;
+    }
+    const response = await llmApi.post("/api/chatbot/chat", { messages: msgs });
     return response.data.reply;
   };
 
-  const sendMessage = async (text) => {
+  const sendMessage = async (text, mode = contentMode) => {
     if (!text || loading) return;
     setFaqVisible(false);
     const newMessages = [...messages, { role: "user", content: text }];
@@ -55,7 +84,7 @@ export default function FloatingChatbot() {
     setRetryText(null);
 
     try {
-      const reply = await callApi(newMessages);
+      const reply = await callApi(newMessages, mode);
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
     } catch {
       setRetryText(text);
@@ -103,10 +132,33 @@ export default function FloatingChatbot() {
     setFaqVisible(true);
     setRetryText(null);
     setInput("");
+    setContentMode(null);
   };
 
   const handleSend = async () => await sendMessage(input.trim());
-  const handleFaqClick = (question) => sendMessage(question);
+
+  const handleFaqClick = (question) => {
+    if (question === CONTENT_CHATBOT_FAQ) {
+      const info = getViewerInfo();
+      if (!info) {
+        setFaqVisible(false);
+        setMessages((prev) => [
+          ...prev,
+          { role: "user", content: question },
+          {
+            role: "assistant",
+            content:
+              "작품 뷰어 페이지(소설 읽기 화면)에서 이용할 수 있어요! 작품을 먼저 열어주세요.",
+          },
+        ]);
+        return;
+      }
+      setContentMode(info);
+      sendMessage("지금 읽고 있는 회차까지의 내용을 바탕으로 궁금한 점에 답해줘. 스포일러는 없이.", info);
+      return;
+    }
+    sendMessage(question);
+  };
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -127,7 +179,9 @@ export default function FloatingChatbot() {
               />
               <div>
                 <div className={styles.headerName}>꼬북이</div>
-                <div className={styles.headerSub}>GGoBook AI 도우미</div>
+                <div className={styles.headerSub}>
+                  {contentMode ? "작품 챗봇 모드 · 스포일러 없음" : "GGoBook AI 도우미"}
+                </div>
               </div>
             </div>
             <div className={styles.headerRight}>

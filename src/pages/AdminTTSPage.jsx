@@ -168,7 +168,9 @@ export default function AdminTTSPage() {
                 value={form.voiceName}
                 onChange={e => setForm(f => ({ ...f, voiceName: e.target.value }))}
                 placeholder="예: voice_abc123"
-                style={{ width: "100%", marginTop: 6, padding: "8px 12px", border: "1px solid #CBD5E1", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }}
+                onFocus={e => e.target.style.border = "2.5px solid #90CAF9"}
+                onBlur={e => e.target.style.border = "1.5px solid #90CAF9"}
+                style={{ width: "100%", marginTop: 6, padding: "8px 12px", border: "1.5px solid #90CAF9", borderRadius: 8, fontSize: 14, boxSizing: "border-box", outline: "none", background: "#E8F4FD", color: "#0D1B2A" }}
               />
             </div>
 
@@ -178,7 +180,9 @@ export default function AdminTTSPage() {
                 value={form.voiceStyle}
                 onChange={e => setForm(f => ({ ...f, voiceStyle: e.target.value }))}
                 placeholder="예: 차분한, 활발한, 진중한"
-                style={{ width: "100%", marginTop: 6, padding: "8px 12px", border: "1px solid #CBD5E1", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }}
+                onFocus={e => e.target.style.border = "2.5px solid #90CAF9"}
+                onBlur={e => e.target.style.border = "1.5px solid #90CAF9"}
+                style={{ width: "100%", marginTop: 6, padding: "8px 12px", border: "1.5px solid #90CAF9", borderRadius: 8, fontSize: 14, boxSizing: "border-box", outline: "none", background: "#E8F4FD", color: "#0D1B2A" }}
               />
             </div>
 

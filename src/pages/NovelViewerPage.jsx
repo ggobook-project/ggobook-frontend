@@ -1407,7 +1407,6 @@ export default function NovelViewerPage() {
             등록
           </button>
         </div>
-
         <div className={styles.commentList}>
           {visibleComments.map((cm) => (
             <div
@@ -1871,7 +1870,7 @@ export default function NovelViewerPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-              ✨ 평행우주 외전
+              평행우주 외전
             </div>
             <div style={{ fontSize: 13, color: "#90A4C8", marginBottom: 16 }}>
               만약 이 이야기가 다르게 흘러갔다면?
