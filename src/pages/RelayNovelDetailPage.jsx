@@ -14,26 +14,28 @@ export default function RelayNovelDetailPage() {
   const { relayNovelId } = useParams();
   const location = useLocation();
   const { showAlert } = useAlert();
-  
-  const [myText, setMyText] = useState("")
-  const [novel, setNovel] = useState(null)
-  const [entries, setEntries] = useState([])
-  const [isGuideOpen, setIsGuideOpen] = useState(true)
-  const [isWriting, setIsWriting] = useState(false)
-  const [guideline, setGuideline] = useState("") 
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [formatLoading, setFormatLoading] = useState(false)
-  const [showGuide, setShowGuide] = useState(false)
+
+  const [myText, setMyText] = useState("");
+  const [novel, setNovel] = useState(null);
+  const [entries, setEntries] = useState([]);
+  const [isGuideOpen, setIsGuideOpen] = useState(true);
+  const [isWriting, setIsWriting] = useState(false);
+  const [guideline, setGuideline] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formatLoading, setFormatLoading] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
 
   // 🌟 신고 및 메뉴 상태
-  const [reportInfo, setReportInfo] = useState(null)
-  const [activeMenu, setActiveMenu] = useState(null)
+  const [reportInfo, setReportInfo] = useState(null);
+  const [activeMenu, setActiveMenu] = useState(null);
 
   // 🌟 타이머를 위한 상태 추가
   const [timeLeft, setTimeLeft] = useState(MAX_TIME_SECONDS);
 
-  const isLoggedIn = !!(localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken"));
+  const isLoggedIn = !!(
+    localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken")
+  );
 
   // ==========================================
   // 🌟 하트비트 및 시각적 타이머 (좀비 락 방지)
@@ -50,7 +52,9 @@ export default function RelayNovelDetailPage() {
         if (prevTime <= 1) {
           clearInterval(countdownInterval);
           // 시간 초과 시 강제 종료
-          showAlert("최대 작성 허용 시간(30분)이 초과되어 강제 종료됩니다.\n작성 중인 내용은 저장되지 않습니다.");
+          showAlert(
+            "최대 작성 허용 시간(30분)이 초과되어 강제 종료됩니다.\n작성 중인 내용은 저장되지 않습니다.",
+          );
           setIsWriting(false);
           setMyText("");
           api.post(`/api/relay-novels/${relayNovelId}/cancel`).catch(() => {});
@@ -62,15 +66,14 @@ export default function RelayNovelDetailPage() {
 
     // 2. 1분(60초)마다 서버에 락 연장 요청 (하트비트)
     const heartbeatInterval = setInterval(() => {
-      api.post(`/api/relay-novels/${relayNovelId}/extend`)
-        .catch(err => {
-          console.error("락 연장 실패:", err);
-          clearInterval(heartbeatInterval);
-          clearInterval(countdownInterval);
-          showAlert("서버 통신 문제 또는 권한 만료로 강제 종료됩니다.", "error");
-          setIsWriting(false);
-          setMyText("");
-        });
+      api.post(`/api/relay-novels/${relayNovelId}/extend`).catch((err) => {
+        console.error("락 연장 실패:", err);
+        clearInterval(heartbeatInterval);
+        clearInterval(countdownInterval);
+        showAlert("서버 통신 문제 또는 권한 만료로 강제 종료됩니다.", "error");
+        setIsWriting(false);
+        setMyText("");
+      });
     }, 60 * 1000);
 
     // 3. 브라우저 탭 닫힘 / 새로고침 감지
@@ -84,7 +87,7 @@ export default function RelayNovelDetailPage() {
       clearInterval(countdownInterval);
       clearInterval(heartbeatInterval);
       window.removeEventListener("beforeunload", handleBeforeUnload);
-      
+
       api.post(`/api/relay-novels/${relayNovelId}/cancel`).catch(() => {});
     };
   }, [isWriting, relayNovelId]);
@@ -111,12 +114,12 @@ export default function RelayNovelDetailPage() {
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
           element.classList.add(styles.adminHighlight);
-          
+
           setTimeout(() => {
             element.classList.remove(styles.adminHighlight);
           }, 3000);
         }
-      }, 600); 
+      }, 600);
       return () => clearTimeout(timer);
     }
   }, [location.search, isLoading, entries]);
@@ -143,7 +146,11 @@ export default function RelayNovelDetailPage() {
   const preloadingRef = useRef(false);
   const ttsConfigRef = useRef(null);
   const [multiVoiceMode, setMultiVoiceMode] = useState(false);
-  const [pendingMultiVoice, setPendingMultiVoice] = useState({ voice1Id: null, voice2Id: null, narratorVoiceId: null });
+  const [pendingMultiVoice, setPendingMultiVoice] = useState({
+    voice1Id: null,
+    voice2Id: null,
+    narratorVoiceId: null,
+  });
   const speedBarRef = useRef(null);
   const progressBarRef = useRef(null);
   const settingsPanelRef = useRef(null);
@@ -163,7 +170,12 @@ export default function RelayNovelDetailPage() {
       setNovel(response.data);
       setEntries(response.data.entries || response.data.entryList || []);
     } catch (error) {
-      setNovel({ title: "소설을 찾을 수 없습니다", starterNickname: "-", uniqueParticipantCount: 0, entryCount: 0 });
+      setNovel({
+        title: "소설을 찾을 수 없습니다",
+        starterNickname: "-",
+        uniqueParticipantCount: 0,
+        entryCount: 0,
+      });
       setEntries([]);
     } finally {
       setIsLoading(false);
@@ -172,9 +184,13 @@ export default function RelayNovelDetailPage() {
 
   const loadGuidelines = async () => {
     try {
-      const response = await api.get("/api/relay-guideline"); 
-      const text = typeof response.data === 'string' ? response.data : response.data?.content;
-      const DEFAULT_GUIDELINE = "• 앞 이야기의 흐름을 이어받아 자연스럽게 연결해 주세요.\n• 욕설, 혐오 표현, 성인 내용은 작성이 제한됩니다.\n• 한 명의 참여자가 연속으로 이어쓸 수 없습니다.\n• 등록 후 수정 및 삭제가 불가하니 신중하게 작성해 주세요.\n• 제한 시간 내에 작성하지 않으면 편집권이 자동으로 해제됩니다.";
+      const response = await api.get("/api/relay-guideline");
+      const text =
+        typeof response.data === "string"
+          ? response.data
+          : response.data?.content;
+      const DEFAULT_GUIDELINE =
+        "• 앞 이야기의 흐름을 이어받아 자연스럽게 연결해 주세요.\n• 욕설, 혐오 표현, 성인 내용은 작성이 제한됩니다.\n• 한 명의 참여자가 연속으로 이어쓸 수 없습니다.\n• 등록 후 수정 및 삭제가 불가하니 신중하게 작성해 주세요.\n• 제한 시간 내에 작성하지 않으면 편집권이 자동으로 해제됩니다.";
       const isEmpty = !text || text.includes("없습니다");
       setGuideline(isEmpty ? DEFAULT_GUIDELINE : text);
     } catch {
@@ -206,20 +222,35 @@ export default function RelayNovelDetailPage() {
       if (audio.duration && audio.currentTime / audio.duration > 0.7) {
         const next = currentChunkIndex + 1;
         const cfg = ttsConfigRef.current;
-        if (next < totalChunks && !chunkUrls[next] && !preloadingRef.current && cfg) {
+        if (
+          next < totalChunks &&
+          !chunkUrls[next] &&
+          !preloadingRef.current &&
+          cfg
+        ) {
           preloadingRef.current = true;
-          const nextUrl = cfg.mode === 'single'
-            ? `/api/relay-novels/${relayNovelId}/tts/chunk/${next}?voiceId=${cfg.voiceId}`
-            : `/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk/${next}?voice1Id=${cfg.voice1Id}&voice2Id=${cfg.voice2Id}&narratorVoiceId=${cfg.narratorVoiceId}`;
-          api.post(nextUrl)
-            .then(res => { setChunkUrls(prev => ({ ...prev, [next]: res.data.url })); preloadingRef.current = false; })
-            .catch(() => { preloadingRef.current = false; });
+          const nextUrl =
+            cfg.mode === "single"
+              ? `/api/relay-novels/${relayNovelId}/tts/chunk/${next}?voiceId=${cfg.voiceId}`
+              : `/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk/${next}?voice1Id=${cfg.voice1Id}&voice2Id=${cfg.voice2Id}&narratorVoiceId=${cfg.narratorVoiceId}`;
+          api
+            .post(nextUrl)
+            .then((res) => {
+              setChunkUrls((prev) => ({ ...prev, [next]: res.data.url }));
+              preloadingRef.current = false;
+            })
+            .catch(() => {
+              preloadingRef.current = false;
+            });
         }
       }
     };
     const onLoadedMetadata = () => {
       setAudioDuration(audio.duration);
-      setChunkDurations(prev => ({ ...prev, [currentChunkIndex]: audio.duration }));
+      setChunkDurations((prev) => ({
+        ...prev,
+        [currentChunkIndex]: audio.duration,
+      }));
     };
     const onEnded = () => {
       const next = currentChunkIndex + 1;
@@ -279,7 +310,10 @@ export default function RelayNovelDetailPage() {
   };
 
   const handlePlayToggle = () => {
-    if (!audioRef.current) { handleSettingsClick(); return; }
+    if (!audioRef.current) {
+      handleSettingsClick();
+      return;
+    }
     if (playing) {
       audioRef.current.pause();
       playingRef.current = false;
@@ -292,19 +326,29 @@ export default function RelayNovelDetailPage() {
   };
 
   const handleSettingsClick = async () => {
-    if (!isLoggedIn) { navigate("/login"); return; }
-    if (showSettings) { setShowSettings(false); return; }
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    if (showSettings) {
+      setShowSettings(false);
+      return;
+    }
     try {
       const res = await api.get("/api/tts/voices");
       setVoices(res.data || []);
-    } catch { setVoices([]); }
+    } catch {
+      setVoices([]);
+    }
     setShowSettings(true);
   };
 
   const handleGenerateTts = async (voiceId) => {
     try {
       setIsGenerating(true);
-      const infoRes = await api.get(`/api/relay-novels/${relayNovelId}/tts/chunk-info?voiceId=${voiceId}`);
+      const infoRes = await api.get(
+        `/api/relay-novels/${relayNovelId}/tts/chunk-info?voiceId=${voiceId}`,
+      );
       const { totalChunks: total, chunkUrls: existing } = infoRes.data;
       setTotalChunks(total);
       setCurrentChunkIndex(0);
@@ -313,12 +357,14 @@ export default function RelayNovelDetailPage() {
 
       let chunk0Url = existing["0"];
       if (!chunk0Url) {
-        const res = await api.post(`/api/relay-novels/${relayNovelId}/tts/chunk/0?voiceId=${voiceId}`);
+        const res = await api.post(
+          `/api/relay-novels/${relayNovelId}/tts/chunk/0?voiceId=${voiceId}`,
+        );
         chunk0Url = res.data.url;
       }
-      setChunkUrls({ ...existing, "0": chunk0Url });
+      setChunkUrls({ ...existing, 0: chunk0Url });
       setCurrentVoiceId(voiceId);
-      ttsConfigRef.current = { mode: 'single', voiceId };
+      ttsConfigRef.current = { mode: "single", voiceId };
       setShowSettings(false);
       playingRef.current = true;
     } catch (e) {
@@ -330,10 +376,15 @@ export default function RelayNovelDetailPage() {
 
   const handleGenerateMultiVoiceTts = async () => {
     const { voice1Id, voice2Id, narratorVoiceId } = pendingMultiVoice;
-    if (!voice1Id || !voice2Id || !narratorVoiceId) { await showAlert("모든 목소리를 선택해주세요."); return; }
+    if (!voice1Id || !voice2Id || !narratorVoiceId) {
+      await showAlert("모든 목소리를 선택해주세요.");
+      return;
+    }
     try {
       setIsGenerating(true);
-      const infoRes = await api.get(`/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk-info?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`);
+      const infoRes = await api.get(
+        `/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk-info?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`,
+      );
       const { totalChunks: total, chunkUrls: existing } = infoRes.data;
       setTotalChunks(total);
       setCurrentChunkIndex(0);
@@ -342,12 +393,19 @@ export default function RelayNovelDetailPage() {
 
       let chunk0Url = existing["0"];
       if (!chunk0Url) {
-        const res = await api.post(`/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk/0?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`);
+        const res = await api.post(
+          `/api/relay-novels/${relayNovelId}/tts/multi-voice/chunk/0?voice1Id=${voice1Id}&voice2Id=${voice2Id}&narratorVoiceId=${narratorVoiceId}`,
+        );
         chunk0Url = res.data.url;
       }
-      setChunkUrls({ ...existing, "0": chunk0Url });
+      setChunkUrls({ ...existing, 0: chunk0Url });
       setCurrentVoiceId(null);
-      ttsConfigRef.current = { mode: 'multi', voice1Id, voice2Id, narratorVoiceId };
+      ttsConfigRef.current = {
+        mode: "multi",
+        voice1Id,
+        voice2Id,
+        narratorVoiceId,
+      };
       setShowSettings(false);
       playingRef.current = true;
     } catch (e) {
@@ -368,7 +426,9 @@ export default function RelayNovelDetailPage() {
     const rect = speedBarRef.current.getBoundingClientRect();
     const ratio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
     const raw = 0.75 + ratio * (2.0 - 0.75);
-    const nearest = SPEED_PRESETS.reduce((a, b) => Math.abs(b - raw) < Math.abs(a - raw) ? b : a);
+    const nearest = SPEED_PRESETS.reduce((a, b) =>
+      Math.abs(b - raw) < Math.abs(a - raw) ? b : a,
+    );
     applySpeed(nearest);
   };
 
@@ -385,115 +445,228 @@ export default function RelayNovelDetailPage() {
   };
 
   const handleFormatDialogue = async () => {
-    if (!myText.trim()) { await showAlert("내용을 먼저 입력해주세요."); return }
-    try {
-      setFormatLoading(true)
-      const res = await fetch("http://localhost:8000/api/novel/format-dialogue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: myText }),
-      })
-      if (!res.ok) throw new Error()
-      const data = await res.json()
-      setMyText(data.formatted_text)
-    } catch {
-      await showAlert("AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.", "error")
-    } finally {
-      setFormatLoading(false)
+    if (!myText.trim()) {
+      await showAlert("내용을 먼저 입력해주세요.");
+      return;
     }
-  }
+    try {
+      setFormatLoading(true);
+      const res = await fetch(
+        import.meta.env.VITE_LLM_URL + "/api/novel/format-dialogue",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: myText }),
+        },
+      );
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setMyText(data.formatted_text);
+    } catch {
+      await showAlert(
+        "AI 변환에 실패했습니다. LLM 서버가 실행 중인지 확인해주세요.",
+        "error",
+      );
+    } finally {
+      setFormatLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
-    if (!isLoggedIn) { navigate("/login"); return; }
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
     if (myText.length < MIN_CHARS || myText.length > MAX_CHARS) return;
     try {
       setIsSubmitting(true);
-      await api.post(`/api/relay-novels/${relayNovelId}/submit`, { entryText: myText });
+      await api.post(`/api/relay-novels/${relayNovelId}/submit`, {
+        entryText: myText,
+      });
       await showAlert("이어쓰기가 등록되었습니다!", "success");
-      setMyText(""); setIsWriting(false); loadDetail();
-    } catch { await showAlert("등록에 실패했습니다.", "error"); } finally { setIsSubmitting(false); }
+      setMyText("");
+      setIsWriting(false);
+      loadDetail();
+    } catch {
+      await showAlert("등록에 실패했습니다.", "error");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleStartWriting = async () => {
-    if (!isLoggedIn) { navigate("/login"); return; }
+    if (!isLoggedIn) {
+      navigate("/login");
+      return;
+    }
     try {
       await api.post(`/api/relay-novels/${relayNovelId}/start`);
       setIsWriting(true);
     } catch (error) {
-      if (error.response?.status === 409) await showAlert("현재 다른 작가님이 집필 중입니다.");
+      if (error.response?.status === 409)
+        await showAlert("현재 다른 작가님이 집필 중입니다.");
       else await showAlert("서버 통신 중 오류가 발생했습니다.", "error");
     }
   };
 
-
   const handleCancelWriting = async () => {
-    setIsWriting(false); setMyText("");
+    setIsWriting(false);
+    setMyText("");
   };
 
   // 신고 로직
   const openEntryReport = (entry) => {
     setReportInfo({
-      targetType: 'RELAY_ENTRY',
+      targetType: "RELAY_ENTRY",
       targetId: entry.entryId,
-      targetParentId: relayNovelId, 
+      targetParentId: relayNovelId,
       reportedUserId: entry.userId || entry.authorId,
-      targetTitle: `${entry.nickname || "알 수 없음"} 님`
+      targetTitle: `${entry.nickname || "알 수 없음"} 님`,
     });
     setActiveMenu(null);
   };
 
-  const charColor = () => (myText.length < MIN_CHARS || myText.length > MAX_CHARS) ? "#E53935" : "#2196F3";
+  const charColor = () =>
+    myText.length < MIN_CHARS || myText.length > MAX_CHARS
+      ? "#E53935"
+      : "#2196F3";
 
-  if (isLoading) return <div className={styles.pageWrapper}><div className={styles.loading}>불러오는 중...</div></div>;
+  if (isLoading)
+    return (
+      <div className={styles.pageWrapper}>
+        <div className={styles.loading}>불러오는 중...</div>
+      </div>
+    );
 
   return (
     <div className={styles.pageWrapper}>
       <div className={styles.header}>
         <div className={styles.headerTitle}>{novel?.title}</div>
-        <div className={styles.headerMeta}>시작: {novel?.starterNickname} · 참여자 {novel?.uniqueParticipantCount}명 · 이어쓰기 {entries.length}개</div>
+        <div className={styles.headerMeta}>
+          시작: {novel?.starterNickname} · 참여자{" "}
+          {novel?.uniqueParticipantCount}명 · 이어쓰기 {entries.length}개
+        </div>
       </div>
 
       <div className={styles.content}>
         {guideline && (
           <div className={styles.guidelineBanner}>
             <div className={styles.guidelineBannerTitle}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
               작성 가이드라인
-              <button onClick={() => setIsGuideOpen(!isGuideOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "#90A4C8", marginLeft: "auto", display: "flex", alignItems: "center", padding: "2px" }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  {isGuideOpen ? <polyline points="18 15 12 9 6 15" /> : <polyline points="6 9 12 15 18 9" />}
+              <button
+                onClick={() => setIsGuideOpen(!isGuideOpen)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#90A4C8",
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "2px",
+                }}
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {isGuideOpen ? (
+                    <polyline points="18 15 12 9 6 15" />
+                  ) : (
+                    <polyline points="6 9 12 15 18 9" />
+                  )}
                 </svg>
               </button>
             </div>
-            {isGuideOpen && <div className={styles.guidelineContent} style={{ whiteSpace: "pre-wrap", lineHeight: "1.6", fontSize: "12px", marginTop: "8px" }}>{guideline}</div>}
+            {isGuideOpen && (
+              <div
+                className={styles.guidelineContent}
+                style={{
+                  whiteSpace: "pre-wrap",
+                  lineHeight: "1.6",
+                  fontSize: "12px",
+                  marginTop: "8px",
+                }}
+              >
+                {guideline}
+              </div>
+            )}
           </div>
         )}
 
         {entries.map((entry, idx) => (
-          <div key={entry.entryId || idx} id={`entry-${entry.entryId}`} className={styles.entryCard}>
+          <div
+            key={entry.entryId || idx}
+            id={`entry-${entry.entryId}`}
+            className={styles.entryCard}
+          >
             <div className={styles.entryOrder}>
-              <div className={styles.entryOrderNum}>{entry.entryOrder || idx + 1}</div>
-              {idx < entries.length - 1 && <div className={styles.entryOrderLine} />}
+              <div className={styles.entryOrderNum}>
+                {entry.entryOrder || idx + 1}
+              </div>
+              {idx < entries.length - 1 && (
+                <div className={styles.entryOrderLine} />
+              )}
             </div>
             <div className={styles.entryBody}>
-              <div className={styles.entryHeader} style={{ position: 'relative' }}>
-                <div 
-                  className={styles.avatar} 
-                  style={entry.profileImageUrl ? {
-                    backgroundImage: `url(${entry.profileImageUrl})`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center"
-                  } : undefined}
+              <div
+                className={styles.entryHeader}
+                style={{ position: "relative" }}
+              >
+                <div
+                  className={styles.avatar}
+                  style={
+                    entry.profileImageUrl
+                      ? {
+                          backgroundImage: `url(${entry.profileImageUrl})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }
+                      : undefined
+                  }
                 />
                 <span className={styles.entryUser}>{entry.nickname}</span>
-                <span className={styles.entryMeta}>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ""}</span>
-                
+                <span className={styles.entryMeta}>
+                  {entry.createdAt
+                    ? new Date(entry.createdAt).toLocaleDateString()
+                    : ""}
+                </span>
+
                 <button
                   className={styles.reportBtn}
                   onClick={() => openEntryReport(entry)}
                   title="신고하기"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
                     <path d="M5 18h14"></path>
                     <path d="M17 18v-5a5 5 0 0 0-10 0v5"></path>
                     <path d="M2 13h2"></path>
@@ -504,16 +677,34 @@ export default function RelayNovelDetailPage() {
                   </svg>
                 </button>
               </div>
-              
+
               {entry.status === "BLINDED" ? (
                 <div className={styles.blindBox}>
                   <div className={styles.blindTitle}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 18h14"/><path d="M17 18v-5a5 5 0 0 0-10 0v5"/><path d="M2 13h2"/><path d="M20 13h2"/><path d="M12 2v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 6.34 1.41-1.41"/>
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M5 18h14" />
+                      <path d="M17 18v-5a5 5 0 0 0-10 0v5" />
+                      <path d="M2 13h2" />
+                      <path d="M20 13h2" />
+                      <path d="M12 2v2" />
+                      <path d="m4.93 4.93 1.41 1.41" />
+                      <path d="m17.66 6.34 1.41-1.41" />
                     </svg>
                     가이드라인 위반으로 블라인드 처리되었습니다.
                   </div>
-                  <div className={styles.blindText}><strong>AI 요약:</strong> {entry.adminMessage || "부적절한 내용이 포함되어 있습니다."}</div>
+                  <div className={styles.blindText}>
+                    <strong>AI 요약:</strong>{" "}
+                    {entry.adminMessage || "부적절한 내용이 포함되어 있습니다."}
+                  </div>
                 </div>
               ) : (
                 <div className={styles.entryText}>{entry.entryText}</div>
@@ -527,72 +718,199 @@ export default function RelayNovelDetailPage() {
           <div className={styles.ttsRow}>
             <button className={styles.playBtn} onClick={handlePlayToggle}>
               {playing ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" /></svg>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <rect x="6" y="4" width="4" height="16" />
+                  <rect x="14" y="4" width="4" height="16" />
+                </svg>
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}><polygon points="5,3 19,12 5,21"/></svg>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  style={{ marginLeft: 2 }}
+                >
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
               )}
             </button>
-            <div className={styles.ttsProgressBarWrapper} ref={progressBarRef} onMouseDown={handleProgressMouseDown}>
+            <div
+              className={styles.ttsProgressBarWrapper}
+              ref={progressBarRef}
+              onMouseDown={handleProgressMouseDown}
+            >
               <div className={styles.ttsProgressBar}>
-                <div className={styles.ttsProgressFill} style={{ width: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%` }} />
-                <div className={styles.ttsProgressThumb} style={{ left: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%` }} />
+                <div
+                  className={styles.ttsProgressFill}
+                  style={{
+                    width: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%`,
+                  }}
+                />
+                <div
+                  className={styles.ttsProgressThumb}
+                  style={{
+                    left: `${audioDuration ? (audioTime / audioDuration) * 100 : 0}%`,
+                  }}
+                />
               </div>
             </div>
-            <span className={styles.timeLabel}>{formatAudioTime(audioTime)} / {formatAudioTime(audioDuration)}</span>
+            <span className={styles.timeLabel}>
+              {formatAudioTime(audioTime)} / {formatAudioTime(audioDuration)}
+            </span>
             <span className={styles.speedBadge}>{playbackRate}×</span>
-            <button className={styles.settingsBtn} onClick={handleSettingsClick}>설정</button>
+            <button
+              className={styles.settingsBtn}
+              onClick={handleSettingsClick}
+            >
+              설정
+            </button>
           </div>
 
           {showSettings && (
             <div className={styles.settingsPanel} ref={settingsPanelRef}>
               <div className={styles.settingsSection}>
                 <div className={styles.modeToggle}>
-                  <button className={`${styles.modeToggleBtn} ${!multiVoiceMode ? styles.modeToggleBtnActive : ""}`} onClick={() => setMultiVoiceMode(false)}>단일 목소리</button>
-                  <button className={`${styles.modeToggleBtn} ${multiVoiceMode ? styles.modeToggleBtnActive : ""}`} onClick={() => setMultiVoiceMode(true)}>멀티 보이스</button>
+                  <button
+                    className={`${styles.modeToggleBtn} ${!multiVoiceMode ? styles.modeToggleBtnActive : ""}`}
+                    onClick={() => setMultiVoiceMode(false)}
+                  >
+                    단일 목소리
+                  </button>
+                  <button
+                    className={`${styles.modeToggleBtn} ${multiVoiceMode ? styles.modeToggleBtnActive : ""}`}
+                    onClick={() => setMultiVoiceMode(true)}
+                  >
+                    멀티 보이스
+                  </button>
                 </div>
               </div>
-              
+
               {!multiVoiceMode ? (
                 <div className={styles.settingsSection}>
                   <div className={styles.settingsSectionTitle}>목소리 선택</div>
-                  <select className={styles.voiceSelect} value={pendingVoiceId ?? currentVoiceId ?? ""} onChange={e => setPendingVoiceId(Number(e.target.value))}>
+                  <select
+                    className={styles.voiceSelect}
+                    value={pendingVoiceId ?? currentVoiceId ?? ""}
+                    onChange={(e) => setPendingVoiceId(Number(e.target.value))}
+                  >
                     <option value="">목소리를 골라주세요</option>
-                    {voices.map(v => <option key={v.voiceId} value={v.voiceId}>{v.voiceStyle} ({v.voiceType})</option>)}
+                    {voices.map((v) => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle} ({v.voiceType})
+                      </option>
+                    ))}
                   </select>
-                  {pendingVoiceId && <button className={styles.applyBtn} onClick={() => handleGenerateTts(pendingVoiceId)}>이 목소리로 생성</button>}
+                  {pendingVoiceId && (
+                    <button
+                      className={styles.applyBtn}
+                      onClick={() => handleGenerateTts(pendingVoiceId)}
+                    >
+                      이 목소리로 생성
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className={styles.settingsSection}>
-                  <div className={styles.settingsSectionTitle}>멀티 보이스 설정</div>
+                  <div className={styles.settingsSectionTitle}>
+                    멀티 보이스 설정
+                  </div>
                   <div className={styles.voiceSubLabel}>화자1</div>
-                  <select className={styles.voiceSelect} onChange={e => setPendingMultiVoice(p => ({ ...p, voice1Id: Number(e.target.value) }))}>
+                  <select
+                    className={styles.voiceSelect}
+                    onChange={(e) =>
+                      setPendingMultiVoice((p) => ({
+                        ...p,
+                        voice1Id: Number(e.target.value),
+                      }))
+                    }
+                  >
                     <option value="">선택</option>
-                    {voices.map(v => <option key={v.voiceId} value={v.voiceId}>{v.voiceStyle}</option>)}
+                    {voices.map((v) => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle}
+                      </option>
+                    ))}
                   </select>
                   <div className={styles.voiceSubLabel}>화자2</div>
-                  <select className={styles.voiceSelect} onChange={e => setPendingMultiVoice(p => ({ ...p, voice2Id: Number(e.target.value) }))}>
+                  <select
+                    className={styles.voiceSelect}
+                    onChange={(e) =>
+                      setPendingMultiVoice((p) => ({
+                        ...p,
+                        voice2Id: Number(e.target.value),
+                      }))
+                    }
+                  >
                     <option value="">선택</option>
-                    {voices.map(v => <option key={v.voiceId} value={v.voiceId}>{v.voiceStyle}</option>)}
+                    {voices.map((v) => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle}
+                      </option>
+                    ))}
                   </select>
                   <div className={styles.voiceSubLabel}>서술자</div>
-                  <select className={styles.voiceSelect} onChange={e => setPendingMultiVoice(p => ({ ...p, narratorVoiceId: Number(e.target.value) }))}>
+                  <select
+                    className={styles.voiceSelect}
+                    onChange={(e) =>
+                      setPendingMultiVoice((p) => ({
+                        ...p,
+                        narratorVoiceId: Number(e.target.value),
+                      }))
+                    }
+                  >
                     <option value="">선택</option>
-                    {voices.map(v => <option key={v.voiceId} value={v.voiceId}>{v.voiceStyle}</option>)}
+                    {voices.map((v) => (
+                      <option key={v.voiceId} value={v.voiceId}>
+                        {v.voiceStyle}
+                      </option>
+                    ))}
                   </select>
-                  <button className={styles.applyBtn} onClick={handleGenerateMultiVoiceTts}>멀티 보이스 생성</button>
+                  <button
+                    className={styles.applyBtn}
+                    onClick={handleGenerateMultiVoiceTts}
+                  >
+                    멀티 보이스 생성
+                  </button>
                 </div>
               )}
 
               <div className={styles.settingsSection}>
                 <div className={styles.settingsSectionTitle}>배속 조절</div>
-                <div className={styles.speedBarWrapper} ref={speedBarRef} onMouseDown={handleSpeedMouseDown}>
+                <div
+                  className={styles.speedBarWrapper}
+                  ref={speedBarRef}
+                  onMouseDown={handleSpeedMouseDown}
+                >
                   <div className={styles.speedBar}>
-                    <div className={styles.speedFill} style={{ width: `${((playbackRate - 0.75) / 1.25) * 100}%` }} />
-                    <div className={styles.speedThumb} style={{ left: `${((playbackRate - 0.75) / 1.25) * 100}%` }} />
+                    <div
+                      className={styles.speedFill}
+                      style={{
+                        width: `${((playbackRate - 0.75) / 1.25) * 100}%`,
+                      }}
+                    />
+                    <div
+                      className={styles.speedThumb}
+                      style={{
+                        left: `${((playbackRate - 0.75) / 1.25) * 100}%`,
+                      }}
+                    />
                   </div>
                 </div>
                 <div className={styles.speedPresets}>
-                  {SPEED_PRESETS.map(s => <button key={s} className={`${styles.speedPreset} ${playbackRate === s ? styles.speedPresetActive : ""}`} onClick={() => applySpeed(s)}>{s}x</button>)}
+                  {SPEED_PRESETS.map((s) => (
+                    <button
+                      key={s}
+                      className={`${styles.speedPreset} ${playbackRate === s ? styles.speedPresetActive : ""}`}
+                      onClick={() => applySpeed(s)}
+                    >
+                      {s}x
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -601,59 +919,128 @@ export default function RelayNovelDetailPage() {
 
         {/* 이어쓰기 하단 */}
         {!isWriting ? (
-          <button className={styles.writeOpenBtn} onClick={handleStartWriting}>이야기 이어 쓰기</button>
+          <button className={styles.writeOpenBtn} onClick={handleStartWriting}>
+            이야기 이어 쓰기
+          </button>
         ) : (
           <div className={styles.writeCard}>
             <div className={styles.writeHeader}>
               <div className={styles.writeTitle}>직접 쓰는 다음 이야기</div>
               {/* 🌟 타이머 및 닫기 버튼 배치 */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ 
-                  fontSize: "13px", 
-                  fontWeight: "600", 
-                  color: timeLeft <= 300 ? "#E53935" : "#4A6FA5" // 5분 이하면 빨간색 경고
-                }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "12px" }}
+              >
+                <span
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    color: timeLeft <= 300 ? "#E53935" : "#4A6FA5", // 5분 이하면 빨간색 경고
+                  }}
+                >
                   남은 시간: {formatTimer(timeLeft)}
                 </span>
-                <button className={styles.closeWriteBtn} onClick={handleCancelWriting}>✕</button> 
+                <button
+                  className={styles.closeWriteBtn}
+                  onClick={handleCancelWriting}
+                >
+                  ✕
+                </button>
               </div>
             </div>
             <div className={styles.textareaActions}>
-              <button type="button" className={styles.guideToggleBtn} onClick={() => setShowGuide(v => !v)}>
+              <button
+                type="button"
+                className={styles.guideToggleBtn}
+                onClick={() => setShowGuide((v) => !v)}
+              >
                 {showGuide ? "가이드 닫기" : "멀티 보이스 TTS 가이드"}
               </button>
-              <button type="button" className={styles.aiFormatBtn} onClick={handleFormatDialogue} disabled={formatLoading}>
+              <button
+                type="button"
+                className={styles.aiFormatBtn}
+                onClick={handleFormatDialogue}
+                disabled={formatLoading}
+              >
                 {formatLoading ? "변환 중..." : "AI 대사 자동 변환"}
               </button>
             </div>
             {showGuide && (
               <div className={styles.guideBox}>
-                <div className={styles.guideTitle}>멀티 보이스 TTS 포맷 가이드</div>
-                <div className={styles.guideDesc}>대사를 큰따옴표("")로 감싸면 등장인물별 목소리가 자동 적용됩니다.</div>
+                <div className={styles.guideTitle}>
+                  멀티 보이스 TTS 포맷 가이드
+                </div>
+                <div className={styles.guideDesc}>
+                  대사를 큰따옴표("")로 감싸면 등장인물별 목소리가 자동
+                  적용됩니다.
+                </div>
                 <div className={styles.guideItems}>
                   <div className={styles.guideItem}>
-                    <span className={styles.guideTag} style={{ background: "#E3F2FD", color: "#1565C0" }}>나레이터</span>
-                    <span className={styles.guideText}>따옴표 없는 서술 텍스트</span>
+                    <span
+                      className={styles.guideTag}
+                      style={{ background: "#E3F2FD", color: "#1565C0" }}
+                    >
+                      나레이터
+                    </span>
+                    <span className={styles.guideText}>
+                      따옴표 없는 서술 텍스트
+                    </span>
                   </div>
                   <div className={styles.guideItem}>
-                    <span className={styles.guideTag} style={{ background: "#E8F5E9", color: "#2E7D32" }}>참여자1</span>
-                    <span className={styles.guideText}>홀수 번째 <code className={styles.guideCode}>"대사"</code></span>
+                    <span
+                      className={styles.guideTag}
+                      style={{ background: "#E8F5E9", color: "#2E7D32" }}
+                    >
+                      참여자1
+                    </span>
+                    <span className={styles.guideText}>
+                      홀수 번째 <code className={styles.guideCode}>"대사"</code>
+                    </span>
                   </div>
                   <div className={styles.guideItem}>
-                    <span className={styles.guideTag} style={{ background: "#FFF3E0", color: "#E65100" }}>참여자2</span>
-                    <span className={styles.guideText}>짝수 번째 <code className={styles.guideCode}>"대사"</code></span>
+                    <span
+                      className={styles.guideTag}
+                      style={{ background: "#FFF3E0", color: "#E65100" }}
+                    >
+                      참여자2
+                    </span>
+                    <span className={styles.guideText}>
+                      짝수 번째 <code className={styles.guideCode}>"대사"</code>
+                    </span>
                   </div>
                 </div>
                 <div className={styles.guideExample}>
                   <div className={styles.guideExampleTitle}>예시</div>
-                  <pre className={styles.guideExampleCode}>{`그는 천천히 걸어왔다.\n"오랜만이야." 그가 말했다.\n그녀가 고개를 들었다.\n"정말 오래됐네." 그녀가 속삭였다.`}</pre>
+                  <pre
+                    className={styles.guideExampleCode}
+                  >{`그는 천천히 걸어왔다.\n"오랜만이야." 그가 말했다.\n그녀가 고개를 들었다.\n"정말 오래됐네." 그녀가 속삭였다.`}</pre>
                 </div>
               </div>
             )}
-            <textarea value={myText} onChange={e => setMyText(e.target.value)} onFocus={() => !isLoggedIn && navigate("/login")} placeholder="" rows={6} className={styles.textarea} readOnly={!isLoggedIn} maxLength={MAX_CHARS + 50} />
+            <textarea
+              value={myText}
+              onChange={(e) => setMyText(e.target.value)}
+              onFocus={() => !isLoggedIn && navigate("/login")}
+              placeholder=""
+              rows={6}
+              className={styles.textarea}
+              readOnly={!isLoggedIn}
+              maxLength={MAX_CHARS + 50}
+            />
             <div className={styles.writeFooter}>
-              <div className={styles.charCountWrap}><span style={{ color: charColor() }}>{myText.length}</span> <span className={styles.charCountSep}>/</span> <span className={styles.charCountMax}>{MAX_CHARS}자</span></div>
-              <button className={styles.submitBtn} onClick={handleSubmit} disabled={isSubmitting || myText.length < MIN_CHARS || myText.length > MAX_CHARS}>
+              <div className={styles.charCountWrap}>
+                <span style={{ color: charColor() }}>{myText.length}</span>{" "}
+                <span className={styles.charCountSep}>/</span>{" "}
+                <span className={styles.charCountMax}>{MAX_CHARS}자</span>
+              </div>
+              <button
+                className={styles.submitBtn}
+                onClick={handleSubmit}
+                disabled={
+                  isSubmitting ||
+                  myText.length < MIN_CHARS ||
+                  myText.length > MAX_CHARS
+                }
+              >
                 {isSubmitting ? "등록 중..." : "등록하기"}
               </button>
             </div>
@@ -661,7 +1048,11 @@ export default function RelayNovelDetailPage() {
         )}
       </div>
 
-      <ReportModal isOpen={!!reportInfo} onClose={() => setReportInfo(null)} targetInfo={reportInfo} />
+      <ReportModal
+        isOpen={!!reportInfo}
+        onClose={() => setReportInfo(null)}
+        targetInfo={reportInfo}
+      />
     </div>
   );
 }

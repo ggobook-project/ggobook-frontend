@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const llmApi = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: import.meta.env.VITE_LLM_URL,
 });
 
 llmApi.interceptors.request.use((config) => {
